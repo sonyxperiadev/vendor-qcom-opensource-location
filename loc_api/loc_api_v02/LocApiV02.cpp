@@ -213,7 +213,8 @@ LocApiV02 :: open(LOC_API_ADAPTER_EVENT_MASK_T mask)
       LOC_LOGE ("%s:%d]: locClientOpen failed, status = %s\n", __func__,
                 __LINE__, loc_get_v02_client_status_name(status));
       rtv = LOC_API_ADAPTER_ERR_FAILURE;
-    } else {
+#ifndef LEGACY_DEVICES
+    }  else {
         uint64_t supportedMsgList = 0;
         const uint32_t msgArray[LOC_API_ADAPTER_MESSAGE_MAX] =
         {
@@ -239,6 +240,7 @@ LocApiV02 :: open(LOC_API_ADAPTER_EVENT_MASK_T mask)
 
         // save the supported message list
         saveSupportedMsgList(supportedMsgList);
+#endif
     }
   } else if (newMask != mMask) {
     // it is important to cap the mask here, because not all LocApi's
@@ -1805,8 +1807,10 @@ enum loc_api_adapter_err LocApiV02 :: convertErr(
     case eLOC_CLIENT_FAILURE_SERVICE_NOT_PRESENT:
       return LOC_API_ADAPTER_ERR_SERVICE_NOT_PRESENT;
 
+#ifndef LEGACY_DEVICES
     case eLOC_CLIENT_FAILURE_INTERNAL:
       return LOC_API_ADAPTER_ERR_INTERNAL;
+#endif
 
     default:
       return LOC_API_ADAPTER_ERR_FAILURE;
@@ -2885,6 +2889,7 @@ int LocApiV02 :: getGpsLock()
     return ret;
 }
 
+#ifndef LEGACY_DEVICES
 enum loc_api_adapter_err LocApiV02:: setXtraVersionCheck(enum xtra_version_check check)
 {
     qmiLocSetXtraVersionCheckReqMsgT_v02 req;
@@ -2931,6 +2936,7 @@ enum loc_api_adapter_err LocApiV02:: setXtraVersionCheck(enum xtra_version_check
     LOC_LOGD("%s:%d]: Exit. ret: %d", __func__, __LINE__, (int)ret);
     return ret;
 }
+#endif
 
 void LocApiV02 :: installAGpsCert(const DerEncodedCertificate* pData,
                                   size_t numberOfCerts,

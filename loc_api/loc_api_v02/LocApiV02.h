@@ -198,7 +198,9 @@ public:
     -1 on failure
   */
   virtual int getGpsLock(void);
+#ifndef LEGACY_DEVICES
   virtual enum loc_api_adapter_err setXtraVersionCheck(enum xtra_version_check check);
+#endif
   virtual void installAGpsCert(const DerEncodedCertificate* pData,
                                size_t length,
                                uint32_t slotBitMask);
