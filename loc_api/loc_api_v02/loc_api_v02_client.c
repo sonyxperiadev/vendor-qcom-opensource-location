@@ -2513,7 +2513,7 @@ locClientStatusEnumType locClientSupportMsgCheck(
 
   if (isCheckedAlready) {
     // already checked modem
-    LOC_LOGV("%s:%d]: Already checked. The supportedMsgChecked is %lld\n",
+    LOC_LOGV("%s:%d]: Already checked. The supportedMsgChecked is %lu\n",
              __func__, __LINE__, supportedMsgChecked);
     *supportedMsg = supportedMsgChecked;
     return eLOC_CLIENT_SUCCESS;
@@ -2573,7 +2573,7 @@ locClientStatusEnumType locClientSupportMsgCheck(
     // check every message listed in msgArray supported by modem or not
     checkQmiMsgsSupported(msgArray, msgArrayLength, &resp, &supportedMsgChecked);
 
-    LOC_LOGV("%s:%d]: supportedMsgChecked is %lld\n",
+    LOC_LOGV("%s:%d]: supportedMsgChecked is %lu\n",
              __func__, __LINE__, supportedMsgChecked);
     *supportedMsg = supportedMsgChecked;
     isCheckedAlready = true;

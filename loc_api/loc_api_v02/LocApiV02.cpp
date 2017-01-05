@@ -186,7 +186,7 @@ LocApiV02 :: open(LOC_API_ADAPTER_EVENT_MASK_T mask)
   enum loc_api_adapter_err rtv = LOC_API_ADAPTER_ERR_SUCCESS;
   LOC_API_ADAPTER_EVENT_MASK_T newMask = mMask | (mask & ~mExcludedMask);
   locClientEventMaskType qmiMask = convertMask(newMask);
-  LOC_LOGD("%s:%d]: Enter mMask: %x; mask: %x; newMask: %x mQmiMask: %lld qmiMask: %lld",
+  LOC_LOGD("%s:%d]: Enter mMask: %x; mask: %x; newMask: %x mQmiMask: %lu qmiMask: %lu",
            __func__, __LINE__, mMask, mask, newMask, mQmiMask, qmiMask);
   /* If the client is already open close it first */
   if(LOC_CLIENT_INVALID_HANDLE_VALUE == clientHandle)
@@ -234,7 +234,7 @@ LocApiV02 :: open(LOC_API_ADAPTER_EVENT_MASK_T mask)
             LOC_LOGE("%s:%d]: Failed to checking QMI_LOC message supported. \n",
                      __func__, __LINE__);
         } else {
-            LOC_LOGV("%s:%d]: supportedMsgList is %lld. \n",
+            LOC_LOGV("%s:%d]: supportedMsgList is %lu. \n",
                      __func__, __LINE__, supportedMsgList);
         }
 
@@ -255,7 +255,7 @@ LocApiV02 :: open(LOC_API_ADAPTER_EVENT_MASK_T mask)
         mQmiMask = qmiMask;
     }
   }
-  LOC_LOGD("%s:%d]: Exit mMask: %x; mask: %x mQmiMask: %lld qmiMask: %lld",
+  LOC_LOGD("%s:%d]: Exit mMask: %x; mask: %x mQmiMask: %lu qmiMask: %lu",
            __func__, __LINE__, mMask, mask, mQmiMask, qmiMask);
 
   return rtv;
@@ -266,14 +266,14 @@ bool LocApiV02 :: registerEventMask(locClientEventMaskType qmiMask)
     if (!mInSession) {
         qmiMask = adjustMaskForNoSession(qmiMask);
     }
-    LOC_LOGD("%s:%d]: mQmiMask=%lld qmiMask=%lld",
+    LOC_LOGD("%s:%d]: mQmiMask=%lu qmiMask=%lu",
              __func__, __LINE__, mQmiMask, qmiMask);
     return locClientRegisterEventMask(clientHandle, qmiMask);
 }
 
 locClientEventMaskType LocApiV02 :: adjustMaskForNoSession(locClientEventMaskType qmiMask)
 {
-    LOC_LOGD("%s:%d]: before qmiMask=%lld",
+    LOC_LOGD("%s:%d]: before qmiMask=%lu",
              __func__, __LINE__, qmiMask);
     if (qmiMask & QMI_LOC_EVENT_MASK_POSITION_REPORT_V02) {
         qmiMask ^= QMI_LOC_EVENT_MASK_POSITION_REPORT_V02;
@@ -287,7 +287,7 @@ locClientEventMaskType LocApiV02 :: adjustMaskForNoSession(locClientEventMaskTyp
     if (qmiMask & QMI_LOC_EVENT_MASK_ENGINE_STATE_V02) {
         qmiMask ^= QMI_LOC_EVENT_MASK_ENGINE_STATE_V02;
     }
-    LOC_LOGD("%s:%d]: after qmiMask=%lld",
+    LOC_LOGD("%s:%d]: after qmiMask=%lu",
              __func__, __LINE__, qmiMask);
     return qmiMask;
 }
@@ -2674,7 +2674,7 @@ getWwanZppFix(GpsLocation &zppLoc)
              zpp_ind.timestampUtc_valid,
              zpp_ind.horUncCircular_valid);
 
-    LOC_LOGD("(%.7f, %.7f), timestamp %llu, accuracy %f",
+    LOC_LOGD("(%.7f, %.7f), timestamp %lu, accuracy %f",
              zpp_ind.latitude,
              zpp_ind.longitude,
              zpp_ind.timestampUtc,
@@ -2692,7 +2692,7 @@ getWwanZppFix(GpsLocation &zppLoc)
         clock_gettime(CLOCK_REALTIME,&time_info_current);
         zppLoc.timestamp = (time_info_current.tv_sec)*1e3 +
                            (time_info_current.tv_nsec)/1e6;
-        LOC_LOGD("zpp timestamp got from system: %llu", zppLoc.timestamp);
+        LOC_LOGD("zpp timestamp got from system: %ld", zppLoc.timestamp);
     }
 
     if ((zpp_ind.latitude_valid == false) ||
@@ -2752,7 +2752,7 @@ getBestAvailableZppFix(GpsLocation &zppLoc, LocPosTechMask &tech_mask)
                   loc_get_v02_qmi_status_name(zpp_ind.status));
     } else {
         LOC_LOGD("Got Zpp fix location validity (lat:%d, lon:%d, timestamp:%d accuracy:%d)"
-                 " (%.7f, %.7f), timestamp %llu, accuracy %f",
+                 " (%.7f, %.7f), timestamp %lu, accuracy %f",
                  zpp_ind.latitude_valid,
                  zpp_ind.longitude_valid,
                  zpp_ind.timestampUtc_valid,
@@ -2774,7 +2774,7 @@ getBestAvailableZppFix(GpsLocation &zppLoc, LocPosTechMask &tech_mask)
             clock_gettime(CLOCK_REALTIME,&time_info_current);
             zppLoc.timestamp = (time_info_current.tv_sec)*1e3 +
                                (time_info_current.tv_nsec)/1e6;
-            LOC_LOGD("zpp timestamp got from system: %llu", zppLoc.timestamp);
+            LOC_LOGD("zpp timestamp got from system: %ld", zppLoc.timestamp);
         }
 
         if (zpp_ind.latitude_valid &&
@@ -2942,7 +2942,7 @@ void LocApiV02 :: installAGpsCert(const DerEncodedCertificate* pData,
                                   size_t numberOfCerts,
                                   uint32_t slotBitMask)
 {
-    LOC_LOGD("%s:%d]:, slot mask=%u number of certs=%u",
+    LOC_LOGD("%s:%d]:, slot mask=%u number of certs=%lu",
             __func__, __LINE__, slotBitMask, numberOfCerts);
 
     uint8_t certIndex = 0;
@@ -2952,7 +2952,7 @@ void LocApiV02 :: installAGpsCert(const DerEncodedCertificate* pData,
         {
             if (certIndex < numberOfCerts && pData[certIndex].data && pData[certIndex].length > 0)
             {
-                LOC_LOGD("%s:%d]:, Inject cert#%u slot=%u length=%u",
+                LOC_LOGD("%s:%d]:, Inject cert#%u slot=%u length=%lu",
                          __func__, __LINE__, certIndex, slot, pData[certIndex].length);
 
                 locClientReqUnionType req_union;

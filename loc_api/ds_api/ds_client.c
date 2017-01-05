@@ -114,9 +114,10 @@ void net_ev_cb(dsi_hndl_t handle, void* user_data,
     {
         for(i=0;i<DSI_EVT_MAX;i++)
         {
-            if(event_string_tbl[i].evt == evt)
+            if(event_string_tbl[i].evt == evt) {
                 LOC_LOGE("%s:%d]: Callback received: %s",
                          __func__, __LINE__, event_string_tbl[i].str);
+            }
         }
         switch(evt) {
         case DSI_EVT_NET_IS_CONN:
