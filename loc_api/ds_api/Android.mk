@@ -37,8 +37,6 @@ LOCAL_LDFLAGS += -Wl,--export-dynamic
 ## Includes
 LOCAL_C_INCLUDES := \
     $(TARGET_OUT_HEADERS)/libloc_eng \
-    $(TARGET_OUT_HEADERS)/qmi-framework/inc \
-    $(TARGET_OUT_HEADERS)/qmi/inc \
     $(TARGET_OUT_HEADERS)/gps.utils \
     $(TARGET_OUT_HEADERS)/data/inc
 
