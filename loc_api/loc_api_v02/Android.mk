@@ -29,10 +29,6 @@ LOCAL_CFLAGS += \
     -fno-short-enums \
     -D_ANDROID_
 
-## Includes
-LOCAL_C_INCLUDES := \
-    $(TARGET_OUT_HEADERS)/qmi-framework/inc
-
 LOCAL_HEADER_LIBRARIES := \
     libloc_core_headers \
     libgps.utils_headers \
