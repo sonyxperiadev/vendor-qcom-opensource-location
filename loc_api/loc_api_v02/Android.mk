@@ -7,7 +7,6 @@ include $(CLEAR_VARS)
 LOCAL_MODULE := libloc_api_v02
 
 LOCAL_MODULE_TAGS := optional
-LOCAL_PROPRIETARY_MODULE := true
 
 ifeq ($(TARGET_DEVICE),apq8026_lw)
 LOCAL_CFLAGS += -DPDK_FEATURE_SET
