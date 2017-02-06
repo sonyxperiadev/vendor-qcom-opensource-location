@@ -1,3 +1,5 @@
+ifneq ($(filter yukon rhine shinano kanuti kitakami loire tone,$(PRODUCT_PLATFORM)),)
+
 ifneq ($(BOARD_VENDOR_QCOM_GPS_LOC_API_HARDWARE),)
 
 LOCAL_PATH := $(call my-dir)
@@ -48,3 +50,5 @@ $(shell ln -sf /firmware/image/gss.mdt $(TARGET_OUT_ETC)/firmware/gss.mdt)
 endif
 
 endif#BOARD_VENDOR_QCOM_GPS_LOC_API_HARDWARE
+
+endif
