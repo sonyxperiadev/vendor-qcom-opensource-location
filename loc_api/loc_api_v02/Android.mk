@@ -25,7 +25,8 @@ LOCAL_SHARED_LIBRARIES := \
     libqmi_common_so \
     libloc_core \
     libgps.utils \
-    libloc_ds_api
+    libloc_ds_api \
+    liblog
 
 LOCAL_SRC_FILES = \
     LocApiV02.cpp \
