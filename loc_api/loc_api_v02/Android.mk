@@ -56,7 +56,8 @@ LOCAL_C_INCLUDES := \
     $(TARGET_OUT_HEADERS)/gps.utils \
     $(TARGET_OUT_HEADERS)/libloc_ds_api
 
-LOCAL_PRELINK_MODULE := false
+LOCAL_MODULE_OWNER := qcom
+LOCAL_PROPRIETARY_MODULE := true
 
 include $(BUILD_SHARED_LIBRARY)
 
