@@ -12,11 +12,7 @@ LOCAL_SHARED_LIBRARIES := \
     libutils \
     libcutils \
     liblog \
-    libqmi_cci \
-    libqmi_common_so \
     libgps.utils \
-    libdsi_netctrl \
-    libqmiservices \
     libloc_pla
 
 LOCAL_SRC_FILES += \
