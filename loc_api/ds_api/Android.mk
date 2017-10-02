@@ -12,7 +12,8 @@ LOCAL_SHARED_LIBRARIES := \
     libutils \
     libcutils \
     libgps.utils \
-    liblog
+    liblog \
+    libloc_loader
 
 LOCAL_SRC_FILES += \
     ds_client.c
