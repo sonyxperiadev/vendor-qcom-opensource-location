@@ -46,6 +46,10 @@
 #include <gps_extended.h>
 #include "platform_lib_includes.h"
 
+extern "C" {
+#include <libloc_loader/libloc_loader.h>
+}
+
 using namespace loc_core;
 
 /* Default session id ; TBD needs incrementing for each */
@@ -188,6 +192,10 @@ LocApiV02 :: open(LOC_API_ADAPTER_EVENT_MASK_T mask)
   locClientEventMaskType qmiMask = convertMask(newMask);
   LOC_LOGD("%s:%d]: Enter mMask: %x; mask: %x; newMask: %x mQmiMask: %lu qmiMask: %lu",
            __func__, __LINE__, mMask, mask, newMask, mQmiMask, qmiMask);
+
+  // load proprietary symbols from their respective libs
+  load_proprietary_symbols();
+
   /* If the client is already open close it first */
   if(LOC_CLIENT_INVALID_HANDLE_VALUE == clientHandle)
   {

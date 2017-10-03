@@ -37,6 +37,7 @@
 #include <utils/Log.h>
 #include <log_util.h>
 #include <loc_log.h>
+#include <libloc_loader/libloc_loader.h>
 #include "../include/qmi_client.h"
 #include "../include/qmi_idl_lib.h"
 #include "../include/dsi_netctrl.h"
@@ -151,6 +152,9 @@ ds_client_qmi_ctrl_point_init(qmi_client_type *p_wds_qmi_client)
     int timeout = 0;
 
     LOC_LOGD("%s:%d]:Enter\n", __func__, __LINE__);
+
+    // load proprietary symbols from their respective libs
+    load_proprietary_symbols();
 
     //Get service object for QMI_WDS service
     qmi_idl_service_object_type ds_client_service_object =
