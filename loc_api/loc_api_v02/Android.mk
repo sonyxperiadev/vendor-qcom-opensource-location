@@ -19,6 +19,7 @@ LOCAL_SHARED_LIBRARIES := \
     libloc_core \
     libgps.utils \
     libdl \
+    libloc_ds_api \
     liblog \
     libloc_loader
 
