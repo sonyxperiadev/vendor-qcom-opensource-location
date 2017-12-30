@@ -250,7 +250,7 @@ LocApiBase* LocApiV02::createLocApiV02(const MsgTask *msgTask,
                       LOC_API_ADAPTER_EVENT_MASK_T exMask,
                       ContextBase* context)
 {
-    if (NULL != msgTask) {
+    if (NULL == msgTask) {
         LOC_LOGE("%s:%d]: msgTask can not be NULL", __func__, __LINE__);
         return NULL;
     }
