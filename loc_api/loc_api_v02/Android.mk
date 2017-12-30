@@ -37,13 +37,12 @@ LOCAL_CFLAGS += \
 
 ## Includes
 LOCAL_C_INCLUDES := \
+    $(TARGET_OUT_HEADERS)/libloc_core \
+    $(TARGET_OUT_HEADERS)/gps.utils \
+    $(TARGET_OUT_HEADERS)/libloc_ds_api \
+    $(TARGET_OUT_HEADERS)/libloc_pla \
+    $(TARGET_OUT_HEADERS)/liblocation_api
 
-LOCAL_HEADER_LIBRARIES := \
-    libloc_core_headers \
-    libgps.utils_headers \
-    libloc_ds_api_headers \
-    libloc_pla_headers \
-    liblocation_api_headers
 LOCAL_CFLAGS += $(GNSS_CFLAGS)
 include $(BUILD_SHARED_LIBRARY)
 
