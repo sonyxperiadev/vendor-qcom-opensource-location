@@ -241,8 +241,7 @@ public:
   virtual enum loc_api_adapter_err
       getBestAvailableZppFix(LocGpsLocation & zppLoc);
   virtual enum loc_api_adapter_err
-      getBestAvailableZppFix(LocGpsLocation & zppLoc, GpsLocationExtended & location_extended,
-              LocPosTechMask & tech_mask);
+      getBestAvailableZppFix(LocGpsLocation & zppLoc, LocPosTechMask & tech_mask);
   virtual int initDataServiceClient(bool isDueToSsr);
   virtual int openAndStartDataCall();
   virtual void stopDataCall();
