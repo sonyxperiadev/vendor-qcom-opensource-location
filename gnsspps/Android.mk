@@ -27,7 +27,25 @@ LOCAL_C_INCLUDES := \
     $(TARGET_OUT_HEADERS)/gps.utils \
     $(TARGET_OUT_HEADERS)/libloc_pla
 
-LOCAL_CFLAGS += $(GNSS_CFLAGS)
+LOCAL_CFLAGS += \
+    -Werror \
+    -Wno-error=unused-parameter \
+    -Wno-error=format \
+    -Wno-error=macro-redefined \
+    -Wno-error=reorder \
+    -Wno-error=missing-braces \
+    -Wno-error=self-assign \
+    -Wno-error=enum-conversion \
+    -Wno-error=logical-op-parentheses \
+    -Wno-error=null-arithmetic \
+    -Wno-error=null-conversion \
+    -Wno-error=parentheses-equality \
+    -Wno-error=undefined-bool-conversion \
+    -Wno-error=tautological-compare \
+    -Wno-error=switch \
+    -Wno-error=date-time \
+    -Wno-error=incompatible-pointer-types
+
 include $(BUILD_SHARED_LIBRARY)
 
 include $(CLEAR_VARS)
