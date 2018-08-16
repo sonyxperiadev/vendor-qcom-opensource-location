@@ -33,7 +33,6 @@ LOCAL_SRC_FILES = \
     location_service_v02.c
 
 LOCAL_CFLAGS += \
-    -Wno-macro-redefined \
     -fno-short-enums \
     -D_ANDROID_
 
