@@ -28,7 +28,6 @@ LOCAL_COPY_HEADERS:= \
     ds_client.h
 
 LOCAL_LDFLAGS += -Wl,--export-dynamic
-LOCAL_CFLAGS += -Wno-macro-redefined
 
 ## Includes
 LOCAL_C_INCLUDES := \
