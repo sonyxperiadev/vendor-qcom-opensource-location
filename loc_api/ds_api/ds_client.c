@@ -111,7 +111,6 @@ static void net_ev_cb
   dsi_evt_payload_t *payload_ptr
 )
 {
-    int i;
     (void)handle;
     (void)user_data;
     (void)payload_ptr;

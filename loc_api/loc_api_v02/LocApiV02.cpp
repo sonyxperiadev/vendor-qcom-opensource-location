@@ -2673,9 +2673,6 @@ void  LocApiV02 :: reportSvMeasurement (
 
   if(1 == gnss_raw_measurement_ptr->rcvrClockFrequencyInfo_valid)
   {
-    qmiLocRcvrClockFrequencyInfoStructT_v02* rcvClockFreqInfo =
-      (qmiLocRcvrClockFrequencyInfoStructT_v02*) &gnss_raw_measurement_ptr->rcvrClockFrequencyInfo;
-
     svMeasurementSet.clockFreq.size         = sizeof(Gnss_LocRcvrClockFrequencyInfoStructType);
     svMeasurementSet.clockFreqValid         = gnss_raw_measurement_ptr->rcvrClockFrequencyInfo_valid;
     svMeasurementSet.clockFreq.clockDrift   =
@@ -2693,9 +2690,6 @@ void  LocApiV02 :: reportSvMeasurement (
   if((1 == gnss_raw_measurement_ptr->leapSecondInfo_valid) &&
      (0 == gnss_raw_measurement_ptr->leapSecondInfo.leapSecUnc) )
   {
-    qmiLocLeapSecondInfoStructT_v02* leapSecond =
-      (qmiLocLeapSecondInfoStructT_v02*)&gnss_raw_measurement_ptr->leapSecondInfo;
-
     svMeasurementSet.leapSec.size       = sizeof(Gnss_LeapSecondInfoStructType);
     svMeasurementSet.leapSecValid       = (bool)gnss_raw_measurement_ptr->leapSecondInfo_valid;
     svMeasurementSet.leapSec.leapSec    = gnss_raw_measurement_ptr->leapSecondInfo.leapSec;
@@ -3351,9 +3345,6 @@ void LocApiV02 :: reportNiRequest(
     // ES SUPL
     if(ni_req_ptr->suplEmergencyNotification_valid ==1)
     {
-        const qmiLocEmergencyNotificationStructT_v02 *supl_emergency_request =
-        &ni_req_ptr->suplEmergencyNotification;
-
         notif.type = GNSS_NI_TYPE_EMERGENCY_SUPL;
     }
 
@@ -4441,7 +4432,6 @@ LocApiV02 :: setGpsLock(GnssConfigGpsLock lock)
 */
 int LocApiV02 :: getGpsLock()
 {
-    qmiLocGetEngineLockReqMsgT_v02 getEngineLockReq;
     qmiLocGetEngineLockIndMsgT_v02 getEngineLockInd;
     locClientStatusEnumType status;
     locClientReqUnionType req_union;
