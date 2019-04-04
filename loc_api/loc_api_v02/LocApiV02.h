@@ -71,6 +71,7 @@ using namespace loc_core;
 typedef struct {
     uint32_t counter;
     qmiLocSvSystemEnumT_v02 system;
+    qmiLocGnssSignalTypeMaskT_v02 gnssSignalType;
     uint16_t gnssSvId;
     qmiLocMeasFieldsValidMaskT_v02 validMask;
     uint8_t cycleSlipCount;
