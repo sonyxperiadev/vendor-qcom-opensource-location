@@ -2083,7 +2083,7 @@ locClientEventMaskType LocApiV02 :: convertMask(
   LOC_API_ADAPTER_EVENT_MASK_T mask)
 {
   locClientEventMaskType eventMask = 0;
-  LOC_LOGD("%s:%d]: adapter mask = %u\n", __func__, __LINE__, mask);
+  LOC_LOGD("%s:%d]: adapter mask = %lu\n", __func__, __LINE__, mask);
 
   if (mask & LOC_API_ADAPTER_BIT_PARSED_POSITION_REPORT)
       eventMask |= QMI_LOC_EVENT_MASK_POSITION_REPORT_V02;
