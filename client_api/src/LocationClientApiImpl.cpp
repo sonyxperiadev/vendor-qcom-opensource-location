@@ -37,6 +37,7 @@
 #include <dlfcn.h>
 #include <loc_misc_utils.h>
 
+
 static uint32_t gDebug = 0;
 
 static const loc_param_s_type gConfigTable[] =
@@ -166,73 +167,68 @@ static GnssLocationSvUsedInPosition parseLocationSvUsedInPosition(
 }
 
 static GnssSignalTypeMask parseGnssSignalType(const ::GnssSignalTypeMask &halGnssSignalTypeMask) {
-    GnssSignalTypeMask gnssSignalTypeMask;
-    switch (halGnssSignalTypeMask) {
-        case GNSS_SIGNAL_GPS_L1CA:
-            gnssSignalTypeMask = GNSS_SIGNAL_GPS_L1CA_BIT;
-            break;
-        case GNSS_SIGNAL_GPS_L1C:
-            gnssSignalTypeMask = GNSS_SIGNAL_GPS_L1C_BIT;
-            break;
-        case GNSS_SIGNAL_GPS_L2:
-            gnssSignalTypeMask = GNSS_SIGNAL_GPS_L2_BIT;
-            break;
-        case GNSS_SIGNAL_GPS_L5:
-            gnssSignalTypeMask = GNSS_SIGNAL_GPS_L5_BIT;
-            break;
-        case GNSS_SIGNAL_GLONASS_G1:
-            gnssSignalTypeMask = GNSS_SIGNAL_GLONASS_G1_BIT;
-            break;
-        case GNSS_SIGNAL_GLONASS_G2:
-            gnssSignalTypeMask = GNSS_SIGNAL_GLONASS_G2_BIT;
-            break;
-        case GNSS_SIGNAL_GALILEO_E1:
-            gnssSignalTypeMask = GNSS_SIGNAL_GALILEO_E1_BIT;
-            break;
-        case GNSS_SIGNAL_GALILEO_E5A:
-            gnssSignalTypeMask = GNSS_SIGNAL_GALILEO_E5A_BIT;
-            break;
-        case GNSS_SIGNAL_GALILEO_E5B:
-            gnssSignalTypeMask = GNSS_SIGNAL_GALILEO_E5B_BIT;
-            break;
-        case GNSS_SIGNAL_BEIDOU_B1I:
-            gnssSignalTypeMask = GNSS_SIGNAL_BEIDOU_B1I_BIT;
-            break;
-        case GNSS_SIGNAL_BEIDOU_B1C:
-            gnssSignalTypeMask = GNSS_SIGNAL_BEIDOU_B1C_BIT;
-            break;
-        case GNSS_SIGNAL_BEIDOU_B2I:
-            gnssSignalTypeMask = GNSS_SIGNAL_BEIDOU_B2I_BIT;
-            break;
-        case GNSS_SIGNAL_BEIDOU_B2AI:
-            gnssSignalTypeMask = GNSS_SIGNAL_BEIDOU_B2AI_BIT;
-            break;
-        case GNSS_SIGNAL_QZSS_L1CA:
-            gnssSignalTypeMask = GNSS_SIGNAL_QZSS_L1CA_BIT;
-            break;
-        case GNSS_SIGNAL_QZSS_L1S:
-            gnssSignalTypeMask = GNSS_SIGNAL_QZSS_L1S_BIT;
-            break;
-        case GNSS_SIGNAL_QZSS_L2:
-            gnssSignalTypeMask = GNSS_SIGNAL_QZSS_L2_BIT;
-            break;
-        case GNSS_SIGNAL_QZSS_L5:
-            gnssSignalTypeMask = GNSS_SIGNAL_QZSS_L5_BIT;
-            break;
-        case GNSS_SIGNAL_SBAS_L1:
-            gnssSignalTypeMask = GNSS_SIGNAL_SBAS_L1_BIT;
-            break;
-        case GNSS_SIGNAL_NAVIC_L5:
-            gnssSignalTypeMask = GNSS_SIGNAL_NAVIC_L5_BIT;
-            break;
-        case GNSS_SIGNAL_BEIDOU_B2AQ:
-            gnssSignalTypeMask = GNSS_SIGNAL_BEIDOU_B2AQ_BIT;
-            break;
-        default:
-            gnssSignalTypeMask = (GnssSignalTypeMask)0xFF;
-            break;
+    uint32_t gnssSignalTypeMask = 0;
+    if (halGnssSignalTypeMask & GNSS_SIGNAL_GPS_L1CA) {
+        gnssSignalTypeMask |= GNSS_SIGNAL_GPS_L1CA_BIT;
     }
-    return gnssSignalTypeMask;
+    if (halGnssSignalTypeMask & GNSS_SIGNAL_GPS_L1C) {
+        gnssSignalTypeMask |= GNSS_SIGNAL_GPS_L1C_BIT;
+    }
+    if (halGnssSignalTypeMask & GNSS_SIGNAL_GPS_L2) {
+        gnssSignalTypeMask |= GNSS_SIGNAL_GPS_L2_BIT;
+    }
+    if (halGnssSignalTypeMask & GNSS_SIGNAL_GPS_L5) {
+        gnssSignalTypeMask |= GNSS_SIGNAL_GPS_L5_BIT;
+    }
+    if (halGnssSignalTypeMask & GNSS_SIGNAL_GLONASS_G1) {
+        gnssSignalTypeMask |= GNSS_SIGNAL_GLONASS_G1_BIT;
+    }
+    if (halGnssSignalTypeMask & GNSS_SIGNAL_GLONASS_G2) {
+        gnssSignalTypeMask |= GNSS_SIGNAL_GLONASS_G2_BIT;
+    }
+    if (halGnssSignalTypeMask & GNSS_SIGNAL_GALILEO_E1) {
+        gnssSignalTypeMask |= GNSS_SIGNAL_GALILEO_E1_BIT;
+    }
+    if (halGnssSignalTypeMask & GNSS_SIGNAL_GALILEO_E5A) {
+        gnssSignalTypeMask |= GNSS_SIGNAL_GALILEO_E5A_BIT;
+    }
+    if (halGnssSignalTypeMask & GNSS_SIGNAL_GALILEO_E5B) {
+        gnssSignalTypeMask |= GNSS_SIGNAL_GALILEO_E5B_BIT;
+    }
+    if (halGnssSignalTypeMask & GNSS_SIGNAL_BEIDOU_B1I) {
+        gnssSignalTypeMask |= GNSS_SIGNAL_BEIDOU_B1I_BIT;
+    }
+    if (halGnssSignalTypeMask & GNSS_SIGNAL_BEIDOU_B1C) {
+        gnssSignalTypeMask |= GNSS_SIGNAL_BEIDOU_B1C_BIT;
+    }
+    if (halGnssSignalTypeMask & GNSS_SIGNAL_BEIDOU_B2I) {
+        gnssSignalTypeMask |= GNSS_SIGNAL_BEIDOU_B2I_BIT;
+    }
+    if (halGnssSignalTypeMask & GNSS_SIGNAL_BEIDOU_B2AI) {
+        gnssSignalTypeMask |= GNSS_SIGNAL_BEIDOU_B2AI_BIT;
+    }
+    if (halGnssSignalTypeMask & GNSS_SIGNAL_QZSS_L1CA) {
+        gnssSignalTypeMask |= GNSS_SIGNAL_QZSS_L1CA_BIT;
+    }
+    if (halGnssSignalTypeMask & GNSS_SIGNAL_QZSS_L1S) {
+        gnssSignalTypeMask |= GNSS_SIGNAL_QZSS_L1S_BIT;
+    }
+    if (halGnssSignalTypeMask & GNSS_SIGNAL_QZSS_L2) {
+        gnssSignalTypeMask |= GNSS_SIGNAL_QZSS_L2_BIT;
+    }
+    if (halGnssSignalTypeMask & GNSS_SIGNAL_QZSS_L5) {
+        gnssSignalTypeMask |= GNSS_SIGNAL_QZSS_L5_BIT;
+    }
+    if (halGnssSignalTypeMask & GNSS_SIGNAL_SBAS_L1) {
+        gnssSignalTypeMask |= GNSS_SIGNAL_SBAS_L1_BIT;
+    }
+    if (halGnssSignalTypeMask & GNSS_SIGNAL_NAVIC_L5) {
+        gnssSignalTypeMask |= GNSS_SIGNAL_NAVIC_L5_BIT;
+    }
+    if (halGnssSignalTypeMask & GNSS_SIGNAL_BEIDOU_B2AQ) {
+        gnssSignalTypeMask |= GNSS_SIGNAL_BEIDOU_B2AQ_BIT;
+    }
+    return (GnssSignalTypeMask)gnssSignalTypeMask;
 }
 
 static void parseGnssMeasUsageInfo(const ::GnssLocationInfoNotification &halLocationInfo,
@@ -751,10 +747,11 @@ static GnssSv parseGnssSv(const ::GnssSv &halGnssSv) {
     if (GNSS_SV_OPTIONS_HAS_CARRIER_FREQUENCY_BIT & halGnssSv.gnssSvOptionsMask) {
         gnssSvOptionsMask |= GNSS_SV_OPTIONS_HAS_CARRIER_FREQUENCY_BIT;
     }
-    gnssSv.carrierFrequencyHz = halGnssSv.carrierFrequencyHz;
+    gnssSvOptionsMask |= GNSS_SV_OPTIONS_HAS_GNSS_SIGNAL_TYPE_BIT;
     gnssSv.gnssSvOptionsMask = (GnssSvOptionsMask)gnssSvOptionsMask;
-    gnssSv.gnssSignalTypeMask = parseGnssSignalType(halGnssSv.gnssSignalTypeMask);
 
+    gnssSv.carrierFrequencyHz = halGnssSv.carrierFrequencyHz;
+    gnssSv.gnssSignalTypeMask = parseGnssSignalType(halGnssSv.gnssSignalTypeMask);
     return gnssSv;
 }
 
@@ -839,7 +836,8 @@ public:
     inline IpcListener(LocationClientApiImpl& apiImpl, MsgTask& msgTask) :
             mMsgTask(msgTask), mApiImpl(apiImpl) {}
     virtual void onListenerReady() override;
-    virtual void onReceive(const char* data, uint32_t length) override;
+    virtual void onReceive(const char* data, uint32_t length,
+                           const LocIpcRecver* recver) override;
 };
 
 /******************************************************************************
@@ -1036,10 +1034,14 @@ void LocationClientApiImpl::updateCallbacks(LocationCallbacks& callbacks) {
             //convert callbacks to callBacksMask
             LocationCallbacksMask callBacksMask = 0;
             if (mCallBacks.trackingCb) {
-                callBacksMask |= E_LOC_CB_TRACKING_BIT;
+                callBacksMask |= E_LOC_CB_DISTANCE_BASED_TRACKING_BIT;
             }
             if (mCallBacks.gnssLocationInfoCb) {
-                callBacksMask |= E_LOC_CB_GNSS_LOCATION_INFO_BIT;
+                if (mApiImpl->mLocationCb) {
+                    callBacksMask |= E_LOC_CB_SIMPLE_LOCATION_INFO_BIT;
+                } else {
+                    callBacksMask |= E_LOC_CB_GNSS_LOCATION_INFO_BIT;
+                }
             }
             if (mCallBacks.engineLocationsInfoCb) {
                 callBacksMask |= E_LOC_CB_ENGINE_LOCATIONS_INFO_BIT;
@@ -1773,7 +1775,8 @@ void IpcListener::onListenerReady() {
     mMsgTask.sendMsg(new (nothrow) ClientRegisterReq(mApiImpl));
 }
 
-void IpcListener::onReceive(const char* data, uint32_t length) {
+void IpcListener::onReceive(const char* data, uint32_t length,
+                            const LocIpcRecver* recver) {
     struct OnReceiveHandler : public LocMsg {
 #ifndef FEATURE_EXTERNAL_AP
         OnReceiveHandler(LocationClientApiImpl& apiImpl, IpcListener& listener,
@@ -1881,8 +1884,10 @@ void IpcListener::onReceive(const char* data, uint32_t length) {
                     LOC_LOGw("payload size does not match for message with id: %d",
                              pMsg->msgId);
                 }
+                LocationCallbacksMask tempMask =
+                        (E_LOC_CB_DISTANCE_BASED_TRACKING_BIT | E_LOC_CB_SIMPLE_LOCATION_INFO_BIT);
                 if ((mApiImpl.mSessionId != LOCATION_CLIENT_SESSION_ID_INVALID) &&
-                        (mApiImpl.mCallbacksMask & E_LOC_CB_TRACKING_BIT)) {
+                        (mApiImpl.mCallbacksMask & tempMask)) {
                     const LocAPILocationIndMsg* pLocationIndMsg = (LocAPILocationIndMsg*)(pMsg);
                     Location location = parseLocation(pLocationIndMsg->locationNotification);
                     if (mApiImpl.mLocationCb) {
@@ -2058,6 +2063,29 @@ void IpcListener::onReceive(const char* data, uint32_t length) {
                         each += '\n';
                         mApiImpl.mGnssNmeaCb(timestamp, each);
                     }
+
+#ifndef FEATURE_EXTERNAL_AP
+                    if (!mDiagInterface) {
+                        break;
+                    }
+                    size_t diagBufferSize = sizeof(clientDiagGnssNmeaStructType) +
+                            pNmeaIndMsg->gnssNmeaNotification.length - 1;
+                    diagBuffSrc bufferSrc = BUFFER_INVALID;
+                    clientDiagGnssNmeaStructType* diagGnssNmeaPtr = nullptr;
+                    diagGnssNmeaPtr = (clientDiagGnssNmeaStructType*)
+                        mDiagInterface->logAlloc(LOG_GNSS_CLIENT_API_NMEA_REPORT_C,
+                                diagBufferSize, &bufferSrc);
+                    if (diagGnssNmeaPtr == NULL) {
+                        LOC_LOGv("memory alloc failed");
+                        break;
+                    }
+                    populateClientDiagNmea(diagGnssNmeaPtr, pNmeaIndMsg->gnssNmeaNotification);
+                    diagGnssNmeaPtr->version = LOG_CLIENT_NMEA_REPORT_DIAG_MSG_VERSION;
+
+                    mDiagInterface->logCommit(diagGnssNmeaPtr, bufferSrc,
+                            LOG_GNSS_CLIENT_API_NMEA_REPORT_C,
+                            sizeof(clientDiagGnssNmeaStructType));
+#endif // FEATURE_EXTERNAL_AP
                 }
                 break;
             }

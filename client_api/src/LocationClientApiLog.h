@@ -40,6 +40,13 @@
 #define CLIENT_DIAG_GNSS_SV_MAX            (176)
 #define LOG_CLIENT_LOCATION_DIAG_MSG_VERSION        (1)
 #define LOG_CLIENT_SV_REPORT_DIAG_MSG_VERSION       (2)
+#define LOG_CLIENT_NMEA_REPORT_DIAG_MSG_VERSION     (1)
+
+
+#ifndef LOG_GNSS_CLIENT_API_NMEA_REPORT_C
+#define LOG_GNSS_CLIENT_API_NMEA_REPORT_C (0x1CB2)
+#endif
+
 
 namespace location_client
 {
@@ -99,8 +106,7 @@ typedef enum
     CLIENT_DIAG_GNSS_LOC_SV_SYSTEM_GALILEO                = 2,
     /** SBAS satellite. */
     CLIENT_DIAG_GNSS_LOC_SV_SYSTEM_SBAS                   = 3,
-    /** COMPASS satellite. */
-    CLIENT_DIAG_GNSS_LOC_SV_SYSTEM_COMPASS                = 4,
+    //Leave 4 blank for backward compatibility.
     /** GLONASS satellite. */
     CLIENT_DIAG_GNSS_LOC_SV_SYSTEM_GLONASS                = 5,
     /** BDS satellite. */
@@ -628,6 +634,22 @@ typedef PACKED struct PACKED_POST {
     uint32_t count;
     clientDiagGnssSv gnssSvs[CLIENT_DIAG_GNSS_SV_MAX];
 } clientDiagGnssSvStructType;
+
+
+typedef PACKED struct PACKED_POST {
+    /** Used by Logging Module
+      *  Mandatory field */
+    log_hdr_type logHeader;
+    /** clientDiag Message Version
+     *  Mandatory field */
+    uint8 version;
+/** Timestamp of NMEA generation */
+    uint64_t timestamp;
+/** Length of nmea data */
+    uint32_t nmeaLength;
+/** One or more nmea strings separated by \n charachter */
+    uint8_t nmea[1];
+} clientDiagGnssNmeaStructType;
 
 }
 #endif /*LOCATION_CLIENT_API_LOG_H */
