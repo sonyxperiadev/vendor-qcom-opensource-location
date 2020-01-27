@@ -1,5 +1,5 @@
 ifeq ($(PRODUCT_PLATFORM_SOD),true)
-ifeq ($(TARGET_KERNEL_VERSION), 4.14)
+ifneq (,$(filter $(strip $(SOMC_KERNEL_VERSION)),4.9 4.14))
 LOCAL_PATH := $(call my-dir)
 include $(LOCAL_PATH)/build/target_specific_features.mk
 include $(call all-makefiles-under,$(LOCAL_PATH))
