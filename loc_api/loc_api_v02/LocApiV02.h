@@ -284,7 +284,7 @@ public:
     Current value of GPS Lock on success
     -1 on failure
   */
-  virtual int getGpsLock(void);
+  virtual int getGpsLock(uint8_t /*subType*/);
   virtual int setSvMeasurementConstellation(const qmiLocGNSSConstellEnumT_v02 svConstellation);
   virtual LocationError setXtraVersionCheck(uint32_t check);
   virtual void installAGpsCert(const LocDerEncodedCertificate* pData,

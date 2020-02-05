@@ -4430,7 +4430,7 @@ LocApiV02 :: setGpsLock(GnssConfigGpsLock lock)
   Current value of GPS Lock on success
   -1 on failure
 */
-int LocApiV02 :: getGpsLock()
+int LocApiV02 :: getGpsLock(uint8_t subType)
 {
     qmiLocGetEngineLockIndMsgT_v02 getEngineLockInd;
     locClientStatusEnumType status;
