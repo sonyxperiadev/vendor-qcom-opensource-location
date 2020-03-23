@@ -4,9 +4,9 @@
 
 #include <log/log.h>
 
-#include "../include/qmi_client.h"
-#include "../include/qmi_idl_lib.h"
-#include "../include/dsi_netctrl.h"
+#include "qmi_client.h"
+#include "qmi_idl_lib.h"
+#include "dsi_netctrl.h"
 #include "libloc_loader.h"
 
 qmi_idl_type_table_object common_qmi_idl_type_table_object_v01;
