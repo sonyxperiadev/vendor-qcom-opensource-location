@@ -31,6 +31,7 @@ LOCAL_CFLAGS += \
 
 LOCAL_HEADER_LIBRARIES := \
     libloc_loader_headers \
+    libloc_api_qmi_headers \
     libloc_core_headers \
     libgps.utils_headers \
     libloc_pla_headers \
