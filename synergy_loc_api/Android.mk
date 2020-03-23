@@ -14,12 +14,11 @@ LOCAL_VENDOR_MODULE := true
 LOCAL_SHARED_LIBRARIES := \
     libutils \
     libcutils \
-    libqmi_cci \
-    libqmi_common_so \
     libloc_core \
     libgps.utils \
     libdl \
-    liblog
+    liblog \
+    libloc_loader
 
 LOCAL_SRC_FILES = \
     SynergyLocApi.cpp
@@ -30,6 +29,7 @@ LOCAL_CFLAGS += \
 
 ## Includes
 LOCAL_HEADER_LIBRARIES := \
+    libloc_loader_headers \
     libloc_core_headers \
     libgps.utils_headers \
     libloc_pla_headers \
