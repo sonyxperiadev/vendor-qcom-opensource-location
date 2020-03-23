@@ -9,6 +9,8 @@
 #include "../include/dsi_netctrl.h"
 #include "libloc_loader.h"
 
+qmi_idl_type_table_object common_qmi_idl_type_table_object_v01;
+
 void *lib_handle = NULL;
 
 void load_from_libdsi_netctrl() {
