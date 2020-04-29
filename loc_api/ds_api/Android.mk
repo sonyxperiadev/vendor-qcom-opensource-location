@@ -19,10 +19,7 @@ LOCAL_CFLAGS += \
     -fno-short-enums \
     -D_ANDROID_
 
-LOCAL_COPY_HEADERS_TO:= libloc_ds_api/
-
-LOCAL_COPY_HEADERS:= \
-    ds_client.h
+LOCAL_EXPORT_C_INCLUDE_DIRS := $(LOCAL_PATH)
 
 LOCAL_LDFLAGS += -Wl,--export-dynamic
 
@@ -39,8 +36,3 @@ LOCAL_HEADER_LIBRARIES := \
     libloc_pla_headers
 LOCAL_CFLAGS += $(GNSS_CFLAGS)
 include $(BUILD_SHARED_LIBRARY)
-
-include $(CLEAR_VARS)
-LOCAL_MODULE := libloc_ds_api_headers
-LOCAL_EXPORT_C_INCLUDE_DIRS := $(LOCAL_PATH)
-include $(BUILD_HEADER_LIBRARY)
