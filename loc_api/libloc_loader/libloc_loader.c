@@ -6,6 +6,7 @@
 
 #include "qmi_client.h"
 #include "qmi_idl_lib.h"
+#include "qmi_socket.h"
 #include "dsi_netctrl.h"
 #include "libloc_loader.h"
 
@@ -62,9 +63,26 @@ void load_from_libqmiservices() {
     }
 }
 
+#ifdef USE_QSOCKET
+ipcr_find_name_t ipcr_find_name;
+
+void load_from_libqsocket_so() {
+    lib_handle = dlopen(LIBQSOCKET, RTLD_NOW);
+    if (!lib_handle) {
+        ALOGE("%s: DLOPEN failed for %s", __func__, LIBQSOCKET);
+    } else {
+        ipcr_find_name = dlsym(lib_handle, "ipcr_find_name");
+    }
+}
+#else
+void load_from_libqsocket_so() {
+}
+#endif
+
 void load_proprietary_symbols() {
    load_from_libdsi_netctrl();
    load_from_libqmi_cci();
    load_from_libqmi_common_so();
    load_from_libqmiservices();
+   load_from_libqsocket_so();
 }
