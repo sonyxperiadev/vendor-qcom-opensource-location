@@ -16,6 +16,12 @@ LOCAL_SRC_FILES += \
 
 LOCAL_HEADER_LIBRARIES := libcutils_headers libutils_headers
 
+ifeq ($(TARGET_KERNEL_VERSION),$(filter $(TARGET_KERNEL_VERSION),3.18 4.4 4.9))
+LOCAL_CFLAGS += -DUSE_QSOCKET
+LOCAL_HEADER_LIBRARIES += \
+    device_kernel_headers
+endif
+
 LOCAL_PROPRIETARY_MODULE := true
 
 include $(CLEAR_VARS)
