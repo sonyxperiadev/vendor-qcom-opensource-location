@@ -104,11 +104,11 @@ typedef struct {
 */
 typedef struct {
     void (*onAPListAvailable)(const NlpAPInfo* ap_list, uint16_t ap_list_count,
-            ApBsListStatus ap_status, NlpLocation location);
+            ApBsListStatus ap_status, NlpLocation location, const void* clientData);
     void (*onLookupRequest)(const NlpAPInfo* ap_list, uint16_t ap_list_count, NlpLocation location,
-            bool is_emergency);
-    void (*onStatusUpdate)(bool is_success, const char* error);
-    void (*onServiceRequest)(bool is_emergency);
+            bool is_emergency, const void* clientData);
+    void (*onStatusUpdate)(bool is_success, const char* error, const void* clientData);
+    void (*onServiceRequest)(bool is_emergency, const void* clientData);
 } WiFiDBReceiverResponseListener;
 
 #endif /* WIFI_DB_REC_H */
