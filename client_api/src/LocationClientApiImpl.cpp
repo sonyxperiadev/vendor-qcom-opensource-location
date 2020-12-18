@@ -782,6 +782,9 @@ static GnssSv parseGnssSv(const ::GnssSv &halGnssSv) {
 
         case ::GNSS_SV_TYPE_GLONASS:
             gnssSv.type = GNSS_SV_TYPE_GLONASS;
+            if (isGloSlotUnknown(halGnssSv.svId)) { // OSN is not known, report FCN
+                gnssSv.svId = halGnssSv.gloFrequency + 96;
+            }
             break;
 
         case ::GNSS_SV_TYPE_QZSS:
@@ -828,6 +831,7 @@ static GnssSv parseGnssSv(const ::GnssSv &halGnssSv) {
 
     gnssSv.carrierFrequencyHz = halGnssSv.carrierFrequencyHz;
     gnssSv.gnssSignalTypeMask = parseGnssSignalType(halGnssSv.gnssSignalTypeMask);
+    gnssSv.gloFrequency = halGnssSv.gloFrequency;
     return gnssSv;
 }
 

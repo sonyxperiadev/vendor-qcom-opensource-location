@@ -233,7 +233,8 @@ static void onGnssSvCb(const std::vector<location_client::GnssSv>& gnssSvs) {
     std::stringstream ss;
     ss << "<<< onGnssSvCb c=" << numGnssSvCb << " s=" << gnssSvs.size();
     for (auto sv : gnssSvs) {
-        ss << " " << sv.type << ":" << sv.svId << "/" << (uint32_t)sv.cN0Dbhz;
+        ss << " " << sv.type << ":" << sv.svId << "/" << (uint32_t)sv.cN0Dbhz << "/"
+                << (uint32_t)sv.gloFrequency;
     }
     printf("%s\n", ss.str().c_str());
 }
