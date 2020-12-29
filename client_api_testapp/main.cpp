@@ -74,28 +74,29 @@ static int autoTestTimeoutSec = 0x7FFFFFFF;
 
 #define DISABLE_REPORT_OUTPUT "disableReportOutput"
 #define ENABLE_REPORT_OUTPUT  "enableReportOutput"
-#define DISABLE_TUNC       "disableTunc"
-#define ENABLE_TUNC        "enableTunc"
-#define DISABLE_PACE       "disablePACE"
-#define ENABLE_PACE        "enablePACE"
-#define RESET_SV_CONFIG    "resetSVConfig"
-#define CONFIG_SV          "configSV"
-#define CONFIG_SECONDARY_BAND     "configSecondaryBand"
-#define GET_SECONDARY_BAND_CONFIG "getSecondaryBandConfig"
-#define MULTI_CONFIG_SV    "multiConfigSV"
-#define DELETE_ALL         "deleteAll"
-#define DELETE_AIDING_DATA "deleteAidingData"
-#define CONFIG_LEVER_ARM   "configLeverArm"
-#define CONFIG_ROBUST_LOCATION  "configRobustLocation"
+#define DISABLE_TUNC          "disableTunc"
+#define ENABLE_TUNC           "enableTunc"
+#define DISABLE_PACE          "disablePACE"
+#define ENABLE_PACE           "enablePACE"
+#define RESET_SV_CONFIG       "resetSVConfig"
+#define CONFIG_SV             "configSV"
+#define CONFIG_SECONDARY_BAND      "configSecondaryBand"
+#define GET_SECONDARY_BAND_CONFIG  "getSecondaryBandConfig"
+#define MULTI_CONFIG_SV            "multiConfigSV"
+#define DELETE_ALL                 "deleteAll"
+#define DELETE_AIDING_DATA         "deleteAidingData"
+#define CONFIG_LEVER_ARM           "configLeverArm"
+#define CONFIG_ROBUST_LOCATION     "configRobustLocation"
 #define GET_ROBUST_LOCATION_CONFIG "getRobustLocationConfig"
-#define CONFIG_MIN_GPS_WEEK "configMinGpsWeek"
-#define GET_MIN_GPS_WEEK    "getMinGpsWeek"
-#define CONFIG_DR_ENGINE    "configDrEngine"
-#define CONFIG_MIN_SV_ELEVATION "configMinSvElevation"
-#define GET_MIN_SV_ELEVATION    "getMinSvElevation"
-#define CONFIG_ENGINE_RUN_STATE "configEngineRunState"
-#define SET_USER_CONSENT    "setUserConsentForTerrestrialPositioning"
+#define CONFIG_MIN_GPS_WEEK        "configMinGpsWeek"
+#define GET_MIN_GPS_WEEK           "getMinGpsWeek"
+#define CONFIG_DR_ENGINE           "configDrEngine"
+#define CONFIG_MIN_SV_ELEVATION    "configMinSvElevation"
+#define GET_MIN_SV_ELEVATION       "getMinSvElevation"
+#define CONFIG_ENGINE_RUN_STATE    "configEngineRunState"
+#define SET_USER_CONSENT           "setUserConsentForTerrestrialPositioning"
 #define GET_SINGLE_GTP_WWAN_FIX    "getSingleGtpWwanFix"
+#define CONFIG_NMEA_TYPES          "configOutputNmeaTypes"
 
 // debug utility
 static uint64_t getTimestampMs() {
@@ -323,6 +324,7 @@ static void printHelp() {
     printf("%s: config engine run state\n", CONFIG_ENGINE_RUN_STATE);
     printf("%s: set user consent for terrestrial positioning 0/1\n", SET_USER_CONSENT);
     printf("%s: get single shot wwan fix\n", GET_SINGLE_GTP_WWAN_FIX);
+    printf("%s: config nmea types \n", CONFIG_NMEA_TYPES);
 }
 
 void setRequiredPermToRunAsLocClient() {
@@ -926,6 +928,16 @@ int main(int argc, char *argv[]) {
             }
             pClient->getSingleTerrestrialPosition(timeoutMsec, (TerrestrialTechnologyMask) techMask,
                                                   horQoS, onGtpLocationCb, onGtpResponseCb);
+        } else if (strncmp(buf, CONFIG_NMEA_TYPES, strlen(CONFIG_NMEA_TYPES)) == 0) {
+            static char *save = nullptr;
+            NmeaTypesMask nmeaTypes = (NmeaTypesMask) NMEA_TYPE_ALL;
+            char* token = strtok_r(buf, " ", &save);
+            token = strtok_r(NULL, " ", &save);
+            if (token != NULL) {
+                nmeaTypes = (NmeaTypesMask) strtoul(token, &save, 10);
+            }
+            printf("nmeaTypes 0x%x\n", nmeaTypes);
+            pIntClient->configOutputNmeaTypes(nmeaTypes);
         } else {
             int command = buf[0];
             switch(command) {

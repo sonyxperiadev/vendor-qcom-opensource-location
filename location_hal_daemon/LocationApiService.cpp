@@ -597,6 +597,17 @@ void LocationApiService::processClientMsg(const char* data, uint32_t length) {
             break;
         }
 
+        case E_INTAPI_CONFIG_OUTPUT_NMEA_TYPES_MSG_ID: {
+            PBLocConfigOutputNmeaTypesReqMsg pbMsg;
+            if (0 == pbMsg.ParseFromString(pbLocApiMsg.payload())) {
+                LOC_LOGe("Failed to parse PBLocConfigOutputNmeaTypesReqMsg from payload!!");
+                return;
+            }
+            LocConfigOutputNmeaTypesReqMsg msg(sockName.c_str(), pbMsg, &mPbufMsgConv);
+            configOutputNmeaTypes(reinterpret_cast<LocConfigOutputNmeaTypesReqMsg*>(&msg));
+            break;
+        }
+
         case E_INTAPI_GET_ROBUST_LOCATION_CONFIG_REQ_MSG_ID: {
             getGnssConfig(&locApiMsg, GNSS_CONFIG_FLAGS_ROBUST_LOCATION_BIT);
             break;
@@ -1266,6 +1277,17 @@ void LocationApiService::configUserConsentTerrestrialPositioning(
     }
 
     uint32_t sessionId = mLocationControlApi->setOptInStatus(pMsg->mUserConsent);
+    addConfigRequestToMap(sessionId, pMsg);
+}
+
+void LocationApiService::configOutputNmeaTypes(const LocConfigOutputNmeaTypesReqMsg* pMsg) {
+    if (!pMsg) {
+        return;
+    }
+    std::lock_guard<std::mutex> lock(mMutex);
+
+    LOC_LOGi(">-- client %s, mEnabledNmeaTypes 0x%x",  pMsg->mSocketName, pMsg->mEnabledNmeaTypes);
+    uint32_t sessionId = mLocationControlApi->configOutputNmeaTypes(pMsg->mEnabledNmeaTypes);
     addConfigRequestToMap(sessionId, pMsg);
 }
 

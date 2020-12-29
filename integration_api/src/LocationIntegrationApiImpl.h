@@ -91,6 +91,11 @@ typedef struct {
     bool userConsent;
 } GtpUserConsentConfigInfo;
 
+typedef struct {
+    bool isValid;
+    GnssNmeaTypesMask enabledNmeaTypes;
+} NmeaConfigInfo;
+
 class IpcListener;
 
 class LocationIntegrationApiImpl : public ILocationControlAPI {
@@ -135,6 +140,8 @@ public:
 
     uint32_t setUserConsentForTerrestrialPositioning(bool userConsent);
 
+    uint32_t configOutputNmeaTypes(GnssNmeaTypesMask enabledNmeaTypes) override;
+
 private:
     ~LocationIntegrationApiImpl();
     bool integrationClientAllowed();
@@ -178,7 +185,7 @@ private:
     DeadReckoningEngineConfigInfo mDreConfigInfo;
     LocConfigEngRunStateMap       mEngRunStateConfigMap;
     GtpUserConsentConfigInfo      mGtpUserConsentConfigInfo;
-
+    NmeaConfigInfo                mNmeaConfigInfo;
     LocConfigReqCntMap       mConfigReqCntMap;
     LocIntegrationCbs        mIntegrationCbs;
 
