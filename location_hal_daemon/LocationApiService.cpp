@@ -132,7 +132,8 @@ LocationApiService::LocationApiService(const configParamToRead & configParamRead
     mMsgTask(new MsgTask("LocHalDaemonMaintenanceMsgTask", false)),
     mMaintTimer(this),
     mGtpWwanSsLocationApi(nullptr),
-    mOptInTerrestrialService(-1)
+    mOptInTerrestrialService(-1),
+    mGtpWwanSsLocationApiCallbacks{}
 #ifdef POWERMANAGER_ENABLED
     ,mPowerEventObserver(nullptr)
 #endif
@@ -1410,7 +1411,9 @@ void LocationApiService::onGtpWwanTrackingCallback(Location location) {
 
         for (auto it = mTerrestrialFixReqs.begin(); it != mTerrestrialFixReqs.end();) {
             LocHalDaemonClientHandler* pClient = getClient(it->first);
-            pClient->sendTerrestrialFix(LOCATION_ERROR_SUCCESS, location);
+            if (pClient) {
+                pClient->sendTerrestrialFix(LOCATION_ERROR_SUCCESS, location);
+            }
             ++it;
         }
         mTerrestrialFixReqs.clear();
