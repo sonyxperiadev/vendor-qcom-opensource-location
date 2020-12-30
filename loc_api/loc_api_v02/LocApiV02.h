@@ -31,11 +31,17 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+#include <loc_pla.h>
 #include <LocApiBase.h>
 #include <loc_api_v02_client.h>
 #include <vector>
 #include <functional>
-#include <unordered_map>
+#ifdef NO_UNORDERED_SET_OR_MAP
+    #include <map>
+    #define unordered_map map
+#else
+    #include <unordered_map>
+#endif
 
 #define LOC_SEND_SYNC_REQ(NAME, ID, REQ)  \
     int rv = true; \

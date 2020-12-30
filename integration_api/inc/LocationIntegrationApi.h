@@ -29,10 +29,14 @@
 #ifndef LOCATION_INTEGRATION_API_H
 #define LOCATION_INTEGRATION_API_H
 
-#include <unordered_set>
+#include <loc_pla.h>
 #ifdef NO_UNORDERED_SET_OR_MAP
+    #include <set>
     #include <map>
+    #define unordered_set set
+    #define unordered_map map
 #else
+    #include <unordered_set>
     #include <unordered_map>
 #endif
 

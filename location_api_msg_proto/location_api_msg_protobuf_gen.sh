@@ -108,13 +108,13 @@ fi
 ## Output path - eg: <WSP>/../build-qti-distro-fullstack-perf/tmp-glibc/work/x86_64-linux/protobuf-native
 
 # protobuf native out path default - for LE/LV
-protobuf_protoc_path=$wsp_path"poky/build/tmp-glibc/sysroots-components/x86_64/protobuf-native/usr/bin/protoc"
+protobuf_protoc_search_base="${wsp_path}poky/build/tmp-glibc"
 
 # find protoc path based on target type
 if [ -e $wsp_path"sources/meta-qti-eap/recipes-location/location/gps-utils_git.bb" ]
 then
     manifest_info="LE-EAP"
-    protobuf_protoc_path=$wsp_path"build/tmp/sysroots-components/x86_64/protobuf-native/usr/bin/protoc"
+    protobuf_protoc_search_base="${wsp_path}build/tmp"
 elif [ -e "$wsp_path/../poky/qti-conf/set_bb_env.sh" ]
 then
     manifest_info="LE-PDK"
@@ -125,7 +125,7 @@ then
         exit 1
     fi
     echo "LE PDK - Using build folder ${build_folders[0]}"
-    protobuf_protoc_path=$wsp_path"../"${build_folders[0]}"/tmp-glibc/sysroots-components/x86_64/protobuf-native/usr/bin/protoc"
+    protobuf_protoc_search_base="${wsp_path}../${build_folders[0]}/tmp-glibc"
 elif [ -e $wsp_path"meta-qti-bsp/meta-qti-base/recipes-location/location/gps-utils_git.bb" ]
 then
     manifest_info="LV"
@@ -133,6 +133,7 @@ else
     manifest_info="LE"
 fi
 
+protobuf_protoc_path="$(find ${protobuf_protoc_search_base}/sysroots*/x86_64* -type f -name protoc)"
 echo "Target is $manifest_info"
 echo "Binary protoc path is : $protobuf_protoc_path"
 if ! [ -e $protobuf_protoc_path ]
