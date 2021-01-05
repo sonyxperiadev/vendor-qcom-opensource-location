@@ -1,4 +1,4 @@
-/* Copyright (c) 2018-2020, The Linux Foundation. All rights reserved.
+/* Copyright (c) 2018-2021, The Linux Foundation. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -1571,6 +1571,8 @@ struct GnssMeasurements {
     GnssMeasurementsClock clock;
     /** GNSS measurements data. <br/>   */
     std::vector<GnssMeasurementsData> measurements;
+    /** NHz measurements indicator */
+    bool isNhz;
     /** Method to print the struct to human readable form, for logging.
      *  <br/> */
     string toString() const;
