@@ -4739,6 +4739,8 @@ int LocationApiPbMsgConv::pbConvertToGnssAidingData(const PBAidingData &pbGnssAi
 
     // uint32 gnssAidingDataSvMask = 2; - bitwise OR of PBLocApiGnssAidingDataSvMask
     gnssAidData.sv.svMask = getGnssAidingDataSvMaskFromPB(pbGnssAidData.gnssaidingdatasvmask());
+    // set sv type mask
+    gnssAidData.sv.svTypeMask = GNSS_AIDING_DATA_SV_TYPE_MASK_ALL;
 
     // uint32 dreAidingDataMask = 3;- PBDrEngineAidingDataMask
     gnssAidData.dreAidingDataMask = getDrEngineAidingDataMaskFromPB(
