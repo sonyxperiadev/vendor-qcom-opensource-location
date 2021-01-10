@@ -133,7 +133,7 @@ else
     manifest_info="LE"
 fi
 
-protobuf_protoc_path="$(find ${protobuf_protoc_search_base}/sysroots*/x86_64* -type f -name protoc)"
+protobuf_protoc_path="$(find ${protobuf_protoc_search_base}/sysroots*/x86_64* -maxdepth 4 -type f -name protoc)"
 echo "Target is $manifest_info"
 echo "Binary protoc path is : $protobuf_protoc_path"
 if ! [ -e $protobuf_protoc_path ]
