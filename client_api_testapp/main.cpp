@@ -38,6 +38,7 @@
 #include <sys/prctl.h>
 #include <sys/capability.h>
 #include <semaphore.h>
+#include <getopt.h>
 #include <loc_pla.h>
 #include <loc_cfg.h>
 #include <loc_misc_utils.h>
@@ -63,6 +64,13 @@ static uint32_t numGnssSvCb = 0;
 static uint32_t numGnssNmeaCb = 0;
 static uint32_t numDataCb         = 0;
 static uint32_t numGnssMeasurementsCb = 0;
+
+static LocationClientApi* pAutoStartClient = nullptr;
+static location_integration::LocationIntegrationApi* pAutoStartIntClient = nullptr;
+static sem_t sem_autoTestCompleted;
+static int fixCnt = 0x7fffffff;
+static uint64_t autoTestStartTimeMs = 0;
+static int autoTestTimeoutSec = 0x7FFFFFFF;
 
 #define DISABLE_REPORT_OUTPUT "disableReportOutput"
 #define ENABLE_REPORT_OUTPUT  "enableReportOutput"
@@ -90,12 +98,30 @@ static uint32_t numGnssMeasurementsCb = 0;
 #define GET_SINGLE_GTP_WWAN_FIX    "getSingleGtpWwanFix"
 
 // debug utility
-static uint64_t getTimestamp() {
+static uint64_t getTimestampMs() {
     struct timespec ts;
     clock_gettime(CLOCK_BOOTTIME, &ts);
-    uint64_t absolute_micro =
-            ((uint64_t)(ts.tv_sec)) * 1000000ULL + ((uint64_t)(ts.tv_nsec)) / 1000ULL;
-    return absolute_micro;
+    uint64_t msec =
+            ((uint64_t)(ts.tv_sec)) * 1000ULL + ((uint64_t)(ts.tv_nsec)) / 1000000ULL;
+    return msec;
+}
+
+static void cleanupAfterAutoStart() {
+    if (pAutoStartClient) {
+        printf("calling stopPosition and delete LCA client\n");
+        pAutoStartClient->stopPositionSession();
+        delete pAutoStartClient;
+        pAutoStartClient = nullptr;
+    }
+    if (pAutoStartIntClient) {
+        printf("calling delete LIA client \n");
+        delete pAutoStartIntClient;
+        pAutoStartIntClient = nullptr;
+    }
+    // wait one second for stop request to reach hal daemon
+    sleep(1);
+
+    printf("\n\n summary: received %d fixes\n", numEngLocationCb);
 }
 
 /******************************************************************************
@@ -158,14 +184,13 @@ static void onGnssLocationCb(const location_client::GnssLocation& location) {
 }
 
 static void onEngLocationsCb(const std::vector<location_client::GnssLocation>& locations) {
-    numEngLocationCb++;
     if (!outputEnabled) {
         return;
     }
     for (auto gnssLocation : locations) {
        printf("<<< onEngLocationsCb: cnt=%u time=%" PRIu64" mask=0x%x lat=%f lon=%f alt=%f\n"
               "info mask=0x%" PRIx64 ", nav solution maks = 0x%x, eng type %d, eng mask 0x%x, "
-              "session status %d",
+              "session status %d\n",
               numEngLocationCb,
               gnssLocation.timestamp,
               gnssLocation.flags,
@@ -177,11 +202,30 @@ static void onEngLocationsCb(const std::vector<location_client::GnssLocation>& l
               gnssLocation.locOutputEngType,
               gnssLocation.locOutputEngMask,
               gnssLocation.sessionStatus);
+
+        if (gnssLocation.sessionStatus == LOC_SESS_SUCCESS &&
+            gnssLocation.locOutputEngType == LOC_OUTPUT_ENGINE_FUSED) {
+            numEngLocationCb++;
+        }
+    }
+
+    if (numEngLocationCb >= fixCnt) {
+        sem_post(&sem_autoTestCompleted);
     }
 }
 
 static void onGnssSvCb(const std::vector<location_client::GnssSv>& gnssSvs) {
     numGnssSvCb++;
+
+    // we are in auto-test mode, check whether we have completed the test
+    if (autoTestStartTimeMs != 0) {
+        uint64_t nowMs = getTimestampMs();
+        if (nowMs-autoTestStartTimeMs >= autoTestTimeoutSec * 1000) {
+            printf("auto test completed due to timeout \n");
+            sem_post(&sem_autoTestCompleted);
+        }
+    }
+
     if (!outputEnabled) {
         return;
     }
@@ -253,7 +297,6 @@ static void printHelp() {
     printf("u: Update a session with 2000 ms interval\n");
     printf("m: Interleaving fix session with 1000 and 2000 ms interval, change every 3 seconds\n");
     printf("s: Stop a session \n");
-    printf("p: Ping test\n");
     printf("q: Quit\n");
     printf("r: delete client\n");
     printf("%s supress output from various reports: disable output\n", DISABLE_REPORT_OUTPUT);
@@ -524,59 +567,111 @@ void parseDreConfig (char* buf, DeadReckoningEngineConfig& dreConfig) {
     dreConfig.validMask = (DeadReckoningEngineConfigValidMask)validMask;
 }
 
+static void checkForAutoStart(int argc, char *argv[]) {
+    bool autoRun = false;
+    bool deleteAll = false;
+    uint32_t aidingDataMask = 0;
+    int interval = 100;
+    LocReqEngineTypeMask reqEngMask = (LocReqEngineTypeMask) 0x7;
+
+    //Specifying the expected options
+    //The two options l and b expect numbers as argument
+    static struct option long_options[] = {
+        {"auto",      no_argument,       0,  'a' },
+        {"deleteAll", no_argument,       0,  'D' },
+        {"delete",    required_argument, 0,  'd' },
+        {"engine",    required_argument, 0,  'e' },
+        {"interval",  required_argument, 0,  'i' },
+        {"timeout", required_argument,   0,  't' },
+        {"fixcnt",   required_argument,  0,  'l' },
+        {0,           0,                 0,   0  }
+    };
+
+    int long_index =0;
+    int opt = -1;
+    while ((opt = getopt_long(argc, argv, "aDd:e:i:t:l:", long_options, &long_index )) != -1) {
+        switch (opt) {
+             case 'a' :
+                 autoRun = true;
+                 break;
+             case 'D' :
+                 deleteAll = true;
+                 break;
+             case 'd' :
+                 aidingDataMask = atoi(optarg);
+                 break;
+             case 'e' :
+                 printf("report mask: %s\n", optarg);
+                 reqEngMask = (LocReqEngineTypeMask) atoi(optarg);
+                 break;
+             case 'l' :
+                 printf("fix cnt: %s\n", optarg);
+                 fixCnt = atoi(optarg);
+                 break;
+            case 'i' :
+                 printf("interval: %s\n", optarg);
+                 interval = atoi(optarg);
+                 break;
+             case 't' :
+                 printf("tiemout: %s\n", optarg);
+                 autoTestTimeoutSec = atoi(optarg);
+                 break;
+             default:
+                 printf("unsupported args provided\n");
+                 break;
+        }
+    }
+
+    printf("auto run %d, deleteAll %d, delete mask 0x%x, "
+           "req eng mask 0x%x, fix count %d, timeout sec: %d\n",
+           autoRun, deleteAll, aidingDataMask, reqEngMask, fixCnt, autoTestTimeoutSec);
+
+    // check for auto-start option
+    if (autoRun) {
+        uint32_t pid = (uint32_t)getpid();
+
+        if (deleteAll == true || aidingDataMask != 0) {
+            // create location integratin API
+            LocIntegrationCbs intCbs;
+            intCbs.configCb = LocConfigCb(onConfigResponseCb);
+            LocConfigPriorityMap priorityMap;
+            pAutoStartIntClient =
+                    new LocationIntegrationApi(priorityMap, intCbs);
+            if (!pAutoStartIntClient) {
+                printf("can not create Location integration API");
+                exit(1);
+            }
+            sleep(1); // wait for capability callback if you don't like sleep
+            if (deleteAll) {
+                pAutoStartIntClient->deleteAllAidingData();
+            } else {
+                pAutoStartIntClient->deleteAidingData((AidingDataDeletionMask) aidingDataMask);
+            }
+        }
+
+        pAutoStartClient = new LocationClientApi(onCapabilitiesCb);
+        if (nullptr == pAutoStartClient) {
+            printf("can not create Location client API");
+            exit(1);
+        }
+
+        EngineReportCbs reportcbs;
+        reportcbs.engLocationsCallback = EngineLocationsCb(onEngLocationsCb);
+        reportcbs.gnssSvCallback = GnssSvCb(onGnssSvCb);
+        reportcbs.gnssNmeaCallback = GnssNmeaCb(onGnssNmeaCb);
+
+        pAutoStartClient->startPositionSession(interval, reqEngMask, reportcbs, onResponseCb);
+        autoTestStartTimeMs = getTimestampMs();
+
+        sem_wait(&sem_autoTestCompleted);
+        cleanupAfterAutoStart();
+        exit(0);
+    }
+}
 
 /******************************************************************************
 Main function
 ******************************************************************************/
-
-static void checkForAutoStart(int argc, char *argv[]) {
-    // check for auto-start option
-    if (argc >= 2) {
-        if (strncmp (argv[1], "auto", strlen("auto")) == 0) {
-            printf("usage: location_clientapi_test_app auto");
-            uint32_t pid = (uint32_t)getpid();
-
-            LocationClientApi* pClient = new LocationClientApi(onCapabilitiesCb);
-            if (nullptr == pClient) {
-                printf("can not create Location client API");
-                exit(1);
-            }
-
-            bool cleanup = false;
-            if (argc >= 3) {
-                if (strncmp (argv[2], "clean", strlen("clean")) == 0) {
-                    cleanup = true;
-                }
-            }
-            // wait for capability to come
-            sleep(1);
-
-            EngineReportCbs reportcbs;
-            reportcbs.engLocationsCallback = EngineLocationsCb(onEngLocationsCb);
-            reportcbs.gnssSvCallback = GnssSvCb(onGnssSvCb);
-            reportcbs.gnssNmeaCallback = GnssNmeaCb(onGnssNmeaCb);
-            LocReqEngineTypeMask reqEngMask = (LocReqEngineTypeMask)
-                    (LOC_REQ_ENGINE_FUSED_BIT|LOC_REQ_ENGINE_SPE_BIT|
-                    LOC_REQ_ENGINE_PPE_BIT);
-            pClient->startPositionSession(100, reqEngMask, reportcbs, onResponseCb);
-            // wait for fix report to come
-            sleep(2);
-            while (numEngLocationCb < 10) {
-                sleep(3);
-                printf("pid %u, recevied %d report\n", pid, numEngLocationCb);
-            }
-            printf("pid %u, recevied %d report\n", pid, numEngLocationCb);
-            if (pClient && cleanup) {
-                printf("calling stopPosition and delete client \n");
-                pClient->stopPositionSession();
-                delete pClient;
-                sleep(1);
-            }
-            exit(0);
-        }
-    }
-}
-
 int main(int argc, char *argv[]) {
 
     setRequiredPermToRunAsLocClient();
@@ -907,11 +1002,14 @@ int main(int argc, char *argv[]) {
 
 EXIT:
     if (nullptr != pClient) {
+        pClient->stopPositionSession();
         delete pClient;
+        pClient = nullptr;
     }
 
     if (nullptr != pIntClient) {
         delete pIntClient;
+        pIntClient = nullptr;
     }
 
     printf("Done\n");
