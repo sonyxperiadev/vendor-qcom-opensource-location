@@ -2198,8 +2198,9 @@ public:
         requirement. <br/>
 
         For this phase, only 0 will be accepted. None-zero
-        horizontal accuracy requirement will not be supported and
-        API call will return false. <br/>
+        horizontal accuracy requirement will not be supported
+        responseCb if not null will get invoked with
+        LOCATION_RESPONSE_PARAM_INVALID. <br/>
 
         @param terrestrialPositionCallback
         callback to receive terrestrial position. Some fields in

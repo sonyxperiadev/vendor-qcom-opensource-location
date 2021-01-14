@@ -261,6 +261,7 @@ enum ELocMsgID {
     E_INTAPI_CONFIG_CONSTELLATION_SECONDARY_BAND_MSG_ID  = 209,
     E_INTAPI_CONFIG_ENGINE_RUN_STATE_MSG_ID = 210,
     E_INTAPI_CONFIG_USER_CONSENT_TERRESTRIAL_POSITIONING_MSG_ID = 211,
+    E_INTAPI_CONFIG_OUTPUT_NMEA_TYPES_MSG_ID = 212,
 
     // integration API config retrieval request/response
     E_INTAPI_GET_ROBUST_LOCATION_CONFIG_REQ_MSG_ID  = 300,
@@ -1182,6 +1183,25 @@ struct LocConfigUserConsentTerrestrialPositioningReqMsg: LocAPIMsgHeader
 
     LocConfigUserConsentTerrestrialPositioningReqMsg(const char* name,
             const PBLocConfigUserConsentTerrestrialPositioningReqMsg &pbMsg,
+            const LocationApiPbMsgConv *pbMsgConv);
+
+    int serializeToProtobuf(string& protoStr) override;
+};
+
+struct LocConfigOutputNmeaTypesReqMsg: LocAPIMsgHeader
+{
+    GnssNmeaTypesMask mEnabledNmeaTypes;
+
+    inline LocConfigOutputNmeaTypesReqMsg(
+            const char* name, GnssNmeaTypesMask enabledNmeaTypes,
+            const LocationApiPbMsgConv *pbMsgConv) :
+        LocAPIMsgHeader(name,
+                        E_INTAPI_CONFIG_OUTPUT_NMEA_TYPES_MSG_ID,
+                        pbMsgConv),
+        mEnabledNmeaTypes(enabledNmeaTypes) { }
+
+    LocConfigOutputNmeaTypesReqMsg(const char* name,
+            const PBLocConfigOutputNmeaTypesReqMsg &pbMsg,
             const LocationApiPbMsgConv *pbMsgConv);
 
     int serializeToProtobuf(string& protoStr) override;
