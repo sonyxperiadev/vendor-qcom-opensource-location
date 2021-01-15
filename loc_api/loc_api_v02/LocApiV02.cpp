@@ -2824,10 +2824,13 @@ void LocApiV02 :: reportPosition (
            locationExtended.vert_unc = location_report_ptr->vertUnc;
         }
 
-        if (location_report_ptr->speedUnc_valid)
+        if (location_report_ptr->velUncEnu_valid)
         {
            locationExtended.flags |= GPS_LOCATION_EXTENDED_HAS_SPEED_UNC;
-           locationExtended.speed_unc = location_report_ptr->speedUnc;
+           locationExtended.speed_unc = sqrt(location_report_ptr->velUncEnu[0] *
+                                             location_report_ptr->velUncEnu[0] +
+                                             location_report_ptr->velUncEnu[1] *
+                                             location_report_ptr->velUncEnu[1]);
         }
         if (location_report_ptr->headingUnc_valid)
         {

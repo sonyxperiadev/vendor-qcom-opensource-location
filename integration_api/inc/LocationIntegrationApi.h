@@ -1,4 +1,4 @@
-/* Copyright (c) 2019-2020 The Linux Foundation. All rights reserved.
+/* Copyright (c) 2019-2021 The Linux Foundation. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -1250,7 +1250,13 @@ public:
         location hal daemon, it is expected that the client process
         to get re-launched and reconfigure the NMEA sentence types
         if the desired NMEA sentence types are different from
-        default. <br/>
+        default. If the client process that configures the NMEA
+        sentence types resides on a diffrent processor as the
+        location hal daemon, upon location hal daemon restarts,
+        location hal daemon will receive the configured NMEA
+        sentence types again from location integration api library
+        running on the client process on the different processor.
+        <br/>
 
         @param
         enabledNmeaTypes: specify the set of NMEA sentences the
