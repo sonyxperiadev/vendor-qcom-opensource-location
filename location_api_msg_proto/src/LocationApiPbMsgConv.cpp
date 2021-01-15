@@ -1424,7 +1424,7 @@ uint32_t LocationApiPbMsgConv::getPBMaskForGnssLocationInfoFlagMask(
     if (gnssLocInfoFlagMask & GNSS_LOCATION_INFO_DR_SOLUTION_STATUS_MASK_BIT) {
         pbGnssLocInfoFlagMask |= PB_GNSS_LOCATION_INFO_DR_SOLUTION_STATUS_MASK_BIT;
     }
-    LocApiPb_LOGv("LocApiPB: gnssLocInfoFlagMask:%x, pbGnssLocInfoFlagMask:%x",
+    LocApiPb_LOGv("LocApiPB: gnssLocInfoFlagMask:%" PRIx64", pbGnssLocInfoFlagMask:%x",
             gnssLocInfoFlagMask, pbGnssLocInfoFlagMask);
     return pbGnssLocInfoFlagMask;
 }
@@ -3536,7 +3536,8 @@ int LocationApiPbMsgConv::convertGnssLocInfoNotifToPB(
     pbGnssLocInfoNotif->set_sessionstatus(
             getPBEnumForLocSessionStatus(gnssLocInfoNotif.sessionStatus));
 
-    LocApiPb_LOGd("LocApiPB: gnssLocInfoNotif - GLocInfoFlgMask:%u, pdop:%f, hdop:%f, vdop:%f",
+    LocApiPb_LOGd("LocApiPB: gnssLocInfoNotif - GLocInfoFlgMask:%" PRIu64", pdop:%f, hdop:%f, "
+            "vdop:%f",
             gnssLocInfoNotif.flags, gnssLocInfoNotif.pdop, gnssLocInfoNotif.hdop,
             gnssLocInfoNotif.vdop);
     LocApiPb_LOGd("LocApiPB: gnssLocInfoNotif - HorReliab:%d, VerReliab:%d, HorUnc-SemiMajor:%f "
@@ -4644,7 +4645,7 @@ int LocationApiPbMsgConv::pbConvertToGnssLocInfoNotif(
     gnssLocInfoNotif.sessionStatus = getLocSessionStatusFromPB(
             pbGnssLocInfoNotif.sessionstatus());
 
-    LOC_LOGd("LocApiPB: pbGnssLocInfoNotif -GLocInfoFlgMask:%u, pdop:%f, hdop:%f, vdop:%f",
+    LOC_LOGd("LocApiPB: pbGnssLocInfoNotif -GLocInfoFlgMask:%" PRIu64", pdop:%f, hdop:%f, vdop:%f",
             gnssLocInfoNotif.flags, gnssLocInfoNotif.pdop, gnssLocInfoNotif.hdop,
             gnssLocInfoNotif.vdop);
     LOC_LOGd("HorReliab:%d, VerReliab:%d, HorUncElps-SemiMajor:%f SemiMinor:%f, NumSvUsedInPos:%u",

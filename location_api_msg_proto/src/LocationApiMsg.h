@@ -38,7 +38,7 @@
 #include <log_util.h>
 #include <LocIpc.h>
 #include <LocationDataTypes.h>
-#include <errno.h>
+#include <stdlib.h>
 
 // Protobuf message headers
 #include "LocationApiMsg.pb.h"
@@ -153,20 +153,23 @@ public:
         SockNode(pid, tid, getSockNodeLocalPrefix(type)) {}
 
     inline static string getSockNodeLocalPrefix(ClientType type) {
-
-        int program_name_length = strlen(program_invocation_short_name);
-        if (program_name_length > MAX_PROGRAM_NAME_LENGTH) {
-            program_name_length = MAX_PROGRAM_NAME_LENGTH;
+        int program_name_length = 0;
+        const char * progName = getprogname();
+        if (nullptr != progName) {
+            program_name_length = strlen(progName);
+            if (program_name_length > MAX_PROGRAM_NAME_LENGTH) {
+                program_name_length = MAX_PROGRAM_NAME_LENGTH;
+            }
         }
+
         if (LOCATION_CLIENT_API == type) {
-            return string(s_CLIENTAPI_LOCAL).append(1, '_').
-                    append(program_invocation_short_name, program_name_length);
+            return string(s_CLIENTAPI_LOCAL).append(1, '_').append(progName, program_name_length);
         } else {
-            return string(s_INTAPI_LOCAL).append(1, '_').
-                    append(program_invocation_short_name, program_name_length);
+            return string(s_INTAPI_LOCAL).append(1, '_').append(progName, program_name_length);
         }
     }
 };
+
 
 class SockNodeEap : public SockNode {
 public:
@@ -174,13 +177,19 @@ public:
         SockNode(service, instance, getSockNodeEapPrefix()) {}
 
     inline static string getSockNodeEapPrefix() {
-        int program_name_length = strlen (program_invocation_short_name);
-        if (program_name_length > MAX_PROGRAM_NAME_LENGTH) {
-            program_name_length = MAX_PROGRAM_NAME_LENGTH;
+        int program_name_length = 0;
+        const char * progName = getprogname();
+        if (nullptr != progName) {
+            program_name_length = strlen(progName);
+
+            if (program_name_length > MAX_PROGRAM_NAME_LENGTH) {
+                program_name_length = MAX_PROGRAM_NAME_LENGTH;
+            }
         }
-        return string(sEAP).append(1, '_').
-                append(program_invocation_short_name, program_name_length);
+
+        return string(sEAP).append(1, '_').append(progName, program_name_length);
     }
+
 };
 
 /******************************************************************************
@@ -383,6 +392,8 @@ struct LocAPIMsgHeader
             memset(mSocketName, 0, MAX_SOCKET_PATHNAME_LENGTH);
             strlcpy(mSocketName, name, MAX_SOCKET_PATHNAME_LENGTH);
         }
+
+    virtual ~LocAPIMsgHeader() = default;
 
     /** Serialize message to protobuf format. Return length of serialized string.*/
     virtual int serializeToProtobuf(string& protoStr) {return 0;}

@@ -1,4 +1,4 @@
-/* Copyright (c) 2019-2020 The Linux Foundation. All rights reserved.
+/* Copyright (c) 2019-2021 The Linux Foundation. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -34,6 +34,7 @@
 #include <LocationIntegrationApiImpl.h>
 #include <log_util.h>
 #include <gps_extended_c.h>
+#include <inttypes.h>
 
 namespace location_integration {
 
@@ -240,7 +241,7 @@ LocationIntegrationApiImpl::LocationIntegrationApiImpl(LocIntegrationCbs& integr
     size_t pathNameLength = strlcpy(mSocketName, sock.getNodePathname().c_str(),
                                     sizeof(mSocketName));
     if (pathNameLength >= sizeof(mSocketName)) {
-        LOC_LOGe("socket name length exceeds limit of %d bytes", sizeof(mSocketName));
+        LOC_LOGe("socket name length exceeds limit of %zu bytes", sizeof(mSocketName));
         return;
     }
 
@@ -343,7 +344,7 @@ void IpcListener::onReceive(const char* data, uint32_t length,
             // encoded format to local structure
             PBLocAPIMsgHeader pbLocApiMsg;
             if (0 == pbLocApiMsg.ParseFromString(mMsgData)) {
-                LOC_LOGe("Failed to parse pbLocApiMsg from input stream!! length: %u",
+                LOC_LOGe("Failed to parse pbLocApiMsg from input stream!! length: %zu",
                         mMsgData.length());
                 return;
             }
@@ -1361,6 +1362,7 @@ void LocationIntegrationApiImpl::processGetConstellationSecondaryBandConfigRespC
 LocationIntegrationApiImpl - Not implemented ILocationControlAPI functions
 ******************************************************************************/
 uint32_t* LocationIntegrationApiImpl::gnssUpdateConfig(const GnssConfig& config) {
+    (void)config;
     return nullptr;
 }
 

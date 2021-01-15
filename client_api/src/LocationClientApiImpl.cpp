@@ -28,6 +28,7 @@
 
 #define LOG_TAG "LocSvc_LocationClientApi"
 
+#include <inttypes.h>
 #include <sys/types.h>
 #include <unistd.h>
 #include <loc_cfg.h>
@@ -1182,7 +1183,8 @@ LocationClientApiImpl::LocationClientApiImpl(CapabilitiesCb capabitiescb) :
     size_t pathNameLength = strlcpy(mSocketName, sock.getNodePathname().c_str(),
                                     sizeof(mSocketName));
     if (pathNameLength >= sizeof(mSocketName)) {
-        LOC_LOGe("socket name length exceeds limit of %d bytes", sizeof(mSocketName));
+        LOC_LOGe("socket name length exceeds limit of %" PRIu32" bytes",
+                (uint32_t)sizeof(mSocketName));
         return;
     }
 
@@ -1213,7 +1215,8 @@ LocationClientApiImpl::LocationClientApiImpl(CapabilitiesCb capabitiescb) :
     size_t pathNameLength = strlcpy(mSocketName, sock.getNodePathname().c_str(),
                                     sizeof(mSocketName));
     if (pathNameLength >= sizeof(mSocketName)) {
-        LOC_LOGe("socket name length exceeds limit of %d bytes", sizeof(mSocketName));
+        LOC_LOGe("socket name length exceeds limit of %" PRIu32 " bytes",
+                (uint32_t)sizeof(mSocketName));
         return;
     }
 
@@ -1704,7 +1707,7 @@ uint32_t* LocationClientApiImpl::addGeofences(size_t count, GeofenceOption* opti
                 if (msg.serializeToProtobuf(pbStr)) {
                     bool rc = mApiImpl->sendMessage(
                             reinterpret_cast<uint8_t *>((uint8_t *)pbStr.c_str()), pbStr.size());
-                    LOC_LOGd(">>> AddGeofencesReq count=%zu", gfCountUsed);
+                    LOC_LOGd(">>> AddGeofencesReq count1=%" PRIu32 "", gfCountUsed);
                 } else {
                     LOC_LOGe("LocAPIAddGeofencesReqMsg serializeToProtobuf failed");
                 }
@@ -1748,7 +1751,7 @@ void LocationClientApiImpl::removeGeofences(size_t count, uint32_t* ids) {
                 if (msg.serializeToProtobuf(pbStr)) {
                     bool rc = mApiImpl->sendMessage(
                             reinterpret_cast<uint8_t *>((uint8_t *)pbStr.c_str()), pbStr.size());
-                    LOC_LOGd(">>> RemoveGeofencesReq count=%zu", gfCountUsed);
+                    LOC_LOGd(">>> RemoveGeofencesReq count=%" PRIu32"", gfCountUsed);
                 } else {
                     LOC_LOGe("LocAPIRemoveGeofencesReqMsg serializeToProtobuf failed");
                 }
@@ -1792,7 +1795,7 @@ void LocationClientApiImpl::modifyGeofences(
                 if (msg.serializeToProtobuf(pbStr)) {
                     bool rc = mApiImpl->sendMessage(
                             reinterpret_cast<uint8_t *>((uint8_t *)pbStr.c_str()), pbStr.size());
-                    LOC_LOGd(">>> ModifyGeofencesReq count=%zu", gfCountUsed);
+                    LOC_LOGd(">>> ModifyGeofencesReq count=%" PRIu32 "", gfCountUsed);
                 } else {
                     LOC_LOGe("LocAPIModifyGeofencesReqMsg serializeToProtobuf failed");
                 }
@@ -1833,7 +1836,7 @@ void LocationClientApiImpl::pauseGeofences(size_t count, uint32_t* ids) {
                 if (msg.serializeToProtobuf(pbStr)) {
                     bool rc = mApiImpl->sendMessage(
                             reinterpret_cast<uint8_t *>((uint8_t *)pbStr.c_str()), pbStr.size());
-                    LOC_LOGd(">>> PauseGeofencesReq count=%zu", gfCountUsed);
+                    LOC_LOGd(">>> PauseGeofencesReq count=%" PRIu32"", gfCountUsed);
                 } else {
                     LOC_LOGe("LocAPIPauseGeofencesReqMsg serializeToProtobuf failed");
                 }
@@ -1872,7 +1875,7 @@ void LocationClientApiImpl::resumeGeofences(size_t count, uint32_t* ids) {
                 if (msg.serializeToProtobuf(pbStr)) {
                     bool rc = mApiImpl->sendMessage(
                             reinterpret_cast<uint8_t *>((uint8_t *)pbStr.c_str()), pbStr.size());
-                    LOC_LOGd(">>> ResumeGeofencesReq count=%zu", gfCountUsed);
+                    LOC_LOGd(">>> ResumeGeofencesReq count=%" PRIu32"", gfCountUsed);
                 } else {
                     LOC_LOGe("LocAPIResumeGeofencesReqMsg serializeToProtobuf failed");
                 }
@@ -2233,8 +2236,8 @@ void IpcListener::onReceive(const char* data, uint32_t length,
             // encoded format to local structure
             PBLocAPIMsgHeader pbLocApiMsg;
             if (0 == pbLocApiMsg.ParseFromString(mMsgData)) {
-                LOC_LOGe("Failed to parse pbLocApiMsg from input stream!! length: %u",
-                        mMsgData.length());
+                LOC_LOGe("Failed to parse pbLocApiMsg from input stream!! length: %" PRIu32,
+                        (uint32_t) mMsgData.length());
                 return;
             }
 
