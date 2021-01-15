@@ -5256,8 +5256,27 @@ void LocApiV02 :: reportAtlRequest(
         apnTypeMask = convertQmiLocApnTypeMask(server_request_ptr->apnTypeMask);
     }
     LOC_LOGd("handle=%d agpsType=0x%X apnTypeMask=0x%X",
-        connHandle, agpsType, apnTypeMask);
-    requestATL(connHandle, agpsType, apnTypeMask);
+             connHandle, agpsType, apnTypeMask);
+
+    LocSubId agpsSubId = LOC_DEFAULT_SUB;
+    if (server_request_ptr->subId_valid) {
+        switch (server_request_ptr->subId) {
+        case eQMI_LOC_SYS_MODEM_AS_ID_1_V02:
+            agpsSubId = LOC_PRIMARY_SUB;
+            break;
+        case eQMI_LOC_SYS_MODEM_AS_ID_2_V02:
+            agpsSubId = LOC_SECONDARY_SUB;
+            break;
+        case eQMI_LOC_SYS_MODEM_AS_ID_3_V02:
+            agpsSubId = LOC_TERTIARY_SUB;
+            break;
+        default:
+            agpsSubId = LOC_DEFAULT_SUB;
+            break;
+        }
+    }
+    LOC_LOGd("agpsSubId=%d", agpsSubId);
+    requestATL(connHandle, agpsType, apnTypeMask, agpsSubId);
   }
   // service the ATL close request
   else if (server_request_ptr->requestType == eQMI_LOC_SERVER_REQUEST_CLOSE_V02)
