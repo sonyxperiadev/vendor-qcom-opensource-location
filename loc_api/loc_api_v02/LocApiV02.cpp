@@ -1,4 +1,4 @@
-/* Copyright (c) 2011-2020, The Linux Foundation. All rights reserved.
+/* Copyright (c) 2011-2021, The Linux Foundation. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -4511,6 +4511,18 @@ void  LocApiV02 :: reportSvPolynomial (
     {
         svPolynomial.is_valid |= ULP_GNSS_SV_POLY_BIT_NAVIC_TGD_L5;
         svPolynomial.navicTgdL5 = gnss_sv_poly_ptr->navicTgdL5;
+    }
+
+    if (1 == gnss_sv_poly_ptr->bdsTgdB1c_valid)
+    {
+        svPolynomial.is_valid |= ULP_GNSS_SV_POLY_BIT_BDS_TGD_B1C;
+        svPolynomial.bdsTgdB1c = gnss_sv_poly_ptr->bdsTgdB1c;
+    }
+
+    if (1 == gnss_sv_poly_ptr->bdsIscB1c_valid)
+    {
+        svPolynomial.is_valid |= ULP_GNSS_SV_POLY_BIT_BDS_ISC_B1C;
+        svPolynomial.bdsIscB1c = gnss_sv_poly_ptr->bdsIscB1c;
     }
 
 
