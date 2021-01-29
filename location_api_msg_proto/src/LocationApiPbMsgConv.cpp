@@ -1,4 +1,4 @@
-/* Copyright (c) 2020 The Linux Foundation. All rights reserved.
+/* Copyright (c) 2020-2021 The Linux Foundation. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -3567,7 +3567,7 @@ int LocationApiPbMsgConv::convertGnssMeasNotifToPB(
 
     // repeated PBGnssMeasurementsData measurements = 1; Max array len - GNSS_MEASUREMENTS_MAX
     uint32_t count = gnssMeasNotif.count;
-    LOC_LOGd("LocApiPB: gnssMeasNotif - MeasNotif count:%d", count);
+    LOC_LOGd("LocApiPB: gnssMeasNotif - MeasNotif count:%d, isNhz:%d", count, gnssMeasNotif.isNhz);
     for (int i=0; i < count; i++) {
         PBGnssMeasurementsData* gnssMeasData = pbGnssMeasNotif->add_measurements();
         if (nullptr != gnssMeasData) {
@@ -3594,6 +3594,9 @@ int LocationApiPbMsgConv::convertGnssMeasNotifToPB(
         LOC_LOGe("mutable_clock failed");
         return 1;
     }
+
+    // bool isNhz = 3;
+    pbGnssMeasNotif->set_isnhz(gnssMeasNotif.isNhz);
 
     return 0;
 }
@@ -4709,7 +4712,10 @@ int LocationApiPbMsgConv::pbConvertToGnssMeasNotification(
     // PBGnssMeasurementsClock clock = 2;
     pbConvertToGnssMeasurementsClock(pbGnssMeasNotif.clock(), gnssMeasNotif.clock);
 
-    LOC_LOGd("LocApiPB: pbGnssMeasNotif - count:%u", count);
+    // bool isNhz = 3;
+    gnssMeasNotif.isNhz = pbGnssMeasNotif.isnhz();
+
+    LOC_LOGd("LocApiPB: pbGnssMeasNotif - count:%u, isNhz:%d", count, gnssMeasNotif.isNhz);
 
     return 0;
 }

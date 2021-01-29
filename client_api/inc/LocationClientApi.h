@@ -1593,6 +1593,8 @@ struct GnssMeasurements {
     GnssMeasurementsClock clock;
     /** GNSS measurements data. <br/>   */
     std::vector<GnssMeasurementsData> measurements;
+    /** NHz measurements indicator */
+    bool isNhz;
     /** Method to print the struct to human readable form, for logging.
      *  <br/> */
     string toString() const;
