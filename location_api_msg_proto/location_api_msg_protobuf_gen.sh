@@ -118,14 +118,28 @@ then
 elif [ -e "$wsp_path/../poky/qti-conf/set_bb_env.sh" ]
 then
     manifest_info="LE-PDK"
+    if [ "${DISTRO}" == "" ]
+    then
+        # script invoked as part of build
+        echo "DISTRO value is null. Finding path from ${PKG_CONFIG_SYSROOT_DIR}"
+        ## eg: PKG_CONFIG_SYSROOT_DIR=<ROOT>/build-qti-distro-nogplv3-debug/tmp-glibc/work/sdxlemur-oe-linux-gnueabi/location-api-msg-proto/git-r0/recipe-sysroot
+        ## build directory is 6 levels up
+        build_folder=${PKG_CONFIG_SYSROOT_DIR}"/../../../../../../"
+    else
+        # usually when we run this script standalone
+        echo "Machine : ${MACHINE}"
+        echo "Distro : ${DISTRO}"
+        build_folder=$wsp_path"../build-${DISTRO}"
+    fi
+
     # find build folder and select first one if multiple build folders
-    build_folders=(`ls $wsp_path/../|grep build-`)
-    if [ ${#build_folders[@]} -eq 0 ]; then
-        echo "ERROR!! No build folders found..."
+
+    echo "LE PDK - Using build folder ${build_folder}"
+    if ! [ -d ${build_folder} ]; then
+        echo "ERROR!! Build folders ${build_folder} not found..."
         exit 1
     fi
-    echo "LE PDK - Using build folder ${build_folders[0]}"
-    protobuf_protoc_search_base="${wsp_path}../${build_folders[0]}/tmp-glibc"
+    protobuf_protoc_search_base=$build_folder"/tmp-glibc"
 elif [ -e $wsp_path"meta-qti-bsp/meta-qti-base/recipes-location/location/gps-utils_git.bb" ]
 then
     manifest_info="LV"
