@@ -1,4 +1,4 @@
-/* Copyright (c) 2011-2020, The Linux Foundation. All rights reserved.
+/* Copyright (c) 2011-2021, The Linux Foundation. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -2587,21 +2587,16 @@ void LocApiV02 :: reportPosition (
             dataNotify.agc[i-1] = 0.0;
             dataNotify.jammerInd[i-1] = 0.0;
             if (GNSS_INVALID_JAMMER_IND !=
-                location_report_ptr->jammerIndicatorList[i].agcMetricDb) {
-                LOC_LOGv("agcMetricDb[%d]=0x%X",
-                         i, location_report_ptr->jammerIndicatorList[i].agcMetricDb);
-                dataNotify.gnssDataMask[i-1] |= GNSS_LOC_DATA_AGC_BIT;
-                dataNotify.agc[i-1] =
-                    (double)location_report_ptr->jammerIndicatorList[i].agcMetricDb / 100.0;
-                msInWeek = -1;
-            }
-            if (GNSS_INVALID_JAMMER_IND !=
                 location_report_ptr->jammerIndicatorList[i].bpMetricDb) {
-                LOC_LOGv("bpMetricDb[%d]=0x%X",
+                LOC_LOGv("agcMetricDb[%d]=%d; bpMetricDb[%d]=%d",
+                         i, -location_report_ptr->jammerIndicatorList[i].bpMetricDb,
                          i, location_report_ptr->jammerIndicatorList[i].bpMetricDb);
-                dataNotify.gnssDataMask[i-1] |= GNSS_LOC_DATA_JAMMER_IND_BIT;
+                dataNotify.gnssDataMask[i-1] |=
+                        GNSS_LOC_DATA_AGC_BIT | GNSS_LOC_DATA_JAMMER_IND_BIT;
+                dataNotify.agc[i-1] =
+                        -(double)location_report_ptr->jammerIndicatorList[i].bpMetricDb / 100.0;
                 dataNotify.jammerInd[i-1] =
-                    (double)location_report_ptr->jammerIndicatorList[i].bpMetricDb / 100.0;
+                        (double)location_report_ptr->jammerIndicatorList[i].bpMetricDb / 100.0;
                 msInWeek = -1;
             }
         }
@@ -6450,18 +6445,18 @@ bool LocApiV02 :: convertGnssMeasurements(
     // AGC
     if (gnss_measurement_report_ptr.jammerIndicator_valid) {
         if (GNSS_INVALID_JAMMER_IND !=
-            gnss_measurement_report_ptr.jammerIndicator.agcMetricDb) {
-            LOC_LOGv("AGC is valid: agcMetricDb = 0x%X bpMetricDb = 0x%X",
-                gnss_measurement_report_ptr.jammerIndicator.agcMetricDb,
-                gnss_measurement_report_ptr.jammerIndicator.bpMetricDb);
+            gnss_measurement_report_ptr.jammerIndicator.bpMetricDb) {
+            LOC_LOGv("AGC is valid: agcMetricDb = %d bpMetricDb = %d",
+                     -gnss_measurement_report_ptr.jammerIndicator.bpMetricDb,
+                     gnss_measurement_report_ptr.jammerIndicator.bpMetricDb);
 
             measurementData.agcLevelDb =
-                (double)gnss_measurement_report_ptr.jammerIndicator.agcMetricDb / 100.0;
+                    -(double)gnss_measurement_report_ptr.jammerIndicator.bpMetricDb / 100.0;
             measurementData.flags |= GNSS_MEASUREMENTS_DATA_AUTOMATIC_GAIN_CONTROL_BIT;
         } else {
             LOC_LOGv("AGC is invalid: agcMetricDb = 0x%X bpMetricDb = 0x%X",
-                 gnss_measurement_report_ptr.jammerIndicator.agcMetricDb,
-                 gnss_measurement_report_ptr.jammerIndicator.bpMetricDb);
+                     gnss_measurement_report_ptr.jammerIndicator.agcMetricDb,
+                     gnss_measurement_report_ptr.jammerIndicator.bpMetricDb);
         }
         bAgcIsPresent = true;
     } else {
