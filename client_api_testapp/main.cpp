@@ -1,4 +1,4 @@
-/* Copyright (c) 2019-2020 The Linux Foundation. All rights reserved.
+/* Copyright (c) 2019-2021 The Linux Foundation. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -332,7 +332,15 @@ void setRequiredPermToRunAsLocClient() {
             printf("Error: capset failed. %s", strerror(errno));
         }
     } else {
-        printf("Test app started as user: %d", getuid());
+        int userId = getuid();
+        if (UID_LOCCLIENT == userId) {
+            printf("Test app started as locclient user: %d\n", userId);
+        } else {
+            printf("ERROR! Test app started as user: %d\n", userId);
+            printf("Start the test app from shell running as root OR\n");
+            printf("Start the test app as locclient user from shell\n");
+            exit(0);
+        }
     }
 #endif// USE_GLIB
 }
