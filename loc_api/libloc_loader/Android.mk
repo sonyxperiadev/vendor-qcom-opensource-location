@@ -16,12 +16,12 @@ LOCAL_SRC_FILES += \
 
 LOCAL_HEADER_LIBRARIES := libcutils_headers libutils_headers
 
-LOCAL_COPY_HEADERS_TO:= libloc_loader/
-
-LOCAL_COPY_HEADERS:= \
-    libloc_loader.h
-
 LOCAL_PROPRIETARY_MODULE := true
+
+include $(CLEAR_VARS)
+LOCAL_MODULE := libloc_loader_headers
+LOCAL_EXPORT_C_INCLUDE_DIRS := $(LOCAL_PATH)
+include $(BUILD_HEADER_LIBRARY)
 
 include $(BUILD_SHARED_LIBRARY)
 
