@@ -64,8 +64,8 @@ typedef struct {
 */
 typedef struct {
     void (*onApObsLocDataAvailable)(const APObsLocData* ap_obs_list, uint16_t ap_obs_list_count,
-            ApBsListStatus ap_status);
-    void (*onServiceRequest)();
+            ApBsListStatus ap_status, const void* clientData);
+    void (*onServiceRequest)(const void* clientData);
 } WiFiDBProviderResponseListener;
 
 #endif /* WIFI_DB_PROV_H */

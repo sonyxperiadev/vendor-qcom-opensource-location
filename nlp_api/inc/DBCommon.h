@@ -31,6 +31,10 @@
 
 #include <stdint.h>
 
+ /** @brief
+ All the memory pointers received will be never freed internally.
+ Caller shall manage the memory before and after calling these functions.
+ */
 typedef enum {
     STD_CONT    = 0,
     STD_FINAL   = 1,
@@ -83,35 +87,5 @@ typedef struct {
     float    speedAccuracy;
     float    bearingAccuracy;
 } NlpLocation;
-
-typedef enum {
-    OPT_OUT = 0,
-    OPT_IN  = 1,
-} OptInStatus;
-
-typedef enum {
-    TYPE_MOBILE = 0,
-    TYPE_WIFI,
-    TYPE_ETHERNET,
-    TYPE_BLUETOOTH,
-    TYPE_MMS,
-    TYPE_SUPL,
-    TYPE_DUN,
-    TYPE_HIPRI,
-    TYPE_WIMAX,
-    TYPE_PROXY,
-    TYPE_UNKNOWN,
-} NetworkType;
-
-typedef struct {
-    NetworkType networkType;
-    uint64_t networkHandle;
-} NlpNetwork;
-
-typedef struct {
-    void (*onLocationOptInUpdate)(OptInStatus optInStatus);
-    void (*onNetworkStatusUpdate)(bool isConected, const NlpNetwork* networksAvailable,
-            uint8_t networksAvailableCount);
-} SystemStatusListener;
 
 #endif /* WIFI_DB_COMMON_H */
