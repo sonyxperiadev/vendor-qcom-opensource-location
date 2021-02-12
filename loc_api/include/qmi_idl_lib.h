@@ -88,6 +88,8 @@ typedef struct qmi_response_type_v01 {
 } qmi_response_type_v01;
 
 typedef struct qmi_get_supported_msgs_resp_v01 {
+    struct qmi_response_type_v01 response;
+
     uint8_t supported_msgs_valid;
     uint32_t supported_msgs_len;
     uint8_t supported_msgs[8192];
