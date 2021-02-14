@@ -52,6 +52,7 @@ using namespace location_integration;
 namespace location_integration
 {
 typedef std::unordered_map<LocConfigTypeEnum, int32_t> LocConfigReqCntMap;
+typedef std::unordered_map<PositioningEngineMask, LocEngineRunState> LocConfigEngRunStateMap;
 
 typedef struct {
     bool     isValid;
@@ -82,6 +83,11 @@ typedef struct {
     bool isValid;
     ::DeadReckoningEngineConfig dreConfig;
 } DeadReckoningEngineConfigInfo;
+
+typedef struct {
+    bool isValid;
+    bool userConsent;
+} GtpUserConsentConfigInfo;
 
 class IpcListener;
 
@@ -122,6 +128,10 @@ public:
     uint32_t getMinSvElevation();
 
     uint32_t getConstellationSecondaryBandConfig();
+
+    uint32_t configEngineRunState(PositioningEngineMask engType, LocEngineRunState engState);
+
+    uint32_t setUserConsentForTerrestrialPositioning(bool userConsent);
 
 private:
     ~LocationIntegrationApiImpl();
@@ -164,6 +174,8 @@ private:
     LeverArmConfigInfo       mLeverArmConfigInfo;
     RobustLocationConfigInfo mRobustLocationConfigInfo;
     DeadReckoningEngineConfigInfo mDreConfigInfo;
+    LocConfigEngRunStateMap       mEngRunStateConfigMap;
+    GtpUserConsentConfigInfo      mGtpUserConsentConfigInfo;
 
     LocConfigReqCntMap       mConfigReqCntMap;
     LocIntegrationCbs        mIntegrationCbs;

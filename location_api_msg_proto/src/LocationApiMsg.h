@@ -241,6 +241,10 @@ enum ELocMsgID {
     // Measurement reports
     E_LOCAPI_MEAS_MSG_ID = 30,
 
+    // Terrestria fix request/response msg
+    E_LOCAPI_GET_SINGLE_TERRESTRIAL_POS_REQ_MSG_ID = 31,
+    E_LOCAPI_GET_SINGLE_TERRESTRIAL_POS_RESP_MSG_ID = 32,
+
     // ping
     E_LOCAPI_PINGTEST_MSG_ID = 99,
 
@@ -255,6 +259,8 @@ enum ELocMsgID {
     E_INTAPI_CONFIG_DEAD_RECKONING_ENGINE_MSG_ID = 207,
     E_INTAPI_CONFIG_MIN_SV_ELEVATION_MSG_ID = 208,
     E_INTAPI_CONFIG_CONSTELLATION_SECONDARY_BAND_MSG_ID  = 209,
+    E_INTAPI_CONFIG_ENGINE_RUN_STATE_MSG_ID = 210,
+    E_INTAPI_CONFIG_USER_CONSENT_TERRESTRIAL_POSITIONING_MSG_ID = 211,
 
     // integration API config retrieval request/response
     E_INTAPI_GET_ROBUST_LOCATION_CONFIG_REQ_MSG_ID  = 300,
@@ -735,6 +741,43 @@ struct LocAPIGetGnssEnergyConsumedReqMsg: LocAPIMsgHeader
     int serializeToProtobuf(string& protoStr) override;
 };
 
+struct LocAPIGetSingleTerrestrialPosReqMsg: LocAPIMsgHeader
+{
+    uint32_t            mTimeoutMsec;
+    TerrestrialTechMask mTechMask;
+    float               mHorQoS;
+
+    inline LocAPIGetSingleTerrestrialPosReqMsg(
+            const char* name, uint32_t timeoutMsec, TerrestrialTechMask techMask,
+            float horQoS, const LocationApiPbMsgConv *pbMsgConv) :
+        LocAPIMsgHeader(name, E_LOCAPI_GET_SINGLE_TERRESTRIAL_POS_REQ_MSG_ID, pbMsgConv),
+        mTimeoutMsec(timeoutMsec), mTechMask(techMask), mHorQoS(horQoS) { }
+
+    LocAPIGetSingleTerrestrialPosReqMsg(const char* name,
+            const PBLocAPIGetSingleTerrestrialPosReqMsg &pbLocGetTerrestrialPosReq,
+            const LocationApiPbMsgConv *pbMsgConv);
+
+    int serializeToProtobuf(string& protoStr) override;
+};
+
+struct LocAPIGetSingleTerrestrialPosRespMsg: LocAPIMsgHeader
+{
+    LocationError mErrorCode;
+    Location      mLocation;
+
+    inline LocAPIGetSingleTerrestrialPosRespMsg(
+            const char* name, LocationError errorCode, Location location,
+            const LocationApiPbMsgConv *pbMsgConv) :
+        LocAPIMsgHeader(name, E_LOCAPI_GET_SINGLE_TERRESTRIAL_POS_RESP_MSG_ID, pbMsgConv),
+        mErrorCode(errorCode), mLocation(location) { }
+
+    LocAPIGetSingleTerrestrialPosRespMsg(const char* name,
+            const PBLocAPIGetSingleTerrestrialPosRespMsg &pbLocGetTerrestrialPosResp,
+            const LocationApiPbMsgConv *pbMsgConv);
+
+    int serializeToProtobuf(string& protoStr) override;
+};
+
 /******************************************************************************
 IPC message structure - indications
 ******************************************************************************/
@@ -898,7 +941,7 @@ struct LocAPIMeasIndMsg : LocAPIMsgHeader
     int serializeToProtobuf(string& protoStr) override;
 };
 
-// defintion for message with msg id of E_LOCAPI_GET_TOTAL_ENGERY_CONSUMED_BY_GPS_ENGINE_MSG_ID
+// defintion for message with msg id of E_LOCAPI_GET_GNSS_ENGERY_CONSUMED_MSG_ID
 struct LocAPIGnssEnergyConsumedIndMsg: LocAPIMsgHeader
 {
     uint64_t totalGnssEnergyConsumedSinceFirstBoot;
@@ -1101,6 +1144,44 @@ struct LocConfigMinSvElevationReqMsg: LocAPIMsgHeader
         mMinSvElevation(minSvElevation) { }
     LocConfigMinSvElevationReqMsg(const char* name,
             const PBLocConfigMinSvElevationReqMsg &pbConfigMinSvElevReqMsg,
+            const LocationApiPbMsgConv *pbMsgConv);
+
+    int serializeToProtobuf(string& protoStr) override;
+};
+
+struct LocConfigEngineRunStateReqMsg: LocAPIMsgHeader
+{
+    // In this API, only one engine is configured at a time
+    PositioningEngineMask mEngType;
+    LocEngineRunState mEngState;
+
+    inline LocConfigEngineRunStateReqMsg(const char* name,
+                                         PositioningEngineMask engType,
+                                         LocEngineRunState engState,
+                                         const LocationApiPbMsgConv *pbMsgConv) :
+        LocAPIMsgHeader(name, E_INTAPI_CONFIG_ENGINE_RUN_STATE_MSG_ID, pbMsgConv),
+        mEngType(engType), mEngState(engState) { }
+
+    LocConfigEngineRunStateReqMsg(const char* name,
+            const PBLocConfigEngineRunStateReqMsg &pbConfigEngineStateReqMsg,
+            const LocationApiPbMsgConv *pbMsgConv);
+
+    int serializeToProtobuf(string& protoStr) override;
+};
+
+struct LocConfigUserConsentTerrestrialPositioningReqMsg: LocAPIMsgHeader
+{
+    bool mUserConsent;
+
+    inline LocConfigUserConsentTerrestrialPositioningReqMsg(
+            const char* name, bool userConsent, const LocationApiPbMsgConv *pbMsgConv) :
+        LocAPIMsgHeader(name,
+                        E_INTAPI_CONFIG_USER_CONSENT_TERRESTRIAL_POSITIONING_MSG_ID,
+                        pbMsgConv),
+        mUserConsent(userConsent) { }
+
+    LocConfigUserConsentTerrestrialPositioningReqMsg(const char* name,
+            const PBLocConfigUserConsentTerrestrialPositioningReqMsg &pbMsg,
             const LocationApiPbMsgConv *pbMsgConv);
 
     int serializeToProtobuf(string& protoStr) override;

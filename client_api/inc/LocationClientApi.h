@@ -64,7 +64,8 @@ namespace location_client
 {
 class Geofence;
 
-enum LocationCapabilitiesMask {
+typedef uint64_t LocationCapabilitiesMask;
+enum ELocationCapabilitiesMask {
     /** LocationClientApi can support time-based tracking session
      *  via LocationClientApi::startPositionSession(uint32_t,
      *  LocReqEngineTypeMask, const EngineReportCbs&, ResponseCb)
@@ -94,6 +95,55 @@ enum LocationCapabilitiesMask {
     /** LocationClientApi can support trip batching via
      *  LocationClientApi::startTripBatchingSession(). <br/>   */
     LOCATION_CAPS_OUTDOOR_TRIP_BATCHING_BIT         = (1<<5),
+    /** LocationClientApi can support receiving GnssMeasurements
+     *  data in GnssMeasurementsCb when LocationClientApi is in
+     *  a positioning session.. <br/>   */
+    LOCATION_CAPS_GNSS_MEASUREMENTS_BIT             = (1<<6),
+    /** LocationIntegrationApi can support configure constellations
+     *  via LocationIntegrationApi::configConstellations.  <br/>   */
+     LOCATION_CAPS_CONSTELLATION_ENABLEMENT_BIT      = (1<<7),
+    /** Modem supports Carrier Phase for Precise Positioning
+     *  Measurement Engine (PPME).
+     *  This is a Standalone Feature.  <br/>   */
+    LOCATION_CAPS_CARRIER_PHASE_BIT                 = (1<<8),
+    /** Modem supports SV Polynomial for tightly coupled
+     *  external DR support.
+     *  This is a Standalone Feature.  <br/>   */
+    LOCATION_CAPS_SV_POLYNOMIAL_BIT                 = (1<<9),
+    /** Modem supports GNSS Single Frequency feature.
+     *  This is a Standalone Feature.  <br/>   */
+    LOCATION_CAPS_QWES_GNSS_SINGLE_FREQUENCY        = (1<<10),
+    /** Modem supports GNSS Multi Frequency feature. Multi
+     *  Frequency enables Single frequency also.  <br/>   */
+    LOCATION_CAPS_QWES_GNSS_MULTI_FREQUENCY         = (1<<11),
+    /** This mask indicates VEPP license bundle is enabled.
+     *  VEPP bundle include Carrier Phase and SV Polynomial
+     *  features.  <br/>   */
+    LOCATION_CAPS_QWES_VPE                          = (1<<12),
+    /** This mask indicates support for CV2X Location basic
+     *  features. This bundle includes features for GTS Time
+     *  & Freq, C-TUNC (Constrained Time uncertainity.
+     *  LocationIntegrationApi can support setting of C-TUNC
+     *  via configConstrainedTimeUncertainty. <br/> */
+    LOCATION_CAPS_QWES_CV2X_LOCATION_BASIC          = (1<<13),
+    /** This mask indicates support for CV2X Location premium
+     *  features. This bundle includes features for CV2X Location
+     *  Basic features, QDR3 feature, and PACE. (Position
+     *  Assisted Clock Estimator.
+     *  LocationIntegrationApi can support setting of C-TUNC
+     *  via configPositionAssistedClockEstimator. <br/> */
+    LOCATION_CAPS_QWES_CV2X_LOCATION_PREMIUM        = (1<<14),
+    /** This mask indicates that PPE (Precise Positioning Engine)
+     *  library is enabled or Precise Positioning Framework (PPF)
+     *  is available. This bundle includes features for Carrier
+     *  Phase and SV Ephermeris.  <br/>   */
+    LOCATION_CAPS_QWES_PPE                          = (1<<15),
+    /** This mask indicates QDR2_C license bundle is enabled.
+     *  This bundle includes features for SV Polynomial. <br/> */
+    LOCATION_CAPS_QWES_QDR2                         = (1<<16),
+    /** This mask indicates QDR3_C license bundle is enabled.
+     *  This bundle includes features for SV Polynomial. <br/> */
+    LOCATION_CAPS_QWES_QDR3                         = (1<<17),
 };
 
 /**
@@ -334,6 +384,12 @@ enum LocationResponse {
     LOCATION_RESPONSE_NOT_SUPPORTED = 2,
     /** LocationClientApi call has invalid parameter. <br/>   */
     LOCATION_RESPONSE_PARAM_INVALID = 3,
+    /** LocationClientApi call timeout */
+    LOCATION_RESPONSE_TIMEOUT = 4,
+    /** LocationClientApi is busy. */
+    LOCATION_RESPONSE_REQUEST_ALREADY_IN_PROGRESS = 5,
+    /** System is not ready, e.g.: hal daemon is not yet ready. */
+    LOCATION_RESPONSE_SYSTEM_NOT_READY = 6,
 };
 
 /** Specify the SV constellation type in GnssSv
@@ -469,6 +525,11 @@ enum GnssLocationInfoFlagMask {
     /** GnssLocation has valid GnssLocation::drSolutionStatusMask.
      *  <br/>   */
     GNSS_LOCATION_INFO_DR_SOLUTION_STATUS_MASK_BIT      = (1ULL<<32),
+    /** GnssLocation has valid GnssLocation::altitudeAssumed.
+     *  <br/> */
+    GNSS_LOCATION_INFO_ALTITUDE_ASSUMED_BIT             = (1ULL<<33),
+    /** GnssLocation has valid GnssLocation::sessionStatus. <br/> */
+    GNSS_LOCATION_INFO_SESSION_STATUS_BIT               = (1ULL<<34),
 };
 
 /** Specify the reliability level of
@@ -680,7 +741,11 @@ struct GnssLocationPositionDynamics {
     /** Uncertainty of yaw, 68% confidence level, in unit of radian.
      *  <br/> */
     float           yawUnc;
-    /** Heading rate, in unit of radians/second. <br/>   */
+    /** Heading rate, in unit of radians/second. <br/>
+     *  Range: +/- pi (where pi is ~3.14159). <br/>
+     *  The positive value is clockwise and negative value is
+     *  anti-clockwise. <br/>
+     */
     float           yawRate;
     /** Uncertainty of heading rate, in unit of radians/second.
      *  <br/> */
@@ -934,6 +999,17 @@ enum DrSolutionStatusMask {
     DR_SOLUTION_STATUS_VEHICLE_SENSOR_SPEED_INPUT_USED     = (1<<1),
 };
 
+/** Specify the session status. <br/> */
+enum LocSessionStatus {
+    /** Session is successful. <br/> */
+    LOC_SESS_SUCCESS      = 0,
+    /** Session is still in progress, the reported has not yet
+    achieved the needed criteria. <br/>*/
+    LOC_SESS_INTERMEDIATE = 1,
+    /** Session has failed. <br/>*/
+    LOC_SESS_FAILURE      = 2,
+};
+
 /** Specify the location info received by client via
  *  startPositionSession(uint32_t, const
  *  GnssReportCbs&, ResponseCb) and
@@ -1044,6 +1120,15 @@ struct GnssLocation : public Location {
     float enuVelocityVRPBased[3];
     /** Dead reckoning position engine status.  <br/> */
     DrSolutionStatusMask drSolutionStatusMask;
+    /** When this field is valid, it will indicates whether altitude
+     *  is assumed or calculated. <br/>
+     *  false: Altitude is calculated. <br/>
+     *  true:  Altitude is assumed; there may not be enough
+     *         satellites to determine the precise altitude. <br/> */
+    bool altitudeAssumed;
+    /** Indicates whether session is success, failure or
+     *  intermediate. <br/> */
+    LocSessionStatus sessionStatus;
 
     /* Default constructor to initalize GnssLocation structure */
     inline GnssLocation() :
@@ -1069,7 +1154,8 @@ struct GnssLocation : public Location {
             conformityIndex(0.0f),
             llaVRPBased({}),
             enuVelocityVRPBased{0.0f, 0.0f, 0.0f},
-            drSolutionStatusMask((DrSolutionStatusMask)0) {
+            drSolutionStatusMask((DrSolutionStatusMask)0),
+            altitudeAssumed(false), sessionStatus(LOC_SESS_FAILURE) {
     }
     /** Method to print the struct to human readable form, for logging.
      *  <br/> */
@@ -1083,7 +1169,10 @@ struct GnssSv {
      *   SV Range for supported constellation is specified as below:
      *   <br/>
      *    - For GPS:     1 to 32 <br/>
-     *    - For GLONASS: 65 to 96 <br/>
+     *    - For GLONASS: 65 to 96 or FCN+104
+     *                   [65, 96] if orbital slot number(OSN) is known
+     *                   [97, 110] as frequency channel number(FCN) [-7, 6] plus 104
+     *                   i.e. encode FCN -7 as 97, 0 as 104, 6 as 110 <br/>
      *    - For SBAS:    120 to 158 and 183 to 191 <br/>
      *    - For QZSS:    193 to 197 <br/>
      *    - For BDS:     201 to 263 <br/>
@@ -1121,6 +1210,9 @@ struct GnssSv {
     double basebandCarrierToNoiseDbHz;
     /** Method to print the struct to human readable form, for logging.
      *  <br/> */
+    uint16_t gloFrequency;
+    /** GLONASS frequency channel number
+     * <br/> */
     string toString() const;
 };
 
@@ -1605,6 +1697,15 @@ struct LocationSystemInfo {
     /** Method to print the struct to human readable form, for logging.
      *  <br/> */
     string toString() const;
+};
+
+/** Specify the set of terrestrial technologies to be used when
+ *  invoking getSingleTerrestrialPosition(). <br/>
+ *
+ *  Currently, only TERRESTRIAL_TECH_GTP_WWAN is supported.
+ *  <br/> */
+enum TerrestrialTechnologyMask {
+    TERRESTRIAL_TECH_GTP_WWAN = 1 << 0,
 };
 
 enum BatchingStatus {
@@ -2094,6 +2195,81 @@ public:
      *  <br/> */
     void stopPositionSession();
 
+    /** @brief
+        Retrieve single-shot terrestrial position using the set of
+        specified terrestrial technologies. <br/>
+
+        For this phase, only TERRESTRIAL_TECH_GTP_WWAN will be
+        supported and this will return cell-based position. <br/.
+
+        This API can be invoked with on-going tracking session
+        initiated via startPositionSession(). <br/
+
+        If this API is invoked with single-shot terrestrial position
+        already in progress, the request will fail and the
+        responseCallback will get invoked with
+        LOCATION_RESPONSE_BUSY. <br/
+
+        @param timeoutMsec
+        The amount of time that user is willing to wait for
+        the terrestrial positioning to become available. <br/>
+
+        @param techMask
+        The set of terrestrial technologies that are allowed to be
+        used for producing the position. <br/>
+
+        For this phase, only TERRESTRIAL_TECH_GTP_WWAN will be
+        supported. Passing other values to this API will return
+        false. <br/>
+
+        @param horQoS
+        horizontal accuracy requirement for the terrestrial fix.
+        0(Zero) means client does not specify horizontal accuracy
+        requirement. <br/>
+
+        For this phase, only 0 will be accepted. None-zero
+        horizontal accuracy requirement will not be supported and
+        API call will return false. <br/>
+
+        @param terrestrialPositionCallback
+        callback to receive terrestrial position. Some fields in
+        LocationClientApi::Location, e.g.: speed, bearing and their
+        uncertainty may not be available for terrestrial position.
+        Please check Location::flags for the fields that are
+        available. <br/>
+
+        This callback will only be invoked when
+        responseCallback is invoked with ResponseCb with processing
+        status set to LOCATION_RESPONSE_SUCCESS. <br/>
+
+        Null terrestrialPositionCallback will cancel the current
+        request. If responseCallback is none-null,
+        LOCATION_RESPONSE_SUCCESS will be delivered. <br/>
+
+        @param responseCallback
+        Callback to receive processing status, e.g.: success or
+        failure code: e.g.: timeout. <br/>
+
+        When the processing status is LOCATION_RESPONSE_SUCCESS, the
+        terrestrialPositionCallback will be invoked to deliver the
+        single-shot terrestrial position report. <br/>
+
+        If this API is invoked with invalid parameter, e.g.: 0
+        milli-seconds timeout, or techMask set to value other than
+        TERRESTRIAL_TECH_GTP_WWAN or horQoS set to none-zero value,
+        the responseCallback will get invoked with
+        LOCATION_RESPONSE_PARAM_INVALID. <br/>
+
+        If this API is invoked with single-shot terrestrial position
+        already in progress, the request will fail and the
+        responseCallback will get invoked with
+        LOCATION_RESPONSE_BUSY. <br/> */
+    void getSingleTerrestrialPosition(uint32_t timeoutMsec,
+                                      TerrestrialTechnologyMask techMask,
+                                      float horQos,
+                                      LocationCb terrestrialPositionCallback,
+                                      ResponseCb responseCallback);
+
     /** @example example1:testTrackingApi
     * <pre>
     * <code>
@@ -2399,6 +2575,15 @@ public:
                 0, if the year of Hardware information is not available.
     */
     uint16_t getYearOfHw();
+
+    /** @brief
+        Returns the feature capability corresponding to mask as a string
+        for easy inference of features supported. <br/>
+
+        @param capabMask
+        Mask of Location capabilities from LocationCapabilitiesMask. <br/>
+    */
+    static string capabilitiesToString(LocationCapabilitiesMask capabMask);
 
 private:
     /** Internal implementation for LocationClientApi */

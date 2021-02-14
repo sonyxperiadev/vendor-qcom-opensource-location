@@ -137,10 +137,7 @@ static GnssMeasurementsDataFlagsMask parseMeasurementsDataMask(
 }
 
 static LocationCapabilitiesMask parseCapabilitiesMask(::LocationCapabilitiesMask mask) {
-    uint64_t capsMask = 0;
-
-    LOC_LOGd("LocationCapabilitiesMask =0x%x ", mask);
-
+    LocationCapabilitiesMask capsMask = 0;
     if (::LOCATION_CAPABILITIES_TIME_BASED_TRACKING_BIT & mask) {
         capsMask |= LOCATION_CAPS_TIME_BASED_TRACKING_BIT;
     }
@@ -159,8 +156,45 @@ static LocationCapabilitiesMask parseCapabilitiesMask(::LocationCapabilitiesMask
     if (::LOCATION_CAPABILITIES_OUTDOOR_TRIP_BATCHING_BIT & mask) {
         capsMask |=  LOCATION_CAPS_OUTDOOR_TRIP_BATCHING_BIT;
     }
-
-    return static_cast<LocationCapabilitiesMask>(capsMask);
+    if (::LOCATION_CAPABILITIES_GNSS_MEASUREMENTS_BIT & mask) {
+        capsMask |=  LOCATION_CAPS_GNSS_MEASUREMENTS_BIT;
+    }
+    if (::LOCATION_CAPABILITIES_CONSTELLATION_ENABLEMENT_BIT & mask) {
+        capsMask |=  LOCATION_CAPS_CONSTELLATION_ENABLEMENT_BIT;
+    }
+    if (::LOCATION_CAPABILITIES_QWES_CARRIER_PHASE_BIT & mask) {
+        capsMask |=  LOCATION_CAPS_CARRIER_PHASE_BIT;
+    }
+    if (::LOCATION_CAPABILITIES_QWES_SV_POLYNOMIAL_BIT & mask) {
+        capsMask |=  LOCATION_CAPS_SV_POLYNOMIAL_BIT;
+    }
+    if (::LOCATION_CAPABILITIES_QWES_GNSS_SINGLE_FREQUENCY & mask) {
+        capsMask |=  LOCATION_CAPS_QWES_GNSS_SINGLE_FREQUENCY;
+    }
+    if (::LOCATION_CAPABILITIES_QWES_GNSS_MULTI_FREQUENCY & mask) {
+        capsMask |=  LOCATION_CAPS_QWES_GNSS_MULTI_FREQUENCY;
+    }
+    if (::LOCATION_CAPABILITIES_QWES_VPE & mask) {
+        capsMask |=  LOCATION_CAPS_QWES_VPE;
+    }
+    if (::LOCATION_CAPABILITIES_QWES_CV2X_LOCATION_BASIC & mask) {
+        capsMask |=  LOCATION_CAPS_QWES_CV2X_LOCATION_BASIC;
+    }
+    if (::LOCATION_CAPABILITIES_QWES_CV2X_LOCATION_PREMIUM & mask) {
+        capsMask |=  LOCATION_CAPS_QWES_CV2X_LOCATION_PREMIUM;
+    }
+    if (::LOCATION_CAPABILITIES_QWES_PPE & mask) {
+        capsMask |=  LOCATION_CAPS_QWES_PPE;
+    }
+    if (::LOCATION_CAPABILITIES_QWES_QDR2 & mask) {
+        capsMask |=  LOCATION_CAPS_QWES_QDR2;
+    }
+    if (::LOCATION_CAPABILITIES_QWES_QDR3 & mask) {
+        capsMask |=  LOCATION_CAPS_QWES_QDR3;
+    }
+    LOC_LOGd ("parseCapabilitiesMask LocCapabMask =0x%" PRIx64 " LCA mask 0x%" PRIx64,
+            mask, capsMask);
+    return capsMask;
 }
 
 static uint16_t parseYearOfHw(::LocationCapabilitiesMask mask) {
@@ -714,6 +748,14 @@ static GnssLocation parseLocationInfo(const ::GnssLocationInfoNotification &halL
         flags |= GNSS_LOCATION_INFO_DR_SOLUTION_STATUS_MASK_BIT;
     }
 
+    if (::GNSS_LOCATION_INFO_ALTITUDE_ASSUMED_BIT & halLocationInfo.flags) {
+        flags |= GNSS_LOCATION_INFO_ALTITUDE_ASSUMED_BIT;
+    }
+
+    if (::GNSS_LOCATION_INFO_SESSION_STATUS_BIT & halLocationInfo.flags) {
+        flags |= GNSS_LOCATION_INFO_SESSION_STATUS_BIT;
+    }
+
     locationInfo.gnssInfoFlags = (GnssLocationInfoFlagMask)flags;
     locationInfo.altitudeMeanSeaLevel = halLocationInfo.altitudeMeanSeaLevel;
     locationInfo.pdop = halLocationInfo.pdop;
@@ -752,6 +794,8 @@ static GnssLocation parseLocationInfo(const ::GnssLocationInfoNotification &halL
     locationInfo.enuVelocityVRPBased[2] = halLocationInfo.enuVelocityVRPBased[2];
     parseGnssMeasUsageInfo(halLocationInfo, locationInfo.measUsageInfo);
     locationInfo.drSolutionStatusMask = (DrSolutionStatusMask) halLocationInfo.drSolutionStatusMask;
+    locationInfo.altitudeAssumed = halLocationInfo.altitudeAssumed;
+    locationInfo.sessionStatus = (LocSessionStatus) halLocationInfo.sessionStatus;
 
     flags = 0;
     if (::LOCATION_SBAS_CORRECTION_IONO_BIT & halLocationInfo.navSolutionMask) {
@@ -809,6 +853,9 @@ static GnssSv parseGnssSv(const ::GnssSv &halGnssSv) {
 
         case ::GNSS_SV_TYPE_GLONASS:
             gnssSv.type = GNSS_SV_TYPE_GLONASS;
+            if (isGloSlotUnknown(halGnssSv.svId)) { // OSN is not known, report FCN
+                gnssSv.svId = halGnssSv.gloFrequency + 96;
+            }
             break;
 
         case ::GNSS_SV_TYPE_QZSS:
@@ -956,6 +1003,9 @@ static LocationResponse parseLocationError(::LocationError error) {
         case ::LOCATION_ERROR_NOT_SUPPORTED:
             response = LOCATION_RESPONSE_NOT_SUPPORTED;
             break;
+        case ::LOCATION_ERROR_TIMEOUT:
+            response = LOCATION_RESPONSE_TIMEOUT;
+            break;
         default:
             response = LOCATION_RESPONSE_UNKOWN_FAILURE;
             break;
@@ -1088,6 +1138,8 @@ LocationClientApiImpl::LocationClientApiImpl(CapabilitiesCb capabitiescb) :
         mGnssEnergyConsumedResponseCb(nullptr),
         mLocationSysInfoCb(nullptr),
         mLocationSysInfoResponseCb(nullptr),
+        mSingleTerrestrialPosCb(nullptr),
+        mSingleTerrestrialPosRespCb(nullptr),
         mPingTestCb(nullptr),
         mMsgTask("ClientApiImpl"),
         mLogger()
@@ -1983,6 +2035,90 @@ void LocationClientApiImpl::updateLocationSystemInfoListener(
             this, locSystemInfoCallback, responseCallback));
 }
 
+void LocationClientApiImpl::getSingleTerrestrialPos(
+        uint32_t timeoutMsec, TerrestrialTechMask techMask, float horQoS,
+        LocationCb terrestrialPositionCallback, ResponseCb responseCallback) {
+
+    struct GetSingleTerrestrialPosReq : public LocMsg {
+        GetSingleTerrestrialPosReq(LocationClientApiImpl *apiImpl,
+                                        uint32_t timeoutMsec,
+                                        TerrestrialTechMask techMask,
+                                        float horQoS,
+                                        LocationCb terrestrialPositionCallback,
+                                        ResponseCb responseCallback) :
+            mApiImpl(apiImpl), mTimeoutMsec(timeoutMsec), mTechMask(techMask),
+            mHorQoS(horQoS), mSingleTerrestrialPosCb(terrestrialPositionCallback),
+            mResponseCb(responseCallback) {}
+
+        virtual ~GetSingleTerrestrialPosReq() {}
+        void proc() const {
+            do {
+                if ((mApiImpl->mSingleTerrestrialPosCb == nullptr) &&
+                        (mSingleTerrestrialPosCb == nullptr)) {
+                    // pos cb can not be null if there is no pending request
+                    if (mResponseCb) {
+                        mResponseCb(LOCATION_RESPONSE_PARAM_INVALID);
+                    }
+                    break;
+                }
+
+                if ((mApiImpl->mSingleTerrestrialPosCb != nullptr) &&
+                        (mSingleTerrestrialPosCb != nullptr)) {
+                    // do not allow concurent single terrestrial position requests
+                    if (mResponseCb) {
+                        mResponseCb(LOCATION_RESPONSE_REQUEST_ALREADY_IN_PROGRESS);
+                    }
+                    break;
+                }
+
+                if (!mApiImpl->mHalRegistered) {
+                    if (mResponseCb) {
+                        mResponseCb(LOCATION_RESPONSE_SYSTEM_NOT_READY);
+                    }
+                    break;
+                }
+
+                // save the new callback
+                mApiImpl->mSingleTerrestrialPosCb = mSingleTerrestrialPosCb;
+                mApiImpl->mSingleTerrestrialPosRespCb = mResponseCb;
+
+                // If client has cancelled the callback, we are done with processing
+                if (mApiImpl->mSingleTerrestrialPosCb == nullptr) {
+                    if (mResponseCb) {
+                        mResponseCb(LOCATION_RESPONSE_SUCCESS);
+                    }
+                    break;
+                }
+
+                string pbStr;
+                LocAPIGetSingleTerrestrialPosReqMsg msg(
+                        mApiImpl->mSocketName, mTimeoutMsec, mTechMask, mHorQoS,
+                        &mApiImpl->mPbufMsgConv);
+
+                if (msg.serializeToProtobuf(pbStr)) {
+                    bool rc = mApiImpl->sendMessage(
+                            reinterpret_cast<uint8_t *>((uint8_t *)pbStr.c_str()),
+                                        pbStr.size());
+                    if (!rc && mResponseCb) {
+                        mResponseCb(LOCATION_RESPONSE_UNKOWN_FAILURE);
+                    }
+                }
+            } while (0);
+        }
+
+        LocationClientApiImpl *mApiImpl;
+        uint32_t mTimeoutMsec;
+        TerrestrialTechMask mTechMask;
+        float mHorQoS;
+        LocationCb mSingleTerrestrialPosCb;
+        ResponseCb mResponseCb;
+    };
+
+    mMsgTask.sendMsg(new (nothrow)GetSingleTerrestrialPosReq(
+            this, timeoutMsec, techMask, horQoS,
+            terrestrialPositionCallback, responseCallback));
+}
+
 /******************************************************************************
 LocationClientApiImpl - LocIpc onReceive handler
 ******************************************************************************/
@@ -2012,7 +2148,7 @@ void LocationClientApiImpl::capabilitesCallback(ELocMsgID msgId, const void* msg
         }
     }
 
-    LOC_LOGe(">>> session id %d, cap mask 0x%x", mSessionId, mCapsMask);
+    LOC_LOGe(">>> session id %d, cap mask 0x%" PRIx64, mSessionId, mCapsMask);
     if (mSessionId != LOCATION_CLIENT_SESSION_ID_INVALID)  {
         // force mSessionId to invalid so startTracking will start the sesssion
         // if hal deamon crashes and restarts in the middle of a session
@@ -2235,7 +2371,7 @@ void IpcListener::onReceive(const char* data, uint32_t length,
                     gnssLocation.bearingAccuracy    = location.bearingAccuracy;
                     gnssLocation.techMask           = location.techMask;
 
-                    mApiImpl.mLogger.log(gnssLocation);
+                    mApiImpl.mLogger.log(gnssLocation, mApiImpl.mCapsMask);
                 }
                 break;
             }
@@ -2329,7 +2465,7 @@ void IpcListener::onReceive(const char* data, uint32_t length,
                     if (mApiImpl.mGnssLocationCb) {
                         mApiImpl.mGnssLocationCb(gnssLocation);
                     }
-                    mApiImpl.mLogger.log(gnssLocation);
+                    mApiImpl.mLogger.log(gnssLocation, mApiImpl.mCapsMask);
                 }
                 break;
             }
@@ -2360,7 +2496,7 @@ void IpcListener::onReceive(const char* data, uint32_t length,
                         GnssLocation gnssLocation =
                             parseLocationInfo(pEngLocationsInfoIndMsg->engineLocationsInfo[i]);
                         engLocationsVector.push_back(gnssLocation);
-                        mApiImpl.mLogger.log(gnssLocation);
+                        mApiImpl.mLogger.log(gnssLocation, mApiImpl.mCapsMask);
                     }
 
                     if (mApiImpl.mEngLocationsCb) {
@@ -2521,6 +2657,32 @@ void IpcListener::onReceive(const char* data, uint32_t length,
                     if (mApiImpl.mLocationSysInfoCb) {
                         mApiImpl.mLocationSysInfoCb(locationSystemInfo);
                     }
+                }
+                break;
+            }
+
+            case E_LOCAPI_GET_SINGLE_TERRESTRIAL_POS_RESP_MSG_ID:
+            {
+                LOC_LOGd("<<< message = terrestrial pos info");
+                if (mApiImpl.mSingleTerrestrialPosCb) {
+                    PBLocAPIGetSingleTerrestrialPosRespMsg pbMsg;
+                    if (0 == pbMsg.ParseFromString(pbLocApiMsg.payload())) {
+                        LOC_LOGe("Failed to parse PBLocAPIGetSingleTerrestrialPosRespMsg!!");
+                        return;
+                    }
+
+                    LocAPIGetSingleTerrestrialPosRespMsg msg(sockName.c_str(), pbMsg,
+                                                             &mApiImpl.mPbufMsgConv);
+                    if (mApiImpl.mSingleTerrestrialPosRespCb) {
+                        mApiImpl.mSingleTerrestrialPosRespCb(parseLocationError(msg.mErrorCode));
+                    }
+                    if (msg.mErrorCode == ::LOCATION_ERROR_SUCCESS) {
+                        Location terrestialPos = parseLocation(msg.mLocation);
+                        mApiImpl.mSingleTerrestrialPosCb(terrestialPos);
+                    }
+                    // clean up variable to indicate that no request is pending
+                    mApiImpl.mSingleTerrestrialPosRespCb = nullptr;
+                    mApiImpl.mSingleTerrestrialPosCb = nullptr;
                 }
                 break;
             }
