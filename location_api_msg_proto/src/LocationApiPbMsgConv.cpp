@@ -3144,8 +3144,9 @@ int LocationApiPbMsgConv::convertCollectiveResPayloadToPB(
     }
 
     // repeated PBGeofenceResponse resp = 1;
-    LocApiPb_LOGd("LocApiPB: collctResPload count:%d", collctResPload.count);
-    for (int i=0; i < collctResPload.count; i++) {
+    int count = collctResPload.resp.size();
+    LocApiPb_LOGd("LocApiPB: collctResPload count:%d", count);
+    for (int i=0; i < count; i++) {
         LocApiPb_LOGv("LocApiPB: collctResPload clientId:%u, error:%d",
                 collctResPload.resp[i].clientId, collctResPload.resp[i].error);
 
@@ -3255,13 +3256,13 @@ int LocationApiPbMsgConv::convertLocAPIBatchingNotifMsgToPB(
         LOC_LOGe("pbLocApiBatchNotifMsg is NULL!, return");
         return 1;
     }
-    LOC_LOGd("LocApiPB: locApiBatchNotifMsg - BatchStat: %d, Loc count:%u",
-            locApiBatchNotifMsg.status, locApiBatchNotifMsg.count);
+    int count = locApiBatchNotifMsg.location.size();
+    LOC_LOGd("LocApiPB: locApiBatchNotifMsg - BatchStat: %d, Loc count:%d",
+            locApiBatchNotifMsg.status, count);
     // PBBatchingStatus status = 1;
     pbLocApiBatchNotifMsg->set_status(
             getPBEnumForBatchingStatus(locApiBatchNotifMsg.status));
     // repeated PBLocation location = 2;
-    uint32_t count = locApiBatchNotifMsg.count;
     for (int i=0; i < count; i++) {
         PBLocation* location = pbLocApiBatchNotifMsg->add_location();
         if (nullptr != location) {
@@ -3285,9 +3286,9 @@ int LocationApiPbMsgConv::convertLocAPIGfBreachNotifToPB(
         LOC_LOGe("pbLocApiGfBreachNotif is NULL!, return");
         return 1;
     }
+    int gfBreachCnt = locApiGfBreachNotif.id.size();
     LOC_LOGd("LocApiPB: locApiGfBreachNotif - BreachTypMask: %x, timestamp: %" PRIu64 \
-            "count:%d", locApiGfBreachNotif.type, locApiGfBreachNotif.timestamp,
-            locApiGfBreachNotif.count);
+            "count:%d", locApiGfBreachNotif.type, locApiGfBreachNotif.timestamp, gfBreachCnt);
 
     // uint64 timestamp = 1;
     pbLocApiGfBreachNotif->set_timestamp(locApiGfBreachNotif.timestamp);
@@ -3309,7 +3310,7 @@ int LocationApiPbMsgConv::convertLocAPIGfBreachNotifToPB(
     }
 
     // repeated uint32 id = 4;
-    for (int i = 0; i < locApiGfBreachNotif.count; i++) {
+    for (int i = 0; i < gfBreachCnt; i++) {
         pbLocApiGfBreachNotif->add_id(locApiGfBreachNotif.id[i]);
     }
     return 0;
@@ -4364,14 +4365,16 @@ int LocationApiPbMsgConv::pbConvertToCollectiveResPayload(
         CollectiveResPayload &clctResPayload) const {
     // repeated PBGeofenceResponse resp = 1;
     uint32_t count = pbClctResPayload.resp_size();
-    clctResPayload.count = count;
+    LocApiPb_LOGd("LocApiPB: pbClctResPayload count:%lu", count);
     for (int i=0; i < count; i++) {
-        clctResPayload.resp[i].clientId = pbClctResPayload.resp(i).clientid();
-        clctResPayload.resp[i].error = getEnumForPBLocationError(pbClctResPayload.resp(i).error());
+        GeofenceResponse gfResp;
+        gfResp.clientId = pbClctResPayload.resp(i).clientid();
+        gfResp.error = getEnumForPBLocationError(pbClctResPayload.resp(i).error());
+        clctResPayload.resp.push_back(gfResp);
         LocApiPb_LOGv("LocApiPB: pbClctResPayload clientId:%u, error:%d",
-                clctResPayload.resp[i].clientId, clctResPayload.resp[i].error);
+                gfResp.clientId, gfResp.error);
     }
-    LocApiPb_LOGd("LocApiPB: pbClctResPayload count:%d", clctResPayload.count);
+
     return 0;
 }
 
@@ -4430,9 +4433,10 @@ int LocationApiPbMsgConv::pbConvertToLocAPIBatchNotification(
 
     // repeated PBLocation location = 2;
     uint32_t count = pbLocBatchNotif.location_size();
-    locBatchNotif.count = count;
     for (int i=0; i < count; i++) {
-        pbConvertToLocation(pbLocBatchNotif.location(i), locBatchNotif.location[i]);
+        Location batchLoc;
+        pbConvertToLocation(pbLocBatchNotif.location(i), batchLoc);
+        locBatchNotif.location.push_back(batchLoc);
     }
 
     LOC_LOGd("LocApiPB: pbLocBatchNotif - BatchStat: %d, Loc count:%u",
@@ -4452,8 +4456,12 @@ int LocationApiPbMsgConv::pbConvertToLocAPIGfBreachNotification(
     // PBLocation location = 3;
     pbConvertToLocation(pbLocApiGfBreachNotif.location(), locApiGfBreachNotif.location);
 
-    // repeated uint32 id = 4;  --- uint32_t id[1];
-    locApiGfBreachNotif.id[0] = pbLocApiGfBreachNotif.id(0);
+    // repeated uint32 id = 4;
+    uint32_t gfBreachCnt = pbLocApiGfBreachNotif.id_size();
+    LOC_LOGd("LocApiPB: gfBreachCnt: %lu", gfBreachCnt);
+    for (uint32_t i=0; i < gfBreachCnt; i++) {
+        locApiGfBreachNotif.id.push_back(pbLocApiGfBreachNotif.id(0));
+    }
 
     LOC_LOGd("LocApiPB: pbLocApiGfBreachNotif - BreachTypMask: %x, timestamp: %" PRIu64,
             locApiGfBreachNotif.type, locApiGfBreachNotif.timestamp);

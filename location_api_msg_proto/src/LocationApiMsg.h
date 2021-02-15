@@ -1,4 +1,4 @@
-/* Copyright (c) 2018-2020, The Linux Foundation. All rights reserved.
+/* Copyright (c) 2018-2021, The Linux Foundation. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -30,6 +30,7 @@
 #define LOCATIONAPIMSG_H
 
 #include <string>
+#include <vector>
 #include <memory>
 #include <algorithm>
 #include <loc_pla.h> // for strlcpy
@@ -320,21 +321,15 @@ struct LocAPINmeaSerializedPayload {
 };
 
 struct LocAPIBatchNotification {
-    // do not use size_t as data type for size_t is architecture dependent
-    uint32_t size;
-    uint32_t count;
     BatchingStatus status;
-    Location location[1];
+    std::vector<Location> location;
 };
 
 struct LocAPIGeofenceBreachNotification {
-    // do not use size_t as data type for size_t is architecture dependent
-    uint32_t size;
-    uint32_t count;
     uint64_t timestamp;
     GeofenceBreachTypeMask type; //type of breach
     Location location;   //location associated with breach
-    uint32_t id[1];
+    std::vector<uint32_t> id;
 };
 
 struct GeofencePayload {
@@ -359,10 +354,7 @@ struct GeofenceResponse {
 };
 
 struct CollectiveResPayload {
-    // do not use size_t as data type for size_t is architecture dependent
-    uint32_t size;
-    uint32_t count;
-    GeofenceResponse resp[1];
+    std::vector<GeofenceResponse> resp;
 };
 /******************************************************************************
 IPC message header structure
@@ -505,6 +497,9 @@ struct LocAPICollectiveRespMsg: LocAPIMsgHeader
 {
     CollectiveResPayload collectiveRes;
 
+    inline LocAPICollectiveRespMsg(const char* name, ELocMsgID msgId,
+            const LocationApiPbMsgConv *pbMsgConv) :
+        LocAPIMsgHeader(name, msgId, pbMsgConv) { }
     inline LocAPICollectiveRespMsg(const char* name, ELocMsgID msgId,
             CollectiveResPayload& response, const LocationApiPbMsgConv *pbMsgConv) :
         LocAPIMsgHeader(name, msgId, pbMsgConv),
@@ -802,6 +797,8 @@ struct LocAPIBatchingIndMsg: LocAPIMsgHeader
 {
     LocAPIBatchNotification batchNotification;
 
+    inline LocAPIBatchingIndMsg(const char* name, const LocationApiPbMsgConv *pbMsgConv) :
+        LocAPIMsgHeader(name, E_LOCAPI_BATCHING_MSG_ID, pbMsgConv) { }
     inline LocAPIBatchingIndMsg(const char* name, LocAPIBatchNotification& batchNotif,
             const LocationApiPbMsgConv *pbMsgConv) :
         LocAPIMsgHeader(name, E_LOCAPI_BATCHING_MSG_ID, pbMsgConv),
@@ -817,6 +814,8 @@ struct LocAPIGeofenceBreachIndMsg: LocAPIMsgHeader
 {
     LocAPIGeofenceBreachNotification gfBreachNotification;
 
+    inline LocAPIGeofenceBreachIndMsg(const char* name, const LocationApiPbMsgConv *pbMsgConv) :
+        LocAPIMsgHeader(name, E_LOCAPI_GEOFENCE_BREACH_MSG_ID, pbMsgConv) { }
     inline LocAPIGeofenceBreachIndMsg(const char* name,
             LocAPIGeofenceBreachNotification& gfBreachNotif,
             const LocationApiPbMsgConv *pbMsgConv) :
