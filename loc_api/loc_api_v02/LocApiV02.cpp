@@ -1,4 +1,4 @@
-/* Copyright (c) 2011-2020, The Linux Foundation. All rights reserved.
+/* Copyright (c) 2011-2021, The Linux Foundation. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -7926,6 +7926,12 @@ LocPosTechMask LocApiV02 :: convertPosTechMask(
 
    if (mask & QMI_LOC_POS_TECH_MASK_HYBRID_V02)
       locTechMask |= LOC_POS_TECH_MASK_HYBRID;
+
+   if (mask & QMI_LOC_POS_TECH_MASK_INS_V02)
+      locTechMask |= LOC_POS_TECH_MASK_INS;
+
+   if (mask & QMI_LOC_POS_TECH_MASK_PDR_V02)
+      locTechMask |= LOC_POS_TECH_MASK_PDR;
 
    return locTechMask;
 }
