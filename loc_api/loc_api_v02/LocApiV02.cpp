@@ -2686,7 +2686,7 @@ void LocApiV02 :: reportPosition (
         locationExtended.tech_mask = convertPosTechMask(location_report_ptr->technologyMask);
 
         //Mark the location source as from GNSS
-        location.gpsLocation.flags |= LOCATION_HAS_SOURCE_INFO;
+        location.gpsLocation.flags |= LOC_GPS_LOCATION_HAS_SOURCE_INFO;
         location.position_source = ULP_LOCATION_IS_FROM_GNSS;
 
         if (location_report_ptr->spoofReportMask_valid)
