@@ -153,9 +153,9 @@ enum PBClientType {
 }
 
 enum PBLocationCallbacksMask {
-    PB_E_LOC_CB_INVALID                    = 0;
+    PB_E_LOC_CB_INVALID                     = 0;
     /**< Register for DBT location report */
-    PB_E_LOC_CB_DISTANCE_BASED_TRACKING_BIT = 0x1;
+    PB_E_LOC_CB_TRACKING_BIT                = 0x1;
     /**< Register for GNSS Location */
     PB_E_LOC_CB_GNSS_LOCATION_INFO_BIT      = 0x2;
     /**< Register for GNSS SV */

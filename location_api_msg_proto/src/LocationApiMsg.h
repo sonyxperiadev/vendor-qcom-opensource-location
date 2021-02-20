@@ -280,7 +280,7 @@ enum ELocMsgID {
 
 typedef uint32_t LocationCallbacksMask;
 enum ELocationCallbacksOption {
-    E_LOC_CB_DISTANCE_BASED_TRACKING_BIT= (1<<0), /**< Register for DBT location report */
+    E_LOC_CB_TRACKING_BIT               = (1<<0), /**< Register for DBT location report */
     E_LOC_CB_GNSS_LOCATION_INFO_BIT     = (1<<1), /**< Register for GNSS Location */
     E_LOC_CB_GNSS_SV_BIT                = (1<<2), /**< Register for GNSS SV */
     E_LOC_CB_GNSS_NMEA_BIT              = (1<<3), /**< Register for GNSS NMEA */
@@ -297,7 +297,7 @@ enum ELocationCallbacksOption {
 
 // Mask related to all info that are tied with a position session and need to be unsubscribed
 // when session is stopped
-#define LOCATION_SESSON_ALL_INFO_MASK (E_LOC_CB_DISTANCE_BASED_TRACKING_BIT|\
+#define LOCATION_SESSON_ALL_INFO_MASK (E_LOC_CB_TRACKING_BIT|\
                                        E_LOC_CB_GNSS_LOCATION_INFO_BIT|\
                                        E_LOC_CB_GNSS_SV_BIT|E_LOC_CB_GNSS_NMEA_BIT|\
                                        E_LOC_CB_GNSS_DATA_BIT|E_LOC_CB_GNSS_MEAS_BIT|\
