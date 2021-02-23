@@ -1,6 +1,6 @@
 #/bin/bash
 ##################################################################################################
-## Copyright (c) 2020 The Linux Foundation. All rights reserved.
+## Copyright (c) 2020-2021 The Linux Foundation. All rights reserved.
 ##
 ## Redistribution and use in source and binary forms, with or without
 ## modification, are permitted provided that the following conditions are
@@ -45,8 +45,6 @@
 ##
 ## Note:
 ## 1. Add any new .proto files to "src_proto_files" array
-## 2. If protobuf package version is updated, update the values in this script too (variable -
-##    protobuf_package_ver).
 ##
 ##################################################################################################
 
@@ -82,64 +80,28 @@ fi
 ## - <ROOT>/meta-openembedded/meta-oe/recipes-devtools/protobuf/protobuf_3.6.1.bb
 ## SRCREV = "48cb18e5c419ddd23d9badcfe4e9df7bde1979b2"
 ## PV .= "+git${SRCPV}"
-## eg: protobuf_package_ver="3.6.1+gitAUTOINC+48cb18e5c4-r0"
-## Output path - <WSP>/poky/build/tmp-glibc/work/x86_64-linux/protobuf-native/
 
 ## LE target
 ## - <ROOT>/poky/meta-qti-bsp/recipes-devtools/protobuf/protobuf_3.3.0.bb
 ## SRCREV = "a6189acd18b00611c1dc7042299ad75486f08a1a"
 ## PV = "3.3.0+git${SRCPV}"
-## eg: protobuf_package_ver="3.3.0+gitAUTOINC+a6189acd18-r0"
-## Output path - <WSP>/poky/build/tmp-glibc/work/x86_64-linux/protobuf-native/
 
 ## EAP target
 ## - <ROOT>/sources/meta-openembedded/meta-oe/recipes-devtools/protobuf/protobuf_3.5.1.bb
 ## SRCREV = "106ffc04be1abf3ff3399f54ccf149815b287dd9"
 ## PV = "3.5.1+git${SRCPV}"
-## eg: protobuf_package_ver="3.5.1+gitAUTOINC+106ffc04be-r0"
-## Output path is different - <WSP>/build/tmp/work/x86_64-linux/protobuf-native/
 
 ## LE-PDK target
 ## - <ROOT>/poky/meta-qti-bsp/recipes-devtools/protobuf/protobuf_3.3.0.bb
 ## SRCREV = "a6189acd18b00611c1dc7042299ad75486f08a1a"
 ## PV = "3.3.0+git${SRCPV}"
-## eg: protobuf_package_ver="3.3.0+gitAUTOINC+a6189acd18-r0"
-## <WSP> will be "<ROOT>/src"
-## Output path - eg: <WSP>/../build-qti-distro-fullstack-perf/tmp-glibc/work/x86_64-linux/protobuf-native
 
-# protobuf native out path default - for LE/LV
-protobuf_protoc_search_base="${wsp_path}poky/build/tmp-glibc"
-
-# find protoc path based on target type
 if [ -e $wsp_path"sources/meta-qti-eap/recipes-location/location/gps-utils_git.bb" ]
 then
     manifest_info="LE-EAP"
-    protobuf_protoc_search_base="${wsp_path}build/tmp"
 elif [ -e "$wsp_path/../poky/qti-conf/set_bb_env.sh" ]
 then
     manifest_info="LE-PDK"
-    if [ "${DISTRO}" == "" ]
-    then
-        # script invoked as part of build
-        echo "DISTRO value is null. Finding path from ${PKG_CONFIG_SYSROOT_DIR}"
-        ## eg: PKG_CONFIG_SYSROOT_DIR=<ROOT>/build-qti-distro-nogplv3-debug/tmp-glibc/work/sdxlemur-oe-linux-gnueabi/location-api-msg-proto/git-r0/recipe-sysroot
-        ## build directory is 6 levels up
-        build_folder=${PKG_CONFIG_SYSROOT_DIR}"/../../../../../../"
-    else
-        # usually when we run this script standalone
-        echo "Machine : ${MACHINE}"
-        echo "Distro : ${DISTRO}"
-        build_folder=$wsp_path"../build-${DISTRO}"
-    fi
-
-    # find build folder and select first one if multiple build folders
-
-    echo "LE PDK - Using build folder ${build_folder}"
-    if ! [ -d ${build_folder} ]; then
-        echo "ERROR!! Build folders ${build_folder} not found..."
-        exit 1
-    fi
-    protobuf_protoc_search_base=$build_folder"/tmp-glibc"
 elif [ -e $wsp_path"meta-qti-bsp/meta-qti-base/recipes-location/location/gps-utils_git.bb" ]
 then
     manifest_info="LV"
@@ -147,7 +109,7 @@ else
     manifest_info="LE"
 fi
 
-protobuf_protoc_path="$(find ${protobuf_protoc_search_base}/sysroots*/x86_64* -maxdepth 4 -type f -name protoc)"
+protobuf_protoc_path=$(which protoc)
 echo "Target is $manifest_info"
 echo "Binary protoc path is : $protobuf_protoc_path"
 if ! [ -e $protobuf_protoc_path ]
@@ -155,6 +117,8 @@ then
     echo "ERROR!! Protoc - $protobuf_protoc_path - is not found..."
     exit 1
 fi
+
+echo "Protobuf version is: $(eval $protobuf_protoc_path --version)"
 
 ## array of .proto files. Add any new .proto files to this array.
 src_proto_files=(LocationApiDataTypes.proto LocationApiMsg.proto)
