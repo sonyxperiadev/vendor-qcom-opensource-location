@@ -8784,7 +8784,7 @@ void LocApiV02::onDbtPosReportEvent(const qmiLocEventDbtPositionReportIndMsgT_v0
     // Calling the base
     reportDBTPosition(location,
                       locationExtended,
-                      LOC_SESS_SUCCESS,
+                      LOC_SESS_INTERMEDIATE,
                       loc_technology_mask);
 }
 
