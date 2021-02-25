@@ -1,4 +1,4 @@
-/* Copyright (c) 2020 The Linux Foundation. All rights reserved.
+/* Copyright (c) 2020-2021 The Linux Foundation. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -42,8 +42,8 @@ enum LocationApiDataTypesVersion {
     LOCAPI_DATA_TYPES_VER_MAJOR = 1;
     // Minor - New features / API addition, new message/elemtent addition.
     // Bump the last byte of version i.e. x.2 to x.3
-    // Minor version 8: Add isNhz in GnssMeasurements
-    LOCAPI_DATA_TYPES_VER_MINOR = 8;
+    // Minor version 9: Add receivedSvTimeSubNs in GnssMeasurements
+    LOCAPI_DATA_TYPES_VER_MINOR = 9;
 }
 
 // ============================================================================
@@ -829,6 +829,7 @@ message PBGnssMeasurementsData {
     double fullInterSignalBiasNs = 23;
     double fullInterSignalBiasUncertaintyNs = 24;
     uint32 cycleSlipCount = 25;
+    float receivedSvTimeSubNs = 26;
 }
 
 message PBLocApiGnssLocationPositionDynamics {
