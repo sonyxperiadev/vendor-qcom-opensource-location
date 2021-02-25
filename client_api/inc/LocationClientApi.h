@@ -1227,7 +1227,7 @@ struct GnssSv {
      *  This field is valid if gnssSvOptionsMask has
      *  GNSS_SV_OPTIONS_HAS_GNSS_SIGNAL_TYPE_BIT. <br/> */
     GnssSignalTypeMask gnssSignalTypeMask;
-    /** GLONASS frequency channel number
+    /** GLONASS frequency channel number, range is [1, 14].
      * <br/> */
     uint16_t gloFrequency;
     /** Method to print the struct to human readable form, for logging.
@@ -1905,8 +1905,12 @@ struct GnssReportCbs {
     /** Callback to receive GnssData from modem GNSS engine.
      *  <br/> */
     GnssDataCb gnssDataCallback;
-    /** Callback to receive GnssMeasurements modem GNSS engine. <br/>  */
+    /** Callback to receive 1Hz GnssMeasurements from modem GNSS
+     *  engine. <br/> */
     GnssMeasurementsCb gnssMeasurementsCallback;
+    /** Callback to receive NHz GnssMeasurements from modem GNSS
+     *  engine. <br/> */
+    GnssMeasurementsCb gnssNHzMeasurementsCallback;
 };
 
 /** Specify the set of callbacks to receive the reports when
@@ -1932,9 +1936,12 @@ struct EngineReportCbs {
     /** Callback to receive GnssData from modem GNSS engine.
      *  <br/> */
     GnssDataCb gnssDataCallback;
-    /** Callback to receive GnssMeasurements from modem GNSS engine.
-     *  <br/> */
+    /** Callback to receive 1Hz GnssMeasurements from modem GNSS
+     *  engine. <br/> */
     GnssMeasurementsCb gnssMeasurementsCallback;
+    /** Callback to receive NHz GnssMeasurements from modem GNSS
+     *  engine. <br/> */
+    GnssMeasurementsCb gnssNHzMeasurementsCallback;
 };
 
 /**
@@ -2250,7 +2257,9 @@ public:
 
         @param responseCallback
         Callback to receive processing status, e.g.: success or
-        failure code: e.g.: timeout. <br/>
+        failure code: e.g.: timeout. If null responseCallback is
+        passed, client will not be informed of processing status,
+        e.g.:LOCATION_RESPONSE_PARAM_INVALID. <br/>
 
         When the processing status is LOCATION_RESPONSE_SUCCESS, the
         terrestrialPositionCallback will be invoked to deliver the
