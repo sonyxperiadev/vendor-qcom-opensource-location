@@ -1126,6 +1126,7 @@ string GnssMeasurementsData::toString() const {
     out += FIELDVAL_DEC(timeOffsetNs);
     out += FIELDVAL_MASK(stateMask, GnssMeasurementsStateMask_tbl);
     out += FIELDVAL_DEC(receivedSvTimeNs);
+    out += FIELDVAL_DEC(receivedSvTimeSubNs);
     out += FIELDVAL_DEC(receivedSvTimeUncertaintyNs);
     out += FIELDVAL_DEC(carrierToNoiseDbHz);
     out += FIELDVAL_DEC(pseudorangeRateMps);

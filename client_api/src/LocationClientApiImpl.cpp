@@ -870,6 +870,8 @@ static GnssMeasurements parseGnssMeasurements(const ::GnssMeasurementsNotificati
         measurement.stateMask = (GnssMeasurementsStateMask)
                 halGnssMeasurements.measurements[meas].stateMask;
         measurement.receivedSvTimeNs = halGnssMeasurements.measurements[meas].receivedSvTimeNs;
+        measurement.receivedSvTimeSubNs =
+                halGnssMeasurements.measurements[meas].receivedSvTimeSubNs;
         measurement.receivedSvTimeUncertaintyNs =
                 halGnssMeasurements.measurements[meas].receivedSvTimeUncertaintyNs;
         measurement.carrierToNoiseDbHz =

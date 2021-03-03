@@ -78,6 +78,8 @@ using namespace loc_core;
 /* seconds per week*/
 #define WEEK_MSECS              (60*60*24*7*1000LL)
 #define DAY_MSECS               (60*60*24*1000LL)
+#define NSEC_IN_MSEC            (1000000LL)
+
 /* Num days elapsed since GLONASS started from GPS start day 1980->1996 */
 #define GPS_GLONASS_DAYS_DIFF    5838
 /* number of glonass days in a 4-year interval */
@@ -5869,30 +5871,46 @@ bool LocApiV02 :: convertGnssMeasurements (GnssMeasurementsData& measurementData
             measurementData.stateMask |= (GNSS_MEASUREMENTS_STATE_BDS_D2_BIT_SYNC_BIT |
                 GNSS_MEASUREMENTS_STATE_BDS_D2_SUBFRAME_SYNC_BIT);
         }
+
+        qmiLocSVTimeSpeedStructT_v02 &svTimeSpeed = gnss_measurement_info.svTimeSpeed;
+        double svTimeSubMsToNs = ((double)svTimeSpeed.svTimeSubMs) * NSEC_IN_MSEC;
         measurementData.receivedSvTimeNs =
-            (int64_t)(((double)gnss_measurement_info.svTimeSpeed.svTimeMs +
-             (double)gnss_measurement_info.svTimeSpeed.svTimeSubMs) * 1e6);
+                (int64_t)gnss_measurement_info.svTimeSpeed.svTimeMs * NSEC_IN_MSEC +
+                (int64_t)svTimeSubMsToNs;
+        measurementData.receivedSvTimeSubNs = svTimeSubMsToNs -
+                (int64_t)svTimeSubMsToNs;
 
         measurementData.receivedSvTimeUncertaintyNs = (int64_t)gpsTowUncNs;
-
     } else if ((validMask & bitSynMask) == bitSynMask) {
         /* bit sync */
         measurementData.stateMask = GNSS_MEASUREMENTS_STATE_BIT_SYNC_BIT |
                                     GNSS_MEASUREMENTS_STATE_CODE_LOCK_BIT;
         measurementData.stateMask |= galSVstateMask;
+
         measurementData.receivedSvTimeNs =
             (int64_t)(fmod(((double)gnss_measurement_info.svTimeSpeed.svTimeMs +
                   (double)gnss_measurement_info.svTimeSpeed.svTimeSubMs), 20) * 1e6);
-        measurementData.receivedSvTimeUncertaintyNs = (int64_t)gpsTowUncNs;
+        qmiLocSVTimeSpeedStructT_v02 &svTimeSpeed = gnss_measurement_info.svTimeSpeed;
+        double svTimeNs = fmod(((double)gnss_measurement_info.svTimeSpeed.svTimeMs +
+                  (double)gnss_measurement_info.svTimeSpeed.svTimeSubMs), 20) * NSEC_IN_MSEC;
+        measurementData.receivedSvTimeNs = (int64_t)svTimeNs;
+        measurementData.receivedSvTimeSubNs = svTimeNs -(int64_t)svTimeNs;
 
+        measurementData.receivedSvTimeUncertaintyNs = (int64_t)gpsTowUncNs;
     } else if (validMask & QMI_LOC_MASK_MEAS_STATUS_SM_VALID_V02) {
         /* code lock */
         measurementData.stateMask = GNSS_MEASUREMENTS_STATE_CODE_LOCK_BIT;
         measurementData.stateMask |= galSVstateMask;
+
         measurementData.receivedSvTimeNs =
              (int64_t)((double)gnss_measurement_info.svTimeSpeed.svTimeSubMs * 1e6);
-        measurementData.receivedSvTimeUncertaintyNs = (int64_t)gpsTowUncNs;
+        qmiLocSVTimeSpeedStructT_v02 &svTimeSpeed = gnss_measurement_info.svTimeSpeed;
+        double svTimeSubMsToNs = ((double)svTimeSpeed.svTimeSubMs) * NSEC_IN_MSEC;
+        measurementData.receivedSvTimeNs = (int64_t)svTimeSubMsToNs;
+        measurementData.receivedSvTimeSubNs = svTimeSubMsToNs -
+                (int64_t)svTimeSubMsToNs;
 
+        measurementData.receivedSvTimeUncertaintyNs = (int64_t)gpsTowUncNs;
     } else {
         /* by default */
         measurementData.stateMask = GNSS_MEASUREMENTS_STATE_UNKNOWN_BIT;

@@ -1340,7 +1340,8 @@ enum GnssMeasurementsDataFlagsMask{
      *  GnssMeasurementsData::stateMask.  <br/>   */
     GNSS_MEASUREMENTS_DATA_STATE_BIT                        = (1<<2),
     /** GnssMeasurementsData has valid
-     *  GnssMeasurementsData::receivedSvTimeNs.  <br/>   */
+     *  GnssMeasurementsData::receivedSvTimeNs and
+     *  GnssMeasurementsData::receivedSvTimeSubNs.  <br/> */
     GNSS_MEASUREMENTS_DATA_RECEIVED_SV_TIME_BIT             = (1<<3),
     /** GnssMeasurementsData has valid
      *  GnssMeasurementsData::receivedSvTimeUncertaintyNs.  <br/> */
@@ -1505,8 +1506,19 @@ struct GnssMeasurementsData {
      *  GNSS measurement state. <br/>   */
     GnssMeasurementsStateMask stateMask;
     /** Received GNSS time of the week in nanoseconds when the
-     *  measurement was taken. <br/>   */
+     *  measurement was taken. <br/>
+     *  For sub nanoseconds part of the time, please refer to
+     *  of GnssMeasurementsData::receivedSvTimeSubNs. <br/>
+     *  Total time is: receivedSvTimeNs+receivedSvTimeSubNs. <br/>*/
     int64_t receivedSvTimeNs;
+
+    /** Sub nanoseconds portion of the received GNSS time of the
+     *  week when the measurement was taken. <br/>
+     *  For nanoseconds portion of the time, please refer to field
+     *  of GnssMeasurementsData::receivedSvTimeSubNs. <br/>
+     *  Total time is: receivedSvTimeNs+receivedSvTimeSubNs. <br/>*/
+    float receivedSvTimeSubNs;
+
     /** Satellite time. <br/>
      *  All SV times in the current measurement block are already
      *  propagated to a common reference time epoch, in unit of
