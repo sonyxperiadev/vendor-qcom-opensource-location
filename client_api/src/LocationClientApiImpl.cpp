@@ -1,4 +1,4 @@
-/* Copyright (c) 2018-2020, The Linux Foundation. All rights reserved.
+/* Copyright (c) 2018-2021, The Linux Foundation. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -903,6 +903,7 @@ static GnssSv parseGnssSv(const ::GnssSv &halGnssSv) {
 
     gnssSv.carrierFrequencyHz = halGnssSv.carrierFrequencyHz;
     gnssSv.gnssSignalTypeMask = parseGnssSignalType(halGnssSv.gnssSignalTypeMask);
+    gnssSv.gloFrequency = halGnssSv.gloFrequency;
     return gnssSv;
 }
 
@@ -989,6 +990,7 @@ static GnssMeasurements parseGnssMeasurements(const ::GnssMeasurementsNotificati
     gnssMeasurements.clock.driftUncertaintyNsps = halGnssMeasurements.clock.driftUncertaintyNsps;
     gnssMeasurements.clock.hwClockDiscontinuityCount =
             halGnssMeasurements.clock.hwClockDiscontinuityCount;
+    gnssMeasurements.isNhz = halGnssMeasurements.isNhz;
 
     return gnssMeasurements;
 }
@@ -2316,17 +2318,19 @@ void IpcListener::onReceive(const char* data, uint32_t length,
                         &mApiImpl.mPbufMsgConv);
                 const LocAPICollectiveRespMsg* pRespMsg = (LocAPICollectiveRespMsg*)(&msg);
                 std::vector<pair<Geofence, LocationResponse>> responses{};
-                for (int i=0; i<pRespMsg->collectiveRes.count; ++i) {
+                int count = pRespMsg->collectiveRes.resp.size();
+                LOC_LOGd("CollectiveRes Pload count:%d", count);
+                for (int i=0; i < count; i++) {
                     responses.push_back(make_pair(
                             mApiImpl.mGeofenceMap.at(
-                            (*(pRespMsg->collectiveRes.resp + i)).clientId),
+                                pRespMsg->collectiveRes.resp[i].clientId),
                             parseLocationError(
-                            (*(pRespMsg->collectiveRes.resp + i)).error)));
-                    if (LOCATION_ERROR_SUCCESS !=
-                            (*(pRespMsg->collectiveRes.resp + i)).error ||
-                            E_LOCAPI_REMOVE_GEOFENCES_MSG_ID == locApiMsg.msgId) {
+                                pRespMsg->collectiveRes.resp[i].error)));
+                    if ((LOCATION_ERROR_SUCCESS !=
+                            pRespMsg->collectiveRes.resp[i].error) ||
+                            (E_LOCAPI_REMOVE_GEOFENCES_MSG_ID == locApiMsg.msgId)) {
                         mApiImpl.eraseGeofenceMap(1, const_cast<uint32_t*>(
-                                &((*(pRespMsg->collectiveRes.resp + i)).clientId)));
+                                &(pRespMsg->collectiveRes.resp[i].clientId)));
                     }
                 }
                 if (mApiImpl.mCollectiveResCb) {
@@ -2393,10 +2397,11 @@ void IpcListener::onReceive(const char* data, uint32_t length,
                     BatchingStatus status = BATCHING_STATUS_INACTIVE;
                     if (BATCHING_STATUS_POSITION_AVAILABE ==
                             pBatchingIndMsg->batchNotification.status) {
-                        for (int i=0; i<pBatchingIndMsg->batchNotification.count; ++i) {
+                        int batchCount = pBatchingIndMsg->batchNotification.location.size();
+                        LOC_LOGd("Batch count : %d", batchCount);
+                        for (int i=0; i < batchCount; i++) {
                             locationVector.push_back(parseLocation(
-                                        *(pBatchingIndMsg->batchNotification.location +
-                                        i)));
+                                        pBatchingIndMsg->batchNotification.location[i]));
                         }
                         status = BATCHING_STATUS_ACTIVE;
                     } else if (BATCHING_STATUS_TRIP_COMPLETED ==
@@ -2428,10 +2433,10 @@ void IpcListener::onReceive(const char* data, uint32_t length,
                     const LocAPIGeofenceBreachIndMsg* pGfBreachIndMsg =
                         (LocAPIGeofenceBreachIndMsg*)(&msg);
                     std::vector<Geofence> geofences;
-                    for (int i=0; i<pGfBreachIndMsg->gfBreachNotification.count;
-                         ++i) {
+                    int gfBreachCnt = pGfBreachIndMsg->gfBreachNotification.id.size();
+                    for (int i=0; i < gfBreachCnt; i++) {
                         geofences.push_back(mApiImpl.mGeofenceMap.at(
-                                                *(pGfBreachIndMsg->gfBreachNotification.id + i)));
+                                                pGfBreachIndMsg->gfBreachNotification.id[i]));
                     }
                     if (mApiImpl.mGfBreachCb) {
                         mApiImpl.mGfBreachCb(geofences,
