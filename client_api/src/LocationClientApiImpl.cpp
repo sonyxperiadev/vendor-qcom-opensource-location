@@ -1030,8 +1030,8 @@ public:
 LocationClientApiImpl
 ******************************************************************************/
 
-uint32_t  LocationClientApiImpl::mClientIdGenerator = LOCATION_CLIENT_SESSION_ID_INVALID;
-
+uint32_t LocationClientApiImpl::mClientIdGenerator = LOCATION_CLIENT_SESSION_ID_INVALID;
+uint32_t LocationClientApiImpl::mClientIdIndex = 0;
 mutex LocationClientApiImpl::mMutex;
 
 /******************************************************************************
@@ -1078,19 +1078,25 @@ LocationClientApiImpl::LocationClientApiImpl(CapabilitiesCb capabitiescb) :
     // Each client id is tracked via a bit in mClientIdGenerator,
     // which is 4 bytes now.
     lock_guard<mutex> lock(mMutex);
-    unsigned int clientIdMask = 1;
     // find a bit in the mClientIdGenerator that is not yet used
     // and use that as client id
     // client id will be from 1 to 32, as client id will be used to
     // set session id and 0 is reserved for LOCATION_CLIENT_SESSION_ID_INVALID
-    for (mClientId = 1; mClientId <= sizeof(mClientIdGenerator) * 8; mClientId++) {
-        if ((mClientIdGenerator & (1UL << (mClientId-1))) == 0) {
-            mClientIdGenerator |= (1UL << (mClientId-1));
+    mClientIdIndex++;
+    if (mClientIdIndex > 32) {
+        mClientIdIndex = 1;
+    }
+
+    uint32_t loopCnt = 0;
+    for (; loopCnt < sizeof(mClientIdGenerator) * 8; loopCnt++) {
+        if ((mClientIdGenerator & (1UL << (mClientIdIndex-1))) == 0) {
+            mClientIdGenerator |= (1UL << (mClientIdIndex-1));
+            mClientId = mClientIdIndex;
             break;
         }
     }
 
-    if (mClientId > sizeof(mClientIdGenerator) * 8) {
+    if (loopCnt >= sizeof(mClientIdGenerator) * 8) {
         LOC_LOGe("create Qsocket failed, already use up maximum of %d clients",
                  sizeof(mClientIdGenerator)*8);
         return;
@@ -1182,7 +1188,7 @@ void LocationClientApiImpl::destroy() {
             {
                 // get clientId
                 lock_guard<mutex> lock(mMutex);
-                mApiImpl->mClientIdGenerator &= ~(1UL << mApiImpl->mClientId);
+                mApiImpl->mClientIdGenerator &= ~(1UL << (mApiImpl->mClientId-1));
                 LOC_LOGd("client id generarator 0x%x, id %d",
                          mApiImpl->mClientIdGenerator, mApiImpl->mClientId);
             }
