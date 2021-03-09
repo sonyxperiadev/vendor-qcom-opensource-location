@@ -56,6 +56,7 @@ using namespace location_client;
 using namespace location_integration;
 
 static bool     outputEnabled = true;
+static bool     detailedOutputEnabled = false;
 // debug events counter
 static uint32_t numLocationCb = 0;
 static uint32_t numGnssLocationCb = 0;
@@ -72,8 +73,18 @@ static int fixCnt = 0x7fffffff;
 static uint64_t autoTestStartTimeMs = 0;
 static int autoTestTimeoutSec = 0x7FFFFFFF;
 
+enum reportType {
+    POSITION_REPORT = 1 << 0,
+    NMEA_REPORT     = 1 << 1,
+    SV_REPORT       = 1 << 2,
+    DATA_REPORT     = 1 << 3,
+    MEAS_REPORT     = 1 << 4,
+    NHZ_MEAS_REPORT = 1 << 5,
+};
+
 #define DISABLE_REPORT_OUTPUT "disableReportOutput"
 #define ENABLE_REPORT_OUTPUT  "enableReportOutput"
+#define ENABLE_DETAILED_REPORT_OUTPUT  "enableDetailedReportOutput"
 #define DISABLE_TUNC          "disableTunc"
 #define ENABLE_TUNC           "enableTunc"
 #define DISABLE_PACE          "disablePACE"
@@ -113,6 +124,7 @@ static void cleanupAfterAutoStart() {
         pAutoStartClient->stopPositionSession();
         delete pAutoStartClient;
         pAutoStartClient = nullptr;
+        printf("\n\n summary: received %d fixes\n", numEngLocationCb);
     }
     if (pAutoStartIntClient) {
         printf("calling delete LIA client \n");
@@ -121,8 +133,6 @@ static void cleanupAfterAutoStart() {
     }
     // wait one second for stop request to reach hal daemon
     sleep(1);
-
-    printf("\n\n summary: received %d fixes\n", numEngLocationCb);
 }
 
 /******************************************************************************
@@ -143,13 +153,17 @@ static void onLocationCb(const location_client::Location& location) {
     if (!outputEnabled) {
         return;
     }
-    printf("<<< onLocationCb cnt=%u time=%" PRIu64" mask=0x%x lat=%f lon=%f alt=%f\n",
-           numLocationCb,
-           location.timestamp,
-           location.flags,
-           location.latitude,
-           location.longitude,
-           location.altitude);
+    if (detailedOutputEnabled) {
+        printf("<<< onLocationCb cnt=%u: %s\n", numLocationCb, location.toString().c_str());
+    } else {
+        printf("<<< onLocationCb cnt=%u: time=%" PRIu64" mask=0x%x lat=%f lon=%f alt=%f\n",
+               numLocationCb,
+               location.timestamp,
+               location.flags,
+               location.latitude,
+               location.longitude,
+               location.altitude);
+    }
 }
 
 static void onGtpResponseCb(location_client::LocationResponse response) {
@@ -157,17 +171,19 @@ static void onGtpResponseCb(location_client::LocationResponse response) {
 }
 
 static void onGtpLocationCb(const location_client::Location& location) {
-    numLocationCb++;
     if (!outputEnabled) {
         return;
     }
-    printf("<<< onGtpLocationCb cnt=%u time=%" PRIu64" mask=0x%x lat=%f lon=%f alt=%f\n",
-           numLocationCb,
-           location.timestamp,
-           location.flags,
-           location.latitude,
-           location.longitude,
-           location.altitude);
+    if (detailedOutputEnabled) {
+        printf("<<< onGtpLocationCb: %s\n", location.toString().c_str());
+    } else {
+        printf("<<< onGtpLocationCb time=%" PRIu64" mask=0x%x lat=%f lon=%f alt=%f\n",
+               location.timestamp,
+               location.flags,
+               location.latitude,
+               location.longitude,
+               location.altitude);
+    }
 }
 
 static void onGnssLocationCb(const location_client::GnssLocation& location) {
@@ -175,13 +191,17 @@ static void onGnssLocationCb(const location_client::GnssLocation& location) {
     if (!outputEnabled) {
         return;
     }
-    printf("<<< onGnssLocationCb cnt=%u time=%" PRIu64" mask=0x%x lat=%f lon=%f alt=%f\n",
-            numGnssLocationCb,
-            location.timestamp,
-            location.flags,
-            location.latitude,
-            location.longitude,
-            location.altitude);
+    if (detailedOutputEnabled) {
+        printf("<<< onGnssLocationCb cnt=%u: %s\n", numGnssLocationCb, location.toString().c_str());
+    } else {
+        printf("<<< onGnssLocationCb cnt=%u: time=%" PRIu64" mask=0x%x lat=%f lon=%f alt=%f\n",
+                numGnssLocationCb,
+                location.timestamp,
+                location.flags,
+                location.latitude,
+                location.longitude,
+                location.altitude);
+    }
 }
 
 static void onEngLocationsCb(const std::vector<location_client::GnssLocation>& locations) {
@@ -189,20 +209,25 @@ static void onEngLocationsCb(const std::vector<location_client::GnssLocation>& l
         return;
     }
     for (auto gnssLocation : locations) {
-       printf("<<< onEngLocationsCb: cnt=%u time=%" PRIu64" mask=0x%x lat=%f lon=%f alt=%f\n"
-              "info mask=0x%" PRIx64 ", nav solution maks = 0x%x, eng type %d, eng mask 0x%x, "
-              "session status %d\n",
-              numEngLocationCb,
-              gnssLocation.timestamp,
-              gnssLocation.flags,
-              gnssLocation.latitude,
-              gnssLocation.longitude,
-              gnssLocation.altitude,
-              gnssLocation.gnssInfoFlags,
-              gnssLocation.navSolutionMask,
-              gnssLocation.locOutputEngType,
-              gnssLocation.locOutputEngMask,
-              gnssLocation.sessionStatus);
+        if (detailedOutputEnabled) {
+            printf("<<< onEngLocationsCb cnt=%u: %s\n", numEngLocationCb,
+                   gnssLocation.toString().c_str());
+        } else {
+            printf("<<< onEngLocationsCb cnt=%u: time=%" PRIu64" mask=0x%x lat=%f lon=%f alt=%f\n"
+                   "info mask=0x%" PRIx64 ", nav solution maks = 0x%x, eng type %d, eng mask 0x%x, "
+                   "session status %d\n",
+                   numEngLocationCb,
+                   gnssLocation.timestamp,
+                   gnssLocation.flags,
+                   gnssLocation.latitude,
+                   gnssLocation.longitude,
+                   gnssLocation.altitude,
+                   gnssLocation.gnssInfoFlags,
+                   gnssLocation.navSolutionMask,
+                   gnssLocation.locOutputEngType,
+                   gnssLocation.locOutputEngMask,
+                   gnssLocation.sessionStatus);
+        }
 
         if (gnssLocation.sessionStatus == LOC_SESS_SUCCESS &&
             gnssLocation.locOutputEngType == LOC_OUTPUT_ENGINE_FUSED) {
@@ -222,7 +247,7 @@ static void onGnssSvCb(const std::vector<location_client::GnssSv>& gnssSvs) {
     if (autoTestStartTimeMs != 0) {
         uint64_t nowMs = getTimestampMs();
         if (nowMs-autoTestStartTimeMs >= autoTestTimeoutSec * 1000) {
-            printf("auto test completed due to timeout \n");
+            printf("complete due to run time exceeded %d sec\n", autoTestTimeoutSec);
             sem_post(&sem_autoTestCompleted);
         }
     }
@@ -230,13 +255,20 @@ static void onGnssSvCb(const std::vector<location_client::GnssSv>& gnssSvs) {
     if (!outputEnabled) {
         return;
     }
-    std::stringstream ss;
-    ss << "<<< onGnssSvCb c=" << numGnssSvCb << " s=" << gnssSvs.size();
-    for (auto sv : gnssSvs) {
-        ss << " " << sv.type << ":" << sv.svId << "/" << (uint32_t)sv.cN0Dbhz << "/"
-                << (uint32_t)sv.gloFrequency;
+
+    if (detailedOutputEnabled) {
+        printf("<<< onGnssSvCb cnt=%d\n", numGnssSvCb);
+        for (auto sv : gnssSvs) {
+            printf("<<< %s\n", sv.toString().c_str());
+        }
+    } else {
+        std::stringstream ss;
+        ss << "<<< onGnssSvCb c=" << numGnssSvCb << " s=" << gnssSvs.size();
+        for (auto sv : gnssSvs) {
+            ss << " " << sv.type << ":" << sv.svId << "/" << (uint32_t)sv.cN0Dbhz;
+        }
+        printf("%s\n", ss.str().c_str());
     }
-    printf("%s\n", ss.str().c_str());
 }
 
 static void onGnssNmeaCb(uint64_t timestamp, const std::string& nmea) {
@@ -253,7 +285,11 @@ static void onGnssDataCb(const location_client::GnssData& gnssData) {
     if (!outputEnabled) {
         return;
     }
-    printf("<<< gnssDataCb cnt=%u, %s ", numDataCb, gnssData.toString().c_str());
+    if (detailedOutputEnabled) {
+        printf("<<< gnssDataCb cnt=%u: %s\n", numDataCb, gnssData.toString().c_str());
+    } else {
+        printf("<<< gnssDataCb cnt=%u\n", numDataCb);
+    }
 }
 
 static void onGnssMeasurementsCb(const location_client::GnssMeasurements& gnssMeasurements) {
@@ -261,8 +297,14 @@ static void onGnssMeasurementsCb(const location_client::GnssMeasurements& gnssMe
     if (!outputEnabled) {
         return;
     }
-    printf("<<< onGnssMeasurementsCb cnt=%u, num of meas %d, isNHz: %d\n", numGnssMeasurementsCb,
-           gnssMeasurements.measurements.size(), gnssMeasurements.isNhz);
+    if (detailedOutputEnabled) {
+        printf("<<< onGnssMeasurementsCb cnt=%u, %s ", numGnssMeasurementsCb,
+               gnssMeasurements.toString().c_str());
+    } else {
+        printf("<<< onGnssMeasurementsCb cnt=%u, num of meas %d, nHz %d\n",
+               numGnssMeasurementsCb, gnssMeasurements.measurements.size(),
+               gnssMeasurements.isNhz);
+    }
 }
 
 static void onConfigResponseCb(location_integration::LocConfigTypeEnum    requestType,
@@ -301,8 +343,9 @@ static void printHelp() {
     printf("s: Stop a session \n");
     printf("q: Quit\n");
     printf("r: delete client\n");
-    printf("%s supress output from various reports: disable output\n", DISABLE_REPORT_OUTPUT);
-    printf("%s enable output from various reports: disable output\n", ENABLE_REPORT_OUTPUT);
+    printf("%s: supress output from various reports\n", DISABLE_REPORT_OUTPUT);
+    printf("%s: enable output from various reports\n", ENABLE_REPORT_OUTPUT);
+    printf("%s: enable detailed output from various reports\n", ENABLE_DETAILED_REPORT_OUTPUT);
     printf("%s tuncThreshold energyBudget: enable tunc\n", ENABLE_TUNC);
     printf("%s: disable tunc\n", DISABLE_TUNC);
     printf("%s: enable PACE\n", ENABLE_PACE);
@@ -575,7 +618,8 @@ static void checkForAutoStart(int argc, char *argv[]) {
     bool deleteAll = false;
     uint32_t aidingDataMask = 0;
     int interval = 100;
-    LocReqEngineTypeMask reqEngMask = (LocReqEngineTypeMask) 0x7;
+    LocReqEngineTypeMask reqEngMask = (LocReqEngineTypeMask) 0x0;
+    uint32_t reportType = 0xff;
 
     //Specifying the expected options
     //The two options l and b expect numbers as argument
@@ -587,37 +631,46 @@ static void checkForAutoStart(int argc, char *argv[]) {
         {"interval",  required_argument, 0,  'i' },
         {"timeout", required_argument,   0,  't' },
         {"fixcnt",   required_argument,  0,  'l' },
+        {"reportType", required_argument, 0,  'r' },
         {0,           0,                 0,   0  }
     };
 
     int long_index =0;
     int opt = -1;
-    while ((opt = getopt_long(argc, argv, "aDd:e:i:t:l:", long_options, &long_index )) != -1) {
+    while ((opt = getopt_long(argc, argv, "aDVd:e:i:t:l:r:", long_options,
+                              &long_index)) != -1) {
         switch (opt) {
-             case 'a' :
+             case 'a':
                  autoRun = true;
                  break;
-             case 'D' :
+             case 'D':
                  deleteAll = true;
                  break;
-             case 'd' :
+             case 'V':
+                 detailedOutputEnabled = true;
+                 break;
+             case 'd':
                  aidingDataMask = atoi(optarg);
                  break;
-             case 'e' :
+             case 'e':
                  printf("report mask: %s\n", optarg);
                  reqEngMask = (LocReqEngineTypeMask) atoi(optarg);
                  break;
-             case 'l' :
+             case 'l':
                  printf("fix cnt: %s\n", optarg);
                  fixCnt = atoi(optarg);
                  break;
-            case 'i' :
+            case 'i':
                  printf("interval: %s\n", optarg);
                  interval = atoi(optarg);
                  break;
-             case 't' :
+             case 't':
                  printf("tiemout: %s\n", optarg);
                  autoTestTimeoutSec = atoi(optarg);
+                 break;
+             case 'r':
+                 printf("new report type: %s\n", optarg);
+                 reportType = atoi(optarg);
                  break;
              default:
                  printf("unsupported args provided\n");
@@ -644,29 +697,49 @@ static void checkForAutoStart(int argc, char *argv[]) {
                 printf("can not create Location integration API");
                 exit(1);
             }
-            sleep(1); // wait for capability callback if you don't like sleep
+            sleep(1); // wait for capability callback
             if (deleteAll) {
                 pAutoStartIntClient->deleteAllAidingData();
             } else {
                 pAutoStartIntClient->deleteAidingData((AidingDataDeletionMask) aidingDataMask);
             }
+            // wait for config response callback to be received
+            sleep(1);
         }
 
-        pAutoStartClient = new LocationClientApi(onCapabilitiesCb);
-        if (nullptr == pAutoStartClient) {
-            printf("can not create Location client API");
-            exit(1);
+        if (reqEngMask != 0) {
+            pAutoStartClient = new LocationClientApi(onCapabilitiesCb);
+            if (nullptr == pAutoStartClient) {
+                printf("can not create Location client API");
+                exit(1);
+            }
+            EngineReportCbs reportcbs;
+            if (reportType & POSITION_REPORT) {
+                reportcbs.engLocationsCallback = EngineLocationsCb(onEngLocationsCb);
+            }
+            if (reportType & NMEA_REPORT) {
+                reportcbs.gnssNmeaCallback = GnssNmeaCb(onGnssNmeaCb);
+            }
+            if (reportType & SV_REPORT) {
+                reportcbs.gnssSvCallback = GnssSvCb(onGnssSvCb);
+            }
+            if (reportType & DATA_REPORT) {
+                reportcbs.gnssDataCallback = GnssDataCb(onGnssDataCb);
+            }
+            if (reportType & MEAS_REPORT) {
+                reportcbs.gnssMeasurementsCallback = GnssMeasurementsCb(onGnssMeasurementsCb);
+            }
+            if (reportType & NHZ_MEAS_REPORT) {
+                reportcbs.gnssNHzMeasurementsCallback = GnssMeasurementsCb(onGnssMeasurementsCb);
+            }
+
+            printf("reprot type %x, meas report: %x, tbf %d", reportType, MEAS_REPORT, interval);
+            pAutoStartClient->startPositionSession(interval, reqEngMask, reportcbs, onResponseCb);
+            autoTestStartTimeMs = getTimestampMs();
+
+            sem_wait(&sem_autoTestCompleted);
         }
 
-        EngineReportCbs reportcbs;
-        reportcbs.engLocationsCallback = EngineLocationsCb(onEngLocationsCb);
-        reportcbs.gnssSvCallback = GnssSvCb(onGnssSvCb);
-        reportcbs.gnssNmeaCallback = GnssNmeaCb(onGnssNmeaCb);
-
-        pAutoStartClient->startPositionSession(interval, reqEngMask, reportcbs, onResponseCb);
-        autoTestStartTimeMs = getTimestampMs();
-
-        sem_wait(&sem_autoTestCompleted);
         cleanupAfterAutoStart();
         exit(0);
     }
@@ -738,6 +811,11 @@ int main(int argc, char *argv[]) {
 
         if (strncmp(buf, ENABLE_REPORT_OUTPUT, strlen(ENABLE_REPORT_OUTPUT)) == 0) {
             outputEnabled = true;
+            detailedOutputEnabled = false;
+        } else if (strncmp(buf, ENABLE_DETAILED_REPORT_OUTPUT,
+                           strlen(ENABLE_DETAILED_REPORT_OUTPUT)) == 0) {
+            outputEnabled = true;
+            detailedOutputEnabled = true;
         } else if (strncmp(buf, DISABLE_REPORT_OUTPUT, strlen(DISABLE_REPORT_OUTPUT)) == 0) {
             outputEnabled = false;
         } else if (strncmp(buf, DISABLE_TUNC, strlen(DISABLE_TUNC)) == 0) {

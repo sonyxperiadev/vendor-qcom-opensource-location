@@ -1226,12 +1226,14 @@ void LocationClientApiImpl::updateCallbackFunctions(const ClientCallbacks& cbs,
                 mApiImpl->mGnssNmeaCb         = mCbs.gnssreportcbs.gnssNmeaCallback;
                 mApiImpl->mGnssDataCb         = mCbs.gnssreportcbs.gnssDataCallback;
                 mApiImpl->mGnssMeasurementsCb = mCbs.gnssreportcbs.gnssMeasurementsCallback;
+                mApiImpl->mGnssNHzMeasurementsCb = mCbs.gnssreportcbs.gnssNHzMeasurementsCallback;
             } else if (REPORT_CB_ENGINE_INFO == mReportCbType) {
                 mApiImpl->mEngLocationsCb     = mCbs.engreportcbs.engLocationsCallback;
                 mApiImpl->mGnssSvCb           = mCbs.engreportcbs.gnssSvCallback;
                 mApiImpl->mGnssNmeaCb         = mCbs.engreportcbs.gnssNmeaCallback;
                 mApiImpl->mGnssDataCb         = mCbs.engreportcbs.gnssDataCallback;
                 mApiImpl->mGnssMeasurementsCb = mCbs.engreportcbs.gnssMeasurementsCallback;
+                mApiImpl->mGnssNHzMeasurementsCb = mCbs.engreportcbs.gnssNHzMeasurementsCallback;
             }
         }
         LocationClientApiImpl* mApiImpl;
@@ -1277,6 +1279,9 @@ void LocationClientApiImpl::updateCallbacks(LocationCallbacks& callbacks) {
             }
             if (mCallBacks.gnssMeasurementsCb) {
                 callBacksMask |= E_LOC_CB_GNSS_MEAS_BIT;
+            }
+            if (mCallBacks.gnssNHzMeasurementsCb) {
+                callBacksMask |= E_LOC_CB_GNSS_NHZ_MEAS_BIT;
             }
             // handle callbacks that are not related to a fix session
             if (mApiImpl->mLocationSysInfoCb) {
@@ -2521,9 +2526,7 @@ void IpcListener::onReceive(const char* data, uint32_t length,
             case E_LOCAPI_MEAS_MSG_ID:
             {
                 LOC_LOGd("<<< message = measurements");
-                if ((mApiImpl.mSessionId != LOCATION_CLIENT_SESSION_ID_INVALID) &&
-                    (mApiImpl.mCallbacksMask & E_LOC_CB_GNSS_MEAS_BIT)) {
-
+                if (mApiImpl.mSessionId != LOCATION_CLIENT_SESSION_ID_INVALID) {
                     PBLocAPIMeasIndMsg pbLocApiMeasIndMsg;
                     if (0 == pbLocApiMeasIndMsg.ParseFromString(pbLocApiMsg.payload())) {
                         LOC_LOGe("Failed to parse pbLocApiMeasIndMsg from payload!!");
@@ -2534,10 +2537,19 @@ void IpcListener::onReceive(const char* data, uint32_t length,
                     const LocAPIMeasIndMsg* pMeasIndMsg = (LocAPIMeasIndMsg*)(&msg);
                     GnssMeasurements gnssMeasurements =
                         parseGnssMeasurements(pMeasIndMsg->gnssMeasurementsNotification);
-                    if (mApiImpl.mGnssMeasurementsCb) {
-                        mApiImpl.mGnssMeasurementsCb(gnssMeasurements);
+                    if (gnssMeasurements.isNhz) {
+                        if ((mApiImpl.mCallbacksMask & E_LOC_CB_GNSS_NHZ_MEAS_BIT) &&
+                                (nullptr != mApiImpl.mGnssNHzMeasurementsCb)) {
+                            mApiImpl.mGnssNHzMeasurementsCb(gnssMeasurements);
+                            mApiImpl.mLogger.log(gnssMeasurements);
+                        }
+                    } else {
+                        if ((mApiImpl.mCallbacksMask & E_LOC_CB_GNSS_MEAS_BIT) &&
+                                (nullptr != mApiImpl.mGnssMeasurementsCb)) {
+                            mApiImpl.mGnssMeasurementsCb(gnssMeasurements);
+                            mApiImpl.mLogger.log(gnssMeasurements);
+                        }
                     }
-                    mApiImpl.mLogger.log(gnssMeasurements);
                 }
                 break;
             }

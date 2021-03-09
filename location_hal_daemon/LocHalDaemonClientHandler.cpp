@@ -148,6 +148,15 @@ void LocHalDaemonClientHandler::updateSubscription(uint32_t mask) {
         mCallbacks.gnssMeasurementsCb = nullptr;
     }
 
+    // nHz measurements
+    if (mSubscriptionMask & E_LOC_CB_GNSS_NHZ_MEAS_BIT) {
+        mCallbacks.gnssNHzMeasurementsCb = [this](GnssMeasurementsNotification notification) {
+            onGnssMeasurementsCb(notification);
+        };
+    } else {
+        mCallbacks.gnssNHzMeasurementsCb = nullptr;
+    }
+
     // system info
     if (mSubscriptionMask & E_LOC_CB_SYSTEM_INFO_BIT) {
         mCallbacks.locationSystemInfoCb = [this](LocationSystemInfo notification) {
@@ -973,7 +982,8 @@ void LocHalDaemonClientHandler::onGnssDataCb(GnssDataNotification notification) 
 void LocHalDaemonClientHandler::onGnssMeasurementsCb(GnssMeasurementsNotification notification) {
     std::lock_guard<std::mutex> lock(LocationApiService::mMutex);
     LOC_LOGd("--< onGnssMeasurementsCb");
-    if ((nullptr != mIpcSender) && (mSubscriptionMask & E_LOC_CB_GNSS_MEAS_BIT)) {
+    if ((nullptr != mIpcSender) &&
+            (mSubscriptionMask & (E_LOC_CB_GNSS_MEAS_BIT | E_LOC_CB_GNSS_NHZ_MEAS_BIT))) {
         string pbStr;
         LocAPIMeasIndMsg msg(SERVICE_NAME, notification, &mService->mPbufMsgConv);
         if (msg.serializeToProtobuf(pbStr)) {
