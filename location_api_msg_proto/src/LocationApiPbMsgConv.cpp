@@ -3913,6 +3913,9 @@ int LocationApiPbMsgConv::convertGnssMeasDataToPB(const GnssMeasurementsData &gn
     // double agcLevelDb = 20;
     pbGnssMeasData->set_agcleveldb(gnssMeasData.agcLevelDb);
 
+    // float receivedSvTimeSubNs = 26
+    pbGnssMeasData->set_receivedsvtimesubns(gnssMeasData.receivedSvTimeSubNs);
+
     LOC_LOGd("LocApiPB: gnssMeasData - GnssMeasDataFlags:%x, Svid:%d, SvType:%d, StateMsk:%x, "\
             "RcvSvTime:%"  PRIu64", RcvSvTimeUnc:%" PRIu64", CNoDb:%lf", gnssMeasData.flags,
             gnssMeasData.svId, gnssMeasData.svType, gnssMeasData.stateMask,
@@ -5096,6 +5099,9 @@ int LocationApiPbMsgConv::pbConvertToGnssMeasurementsData(
 
     // double agcLevelDb = 20;
     gnssMeasData.agcLevelDb = pbGnssMeasData.agcleveldb();
+
+    // int64 receivedSvTimeSubNs = 26;
+    gnssMeasData.receivedSvTimeSubNs = pbGnssMeasData.receivedsvtimesubns();
 
     LOC_LOGd("LocApiPB: pbGnssMeasData - GnssMeasDataFlags:%x, Svid:%d, SvType:%d, StateMsk:%x, "\
             "RcvSvTime:%"  PRIu64", RcvSvTimeUnc:%" PRIu64", CNoDb:%lf", gnssMeasData.flags,
