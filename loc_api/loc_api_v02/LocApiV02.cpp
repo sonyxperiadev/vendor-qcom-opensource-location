@@ -3138,16 +3138,18 @@ void LocApiV02 :: reportPosition (
                                     GNSS_SIGNAL_QZSS_L1CA;
                         }
                     } else if ((gnssSvIdUsed >= NAVIC_SV_PRN_MIN) &&
-                             (gnssSvIdUsed <= NAVIC_SV_PRN_MAX))
-                      {
+                             (gnssSvIdUsed <= NAVIC_SV_PRN_MAX)) {
                         locationExtended.gnss_sv_used_ids.navic_sv_used_ids_mask |=
                             (1 << (gnssSvIdUsed - NAVIC_SV_PRN_MIN));
                         locationExtended.measUsageInfo[idx].gnssConstellation =
                             GNSS_LOC_SV_SYSTEM_NAVIC;
-                        locationExtended.measUsageInfo[idx].gnssSignalType =
-                            (multiBandTypesAvailable ?
-                                location_report_ptr->gnssSvUsedSignalTypeList[idx] :
-                                GNSS_SIGNAL_NAVIC_L5);
+                        if (multiBandTypesAvailable) {
+                            locationExtended.measUsageInfo[idx].gnssSignalType =
+                                    gnssSignalTypeMask;
+                        } else {
+                            locationExtended.measUsageInfo[idx].gnssSignalType =
+                                    GNSS_SIGNAL_NAVIC_L5;
+                        }
                     }
                 }
                 locationExtended.flags |= GPS_LOCATION_EXTENDED_HAS_GNSS_SV_USED_DATA;
