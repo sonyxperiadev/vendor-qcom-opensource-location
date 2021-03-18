@@ -42,8 +42,8 @@ enum LocationApiDataTypesVersion {
     LOCAPI_DATA_TYPES_VER_MAJOR = 1;
     // Minor - New features / API addition, new message/elemtent addition.
     // Bump the last byte of version i.e. x.2 to x.3
-    // Minor version 9: Add receivedSvTimeSubNs in GnssMeasurements
-    LOCAPI_DATA_TYPES_VER_MINOR = 9;
+    // Minor version 10: Add bit mask for basebandCarrierToNoiseDbHz in SV report
+    LOCAPI_DATA_TYPES_VER_MINOR = 10;
 }
 
 // ============================================================================
@@ -219,11 +219,12 @@ enum PBGnssSvTypesMask {
 
 enum PBLocApiGnssSvOptionsMask {
     PB_GNSS_SV_OPTIONS_INVALID                     = 0;
-    PB_GNSS_SV_OPTIONS_HAS_EPHEMER_BIT             = 1;
-    PB_GNSS_SV_OPTIONS_HAS_ALMANAC_BIT             = 2;
-    PB_GNSS_SV_OPTIONS_USED_IN_FIX_BIT             = 4;
-    PB_GNSS_SV_OPTIONS_HAS_CARRIER_FREQUENCY_BIT   = 8;
-    PB_GNSS_SV_OPTIONS_HAS_GNSS_SIGNAL_TYPE_BIT    = 16;
+    PB_GNSS_SV_OPTIONS_HAS_EPHEMER_BIT             = 0x1;
+    PB_GNSS_SV_OPTIONS_HAS_ALMANAC_BIT             = 0x2;
+    PB_GNSS_SV_OPTIONS_USED_IN_FIX_BIT             = 0x4;
+    PB_GNSS_SV_OPTIONS_HAS_CARRIER_FREQUENCY_BIT   = 0x8;
+    PB_GNSS_SV_OPTIONS_HAS_GNSS_SIGNAL_TYPE_BIT    = 0x10;
+    PB_GNSS_SV_OPTIONS_HAS_BASEBAND_CARRIER_TO_NOISE_BIT = 0x20;
 }
 
 enum PBGnssGloTimeStructTypeFlags {
