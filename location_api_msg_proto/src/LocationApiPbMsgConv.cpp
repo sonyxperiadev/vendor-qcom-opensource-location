@@ -1785,6 +1785,9 @@ uint32_t LocationApiPbMsgConv::getPBMaskForGnssSvOptionsMask(const uint32_t &gns
     if (gnssSvOptMask & GNSS_SV_OPTIONS_HAS_GNSS_SIGNAL_TYPE_BIT) {
         pbGnssSvOptMask |= PB_GNSS_SV_OPTIONS_HAS_GNSS_SIGNAL_TYPE_BIT;
     }
+    if (gnssSvOptMask & GNSS_SV_OPTIONS_HAS_BASEBAND_CARRIER_TO_NOISE_BIT) {
+        pbGnssSvOptMask |= PB_GNSS_SV_OPTIONS_HAS_BASEBAND_CARRIER_TO_NOISE_BIT;
+    }
     LocApiPb_LOGv("LocApiPB: gnssSvOptMask:%x, pbGnssSvOptMask:%x", gnssSvOptMask,
             pbGnssSvOptMask);
     return pbGnssSvOptMask;
@@ -2282,6 +2285,9 @@ uint32_t LocationApiPbMsgConv::getGnssSvOptionsMaskFromPB(
     }
     if (pbGnssSvOptMask & PB_GNSS_SV_OPTIONS_HAS_GNSS_SIGNAL_TYPE_BIT) {
         gnssSvOptMask |= GNSS_SV_OPTIONS_HAS_GNSS_SIGNAL_TYPE_BIT;
+    }
+    if (pbGnssSvOptMask & PB_GNSS_SV_OPTIONS_HAS_BASEBAND_CARRIER_TO_NOISE_BIT) {
+        gnssSvOptMask |= GNSS_SV_OPTIONS_HAS_BASEBAND_CARRIER_TO_NOISE_BIT;
     }
     LocApiPb_LOGv("LocApiPB: pbGnssSvOptMask:%x, gnssSvOptMask:%x", pbGnssSvOptMask,
             gnssSvOptMask);
@@ -4005,6 +4011,9 @@ int LocationApiPbMsgConv::convertGnssSvToPB(const GnssSv &gnssSv,
     // uint32 gnssSignalTypeMask = 8;  - Bitwise OR of PBGnssSignalTypeMask
     pbGnssSv->set_gnsssignaltypemask(getPBMaskForGnssSignalTypeMask(gnssSv.gnssSignalTypeMask));
 
+    // double basebandCarrierToNoiseDbHz = 9; // Baseband signal strength Db Hz.
+    pbGnssSv->set_basebandcarriertonoisedbhz(gnssSv.basebandCarrierToNoiseDbHz);
+
     // uint32 gloFrequency = 10;
     pbGnssSv->set_glofrequency(gnssSv.gloFrequency);
 
@@ -4667,6 +4676,9 @@ int LocationApiPbMsgConv::pbConvertToGnssSvNotif(const PBLocApiGnssSvNotificatio
         // uint32 gnssSignalTypeMask = 8; - PBGnssSignalTypeMask
         gnssSvNotif.gnssSvs[i].gnssSignalTypeMask =
                 getGnssSignalTypeMaskFromPB(pPbGnssSv.gnsssignaltypemask());
+
+        // double basebandCarrierToNoiseDbHz = 9; // Baseband signal strength Db Hz.
+        gnssSvNotif.gnssSvs[i].basebandCarrierToNoiseDbHz = pPbGnssSv.basebandcarriertonoisedbhz();
 
         // uint32 gloFrequency = 10;
         gnssSvNotif.gnssSvs[i].gloFrequency = pPbGnssSv.glofrequency();

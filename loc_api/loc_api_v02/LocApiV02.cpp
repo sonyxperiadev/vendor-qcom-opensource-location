@@ -3545,6 +3545,13 @@ void  LocApiV02 :: reportSv (
 
                 if (sv_info_ptr->validMask & QMI_LOC_SV_INFO_MASK_VALID_SNR_V02) {
                     gnssSv_ref.cN0Dbhz = sv_info_ptr->snr;
+                    if ((gnssSv_ref.cN0Dbhz != 0.0) &&
+                            (1 == gnss_report_ptr->expandedSvList_valid) &&
+                            (1 == gnss_report_ptr->rfLoss_valid)) {
+                        mask |= GNSS_SV_OPTIONS_HAS_BASEBAND_CARRIER_TO_NOISE_BIT;
+                        double rfLoss = gnss_report_ptr->rfLoss[i];
+                        gnssSv_ref.basebandCarrierToNoiseDbHz = gnssSv_ref.cN0Dbhz - rfLoss;
+                    }
                 }
 
                 if (sv_info_ptr->validMask & QMI_LOC_SV_INFO_MASK_VALID_ELEVATION_V02) {

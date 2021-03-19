@@ -827,11 +827,16 @@ static GnssSv parseGnssSv(const ::GnssSv &halGnssSv) {
     if (::GNSS_SV_OPTIONS_HAS_GNSS_SIGNAL_TYPE_BIT & halGnssSv.gnssSvOptionsMask) {
         gnssSvOptionsMask |= GNSS_SV_OPTIONS_HAS_GNSS_SIGNAL_TYPE_BIT;
     }
+    if (::GNSS_SV_OPTIONS_HAS_BASEBAND_CARRIER_TO_NOISE_BIT & halGnssSv.gnssSvOptionsMask) {
+        gnssSvOptionsMask |= GNSS_SV_OPTIONS_HAS_BASEBAND_CARRIER_TO_NOISE_BIT;
+    }
     gnssSv.gnssSvOptionsMask = (GnssSvOptionsMask)gnssSvOptionsMask;
 
     gnssSv.carrierFrequencyHz = halGnssSv.carrierFrequencyHz;
     gnssSv.gnssSignalTypeMask = parseGnssSignalType(halGnssSv.gnssSignalTypeMask);
     gnssSv.gloFrequency = halGnssSv.gloFrequency;
+    gnssSv.basebandCarrierToNoiseDbHz = halGnssSv.basebandCarrierToNoiseDbHz;
+
     return gnssSv;
 }
 
