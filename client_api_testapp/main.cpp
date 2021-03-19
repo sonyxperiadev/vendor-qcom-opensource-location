@@ -100,7 +100,7 @@ static int autoTestTimeoutSec = 0x7FFFFFFF;
 
 // debug utility
 static uint64_t getTimestampMs() {
-    struct timespec ts;
+    struct timespec ts = {};
     clock_gettime(CLOCK_BOOTTIME, &ts);
     uint64_t msec =
             ((uint64_t)(ts.tv_sec)) * 1000ULL + ((uint64_t)(ts.tv_nsec)) / 1000000ULL;
