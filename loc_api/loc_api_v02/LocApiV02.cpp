@@ -2256,6 +2256,9 @@ LocApiV02::setLPPeProtocolCpSync(GnssConfigLppeControlPlaneMask lppeCP)
   if (GNSS_CONFIG_LPPE_CONTROL_PLANE_SENSOR_BARO_MEASUREMENTS_BIT & lppeCP) {
       lppe_req.lppeCpConfig |= QMI_LOC_LPPE_MASK_CP_UBP_V02;
   }
+  if (GNSS_CONFIG_LPPE_CONTROL_PLANE_NON_E911_BIT & lppeCP) {
+      lppe_req.lppeCpConfig |= QMI_LOC_LPPE_MASK_CP_NON_E911_V02;
+  }
 
   req_union.pSetProtocolConfigParametersReq = &lppe_req;
 
@@ -2305,6 +2308,9 @@ LocApiV02::setLPPeProtocolUpSync(GnssConfigLppeUserPlaneMask lppeUP)
   }
   if (GNSS_CONFIG_LPPE_USER_PLANE_SENSOR_BARO_MEASUREMENTS_BIT & lppeUP) {
       lppe_req.lppeUpConfig |= QMI_LOC_LPPE_MASK_UP_UBP_V02;
+  }
+  if (GNSS_CONFIG_LPPE_USER_PLANE_NON_E911_BIT & lppeUP) {
+      lppe_req.lppeUpConfig |= QMI_LOC_LPPE_MASK_UP_NON_E911_V02;
   }
 
   req_union.pSetProtocolConfigParametersReq = &lppe_req;
