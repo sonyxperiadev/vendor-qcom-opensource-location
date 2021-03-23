@@ -63,7 +63,7 @@
  *====*====*====*====*====*====*====*====*====*====*====*====*====*====*====*/
 
 /* This file was generated with Tool version 6.14.9
-   It was generated on: Tue Apr  6 2021 (Spin 0)
+   It was generated on: Thu Apr 22 2021 (Spin 0)
    From IDL File: location_service_v02.idl */
 
 /** @defgroup loc_qmi_consts Constant values defined in the IDL */
@@ -89,7 +89,7 @@ extern "C" {
 /** Major Version Number of the IDL used to generate this file */
 #define LOC_V02_IDL_MAJOR_VERS 0x02
 /** Revision Number of the IDL used to generate this file */
-#define LOC_V02_IDL_MINOR_VERS 0x8B
+#define LOC_V02_IDL_MINOR_VERS 0x8D
 /** Major Version Number of the qmi_idl_compiler used to generate this file */
 #define LOC_V02_IDL_TOOL_VERS 0x06
 /** Maximum Defined Message ID */
@@ -3456,11 +3456,11 @@ typedef struct {
        - 0x00 (FALSE) -- Civic Address is not needed \n
        - 0x01 (TRUE) -- Civic Address is needed
 
-	NOTE: If the civic address is available with the AP, the AP Shall inject
-	the same using the new QMI API QMI_LOC_INJECT_LOCATION_CIVIC_ADDRESS.
+    NOTE: If the civic address is available with the AP, the AP Shall inject
+    the same using the new QMI API QMI_LOC_INJECT_LOCATION_CIVIC_ADDRESS.
 
         If the civic address is not available, the AP shall NOT use the new QMI API
-	QMI_LOC_INJECT_LOCATION_CIVIC_ADDRESS. The existing DBH injection API should
+    QMI_LOC_INJECT_LOCATION_CIVIC_ADDRESS. The existing DBH injection API should
         be used to inject hybrid location is available.
   */
 }qmiLocEventWifiReqIndMsgT_v02;  /* Message */
@@ -5533,7 +5533,9 @@ typedef enum {
   eQMI_LOC_POSITION_SRC_TERRESTRIAL_V02 = 4, /**<  Position source is Terrestrial \n */
   eQMI_LOC_POSITION_SRC_GNSS_TERRESTRIAL_HYBRID_V02 = 5, /**<  Position source is GNSS Terrestrial Hybrid \n  */
   eQMI_LOC_POSITION_SRC_OTHER_V02 = 6, /**<  Other sources \n  */
-  eQMI_LOC_POSITION_SRC_DRE_V02 = 7, /**<  Position source is the dead reckoning engine  */
+  eQMI_LOC_POSITION_SRC_DRE_V02 = 7, /**<  Position source is the dead reckoning engine \n  */
+  eQMI_LOC_POSITION_SRC_FLP_V02 = 8, /**<  Position source is Fused Location Provider  */
+  eQMI_LOC_POSITION_SRC_NLP_V02 = 9, /**<  Position source is Network Location Provider  */
   QMILOCPOSITIONSRCENUMT_MAX_ENUM_VAL_V02 = 2147483647 /**< To force a 32 bit signed enum.  Do not change or use*/
 }qmiLocPositionSrcEnumT_v02;
 /**
@@ -5698,7 +5700,9 @@ typedef struct {
       - eQMI_LOC_POSITION_SRC_TERRESTRIAL (4) --  Position source is Terrestrial \n
       - eQMI_LOC_POSITION_SRC_GNSS_TERRESTRIAL_HYBRID (5) --  Position source is GNSS Terrestrial Hybrid \n
       - eQMI_LOC_POSITION_SRC_OTHER (6) --  Other sources \n
-      - eQMI_LOC_POSITION_SRC_DRE (7) --  Position source is the dead reckoning engine  \n
+      - eQMI_LOC_POSITION_SRC_DRE (7) --  Position source is the dead reckoning engine \n
+      - eQMI_LOC_POSITION_SRC_FLP (8) --  Position source is Fused Location Provider
+      - eQMI_LOC_POSITION_SRC_NLP (9) --  Position source is Network Location Provider  \n
  If altitude is specified and the altitude source is not specified, the engine
  assumes that the altitude was obtained using the specified position source. \n
  If both altitude and altitude source are specified, the engine assumes
@@ -5862,6 +5866,16 @@ typedef uint64_t qmiLocLockClientMaskT_v02;
 #define QMI_LOC_LOCK_CLIENT_MASK_AFW_V02 ((qmiLocLockClientMaskT_v02)0x00000001ull) /**<  Lock AFW client \n */
 #define QMI_LOC_LOCK_CLIENT_MASK_NFW_V02 ((qmiLocLockClientMaskT_v02)0x00000002ull) /**<  Lock NFW client \n */
 #define QMI_LOC_LOCK_CLIENT_MASK_PRIVILEGED_V02 ((qmiLocLockClientMaskT_v02)0x00000004ull) /**<  Lock privileged client  */
+typedef uint64_t qmiLocClientsMaskT_v02;
+#define QMI_LOC_MASK_UTH_CLIENT_IMS_V02 ((qmiLocClientsMaskT_v02)0x00000001ull) /**<  Lock/Unlock IMS Client \n  */
+#define QMI_LOC_MASK_UTH_CLIENT_SIM_V02 ((qmiLocClientsMaskT_v02)0x00000002ull) /**<  Lock/Unlock SIM Client \n  */
+#define QMI_LOC_MASK_UTH_CLIENT_MDT_V02 ((qmiLocClientsMaskT_v02)0x00000004ull) /**<  Lock/Unlock MDT Client \n  */
+#define QMI_LOC_MASK_UTH_CLIENT_TLOC_V02 ((qmiLocClientsMaskT_v02)0x00000008ull) /**<  Lock/Unlock TLOC Client \n  */
+#define QMI_LOC_MASK_UTH_CLIENT_RLOC_V02 ((qmiLocClientsMaskT_v02)0x00000010ull) /**<  Lock/Unlock RLOC Client \n  */
+#define QMI_LOC_MASK_UTH_CLIENT_V2X_V02 ((qmiLocClientsMaskT_v02)0x00000020ull) /**<  Lock/Unlock V2X Client \n  */
+#define QMI_LOC_MASK_OEM_CLIENT_R1_V02 ((qmiLocClientsMaskT_v02)0x00000040ull) /**<  Lock/Unlock reserved UTH OEM R1 client \n    */
+#define QMI_LOC_MASK_OEM_CLIENT_R2_V02 ((qmiLocClientsMaskT_v02)0x00000080ull) /**<  Lock/Unlock reserved UTH OEM R2 client \n    */
+#define QMI_LOC_MASK_OEM_CLIENT_R3_V02 ((qmiLocClientsMaskT_v02)0x00000100ull) /**<  Lock/Unlock reserved UTH OEM R3 client \n    */
 /** @addtogroup loc_qmi_messages
     @{
   */
@@ -5892,16 +5906,34 @@ typedef struct {
  */
 
   /* Optional */
-  /*  Lock Client */
+  /*  Lock Client (Deprecated) */
   uint8_t lockClient_valid;  /**< Must be set to true if lockClient is being passed */
   qmiLocLockClientMaskT_v02 lockClient;
-  /**<   If specified by the control point, the client(s) are
+  /**<   (Deprecated)
+ If specified by the control point, the client(s) are
  blocked to request position.
  Note: lockClient overwrites lockType
  Values: \n
       - QMI_LOC_LOCK_CLIENT_MASK_AFW (0x00000001) --  Lock AFW client \n
       - QMI_LOC_LOCK_CLIENT_MASK_NFW (0x00000002) --  Lock NFW client \n
       - QMI_LOC_LOCK_CLIENT_MASK_PRIVILEGED (0x00000004) --  Lock privileged client
+ */
+
+  /* Optional */
+  /*  Clients Config   */
+  uint8_t clientsConfig_valid;  /**< Must be set to true if clientsConfig is being passed */
+  qmiLocClientsMaskT_v02 clientsConfig;
+  /**<   Bitmask indicating the Clients location request Lock Configuration \n
+ Valid bitmasks: \n
+      - QMI_LOC_MASK_UTH_CLIENT_IMS (0x00000001) --  Lock/Unlock IMS Client \n
+      - QMI_LOC_MASK_UTH_CLIENT_SIM (0x00000002) --  Lock/Unlock SIM Client \n
+      - QMI_LOC_MASK_UTH_CLIENT_MDT (0x00000004) --  Lock/Unlock MDT Client \n
+      - QMI_LOC_MASK_UTH_CLIENT_TLOC (0x00000008) --  Lock/Unlock TLOC Client \n
+      - QMI_LOC_MASK_UTH_CLIENT_RLOC (0x00000010) --  Lock/Unlock RLOC Client \n
+      - QMI_LOC_MASK_UTH_CLIENT_V2X (0x00000020) --  Lock/Unlock V2X Client \n
+      - QMI_LOC_MASK_OEM_CLIENT_R1 (0x00000040) --  Lock/Unlock reserved UTH OEM R1 client \n
+      - QMI_LOC_MASK_OEM_CLIENT_R2 (0x00000080) --  Lock/Unlock reserved UTH OEM R2 client \n
+      - QMI_LOC_MASK_OEM_CLIENT_R3 (0x00000100) --  Lock/Unlock reserved UTH OEM R3 client \n
  */
 }qmiLocSetEngineLockReqMsgT_v02;  /* Message */
 /**
@@ -6009,14 +6041,32 @@ typedef struct {
  */
 
   /* Optional */
-  /*  Lock Client */
+  /*  Lock Client (Deprecated) */
   uint8_t lockClient_valid;  /**< Must be set to true if lockClient is being passed */
   qmiLocLockClientMaskT_v02 lockClient;
-  /**<   The client(s) who have been locked to request position.
+  /**<   (Deprecated)
+ The client(s) who have been locked to request position.
  Values: \n
       - QMI_LOC_LOCK_CLIENT_MASK_AFW (0x00000001) --  Lock AFW client \n
       - QMI_LOC_LOCK_CLIENT_MASK_NFW (0x00000002) --  Lock NFW client \n
       - QMI_LOC_LOCK_CLIENT_MASK_PRIVILEGED (0x00000004) --  Lock privileged client
+ */
+
+  /* Optional */
+  /*  Clients Config   */
+  uint8_t clientsConfig_valid;  /**< Must be set to true if clientsConfig is being passed */
+  qmiLocClientsMaskT_v02 clientsConfig;
+  /**<   Bitmask indicating the Clients location request Lock Configuration \n
+ Valid bitmasks: \n
+      - QMI_LOC_MASK_UTH_CLIENT_IMS (0x00000001) --  Lock/Unlock IMS Client \n
+      - QMI_LOC_MASK_UTH_CLIENT_SIM (0x00000002) --  Lock/Unlock SIM Client \n
+      - QMI_LOC_MASK_UTH_CLIENT_MDT (0x00000004) --  Lock/Unlock MDT Client \n
+      - QMI_LOC_MASK_UTH_CLIENT_TLOC (0x00000008) --  Lock/Unlock TLOC Client \n
+      - QMI_LOC_MASK_UTH_CLIENT_RLOC (0x00000010) --  Lock/Unlock RLOC Client \n
+      - QMI_LOC_MASK_UTH_CLIENT_V2X (0x00000020) --  Lock/Unlock V2X Client \n
+      - QMI_LOC_MASK_OEM_CLIENT_R1 (0x00000040) --  Lock/Unlock reserved UTH OEM R1 client \n
+      - QMI_LOC_MASK_OEM_CLIENT_R2 (0x00000080) --  Lock/Unlock reserved UTH OEM R2 client \n
+      - QMI_LOC_MASK_OEM_CLIENT_R3 (0x00000100) --  Lock/Unlock reserved UTH OEM R3 client \n
  */
 }qmiLocGetEngineLockIndMsgT_v02;  /* Message */
 /**
@@ -12976,6 +13026,8 @@ typedef struct {
        Values: \n
        - 0x01 (TRUE) -- GPS engine is in E911 mode \n
        - 0x00 (FALSE) -- GPS engine is not in E911 mode
+
+       Note: e911Mode shall be set as TRUE for Non-E911 Wifi Ap injections.
     */
 }qmiLocEventInjectWifiApDataReqIndMsgT_v02;  /* Message */
 /**
@@ -16787,7 +16839,9 @@ typedef struct {
       - eQMI_LOC_POSITION_SRC_TERRESTRIAL (4) --  Position source is Terrestrial \n
       - eQMI_LOC_POSITION_SRC_GNSS_TERRESTRIAL_HYBRID (5) --  Position source is GNSS Terrestrial Hybrid \n
       - eQMI_LOC_POSITION_SRC_OTHER (6) --  Other sources \n
-      - eQMI_LOC_POSITION_SRC_DRE (7) --  Position source is the dead reckoning engine
+      - eQMI_LOC_POSITION_SRC_DRE (7) --  Position source is the dead reckoning engine \n
+      - eQMI_LOC_POSITION_SRC_FLP (8) --  Position source is Fused Location Provider
+      - eQMI_LOC_POSITION_SRC_NLP (9) --  Position source is Network Location Provider
  */
 
   /* Optional */
@@ -18050,6 +18104,7 @@ typedef enum {
   eQMI_LOC_SUPPORTED_FEATURE_EDGNSS_V02 = 13, /**<  Support enhanced DGNSS  */
   eQMI_LOC_SUPPORTED_FEATURE_MULTIBAND_CONFIG_V02 = 14, /**<  Support the multiband GNSS configuration feature  */
   eQMI_LOC_SUPPORTED_FEATURE_QMI_AGNSS_CONFIG_DISABLED_V02 = 15, /**<  Support the AGNSS configuration for DSDA   */
+  eQMI_LOC_SUPPORTED_FEATURE_MULTIPLE_ATTRIBUTION_APPS_V02 = 16, /**<  Support the Multiple Attribution Apps(UTH clients Lock control) feature    */
   QMILOCSUPPORTEDFEATUREENUMT_MAX_ENUM_VAL_V02 = 2147483647 /**< To force a 32 bit signed enum.  Do not change or use*/
 }qmiLocSupportedFeatureEnumT_v02;
 /**
@@ -21550,7 +21605,12 @@ typedef enum {
   eQMI_LOC_SIM_V02 = 3, /**<  SIM requests the location \n  */
   eQMI_LOC_MDT_V02 = 4, /**<  MDT requests the location \n  */
   eQMI_LOC_TLOC_V02 = 5, /**<  Trusted location requests the location \n */
-  eQMI_LOC_OTHER_V02 = 6, /**<  Other protocol stack requests the location  */
+  eQMI_LOC_OTHER_V02 = 6, /**<  Other protocol stack requests the location \n  */
+  eQMI_LOC_RLOC_V02 = 7, /**<  Robust Location Client requests the location  \n  */
+  eQMI_LOC_V2X_V02 = 8, /**<  V2X Client requests the location \n  */
+  eQMI_LOC_R1_V02 = 9, /**<  Reserved UTH OEM Client 1 requests the location  \n  */
+  eQMI_LOC_R2_V02 = 10, /**<  Reserved UTH OEM Client 2 requests the location  \n  */
+  eQMI_LOC_R3_V02 = 11, /**<  Reserved UTH OEM Client 3 requests the location    */
   QMILOCREQUESTPROTOCOLENUMT_MAX_ENUM_VAL_V02 = 2147483647 /**< To force a 32 bit signed enum.  Do not change or use*/
 }qmiLocRequestProtocolEnumT_v02;
 /**
@@ -21617,7 +21677,12 @@ typedef struct {
       - eQMI_LOC_SIM (3) --  SIM requests the location \n
       - eQMI_LOC_MDT (4) --  MDT requests the location \n
       - eQMI_LOC_TLOC (5) --  Trusted location requests the location \n
-      - eQMI_LOC_OTHER (6) --  Other protocol stack requests the location
+      - eQMI_LOC_OTHER (6) --  Other protocol stack requests the location \n
+      - eQMI_LOC_RLOC (7) --  Robust Location Client requests the location  \n
+      - eQMI_LOC_V2X (8) --  V2X Client requests the location \n
+      - eQMI_LOC_R1 (9) --  Reserved UTH OEM Client 1 requests the location  \n
+      - eQMI_LOC_R2 (10) --  Reserved UTH OEM Client 2 requests the location  \n
+      - eQMI_LOC_R3 (11) --  Reserved UTH OEM Client 3 requests the location
  */
 
   /* Mandatory */
@@ -23188,8 +23253,8 @@ typedef struct {
         - Units -- Degrees \n
         - Range -- -90.0 to 90.0 \n
 
-		Note: Positive values indicate northern latitude,
-		Negative values indicate southern latitude
+        Note: Positive values indicate northern latitude,
+        Negative values indicate southern latitude
    */
 
   /* Optional */
@@ -23200,8 +23265,8 @@ typedef struct {
         - Units -- Degrees \n
         - Range -- -180.0 to 180.0 \n
 
-		Note: Positive values indicate eastern longitude,
-		Negative values indicate western longitude
+        Note: Positive values indicate eastern longitude,
+        Negative values indicate western longitude
    */
 
   /* Optional */
@@ -23221,7 +23286,7 @@ typedef struct {
         - 0, 101 to 255 -- invalid value\n
         - If 100 is received, reinterpret to 99 \n
 
-		Note: This field must be specified together with horizontal uncertainty.
+        Note: This field must be specified together with horizontal uncertainty.
         If not specified when horUncCircular is set, the default value is 50.
    */
 
@@ -23231,8 +23296,8 @@ typedef struct {
   float altitudeWrtEllipsoid;
   /**<   Altitude with respect to the WGS84 ellipsoid.\n
         - Units -- Meters
-		- Positive = height
-		- Negative = depth
+        - Positive = height
+        - Negative = depth
    */
 
   /* Optional */
@@ -23258,13 +23323,13 @@ typedef struct {
   uint8_t vertConfidence;
   /**<   Vertical confidence, as defined by ETSI TS 101 109. \n
         - Units -- Percent (0-99)\n
-		- 0 -- invalid value \n
-		- 100 to 256 -- not used \n
-		- If 100 is received, reinterpret to 99 \n
+        - 0 -- invalid value \n
+        - 100 to 256 -- not used \n
+        - If 100 is received, reinterpret to 99 \n
 
-		Note: This field must be specified together with the vertical uncertainty.
+        Note: This field must be specified together with the vertical uncertainty.
         If not specified, the default value is 50.
-	*/
+    */
 
   /* Optional */
   /*  Altitude Source */
@@ -23313,7 +23378,9 @@ typedef struct {
       - eQMI_LOC_POSITION_SRC_TERRESTRIAL (4) --  Position source is Terrestrial \n
       - eQMI_LOC_POSITION_SRC_GNSS_TERRESTRIAL_HYBRID (5) --  Position source is GNSS Terrestrial Hybrid \n
       - eQMI_LOC_POSITION_SRC_OTHER (6) --  Other sources \n
-      - eQMI_LOC_POSITION_SRC_DRE (7) --  Position source is the dead reckoning engine
+      - eQMI_LOC_POSITION_SRC_DRE (7) --  Position source is the dead reckoning engine \n
+      - eQMI_LOC_POSITION_SRC_FLP (8) --  Position source is Fused Location Provider
+      - eQMI_LOC_POSITION_SRC_NLP (9) --  Position source is Network Location Provider
 
  If altitude is specified and the altitude source is not specified, the engine
  assumes that the altitude was obtained using the specified position source. \n

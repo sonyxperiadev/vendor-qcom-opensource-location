@@ -2649,32 +2649,33 @@ locClientEventMaskType LocApiV02 :: convertMask(
 
 qmiLocLockEnumT_v02 LocApiV02 ::convertGpsLockFromAPItoQMI(GnssConfigGpsLock lock)
 {
-    switch (lock)
-    {
-      case GNSS_CONFIG_GPS_LOCK_MO_AND_NI:
-        return eQMI_LOC_LOCK_ALL_V02;
-      case GNSS_CONFIG_GPS_LOCK_MO:
-        return eQMI_LOC_LOCK_MI_V02;
-      case GNSS_CONFIG_GPS_LOCK_NI:
-        return eQMI_LOC_LOCK_MT_V02;
-      case GNSS_CONFIG_GPS_LOCK_NONE:
-      default:
-        return eQMI_LOC_LOCK_NONE_V02;
+    bool isAfwLocked = (lock & GNSS_CONFIG_GPS_LOCK_MO);
+    bool areCpAndSuplLocked;
+    if (ContextBase::isFeatureSupported(LOC_SUPPORTED_FEATURE_MULTIPLE_ATTRIBUTION_APPS)) {
+        areCpAndSuplLocked = (lock & GNSS_CONFIG_GPS_LOCK_NFW_CP) &&
+                             (lock & GNSS_CONFIG_GPS_LOCK_NFW_SUPL);
+        LOC_LOGv("Multiple attribution apps supported isAfwLocked = %d "
+                 "areCpAndSuplLocked = %d",
+                 isAfwLocked, areCpAndSuplLocked);
+    } else {
+        areCpAndSuplLocked = (lock & GNSS_CONFIG_GPS_LOCK_NFW_ALL);
+        LOC_LOGv("Multiple attribution apps not supported isAfwLocked = %d "
+                 "areCpAndSuplLocked = %d",
+                 isAfwLocked, areCpAndSuplLocked);
     }
-}
 
-GnssConfigGpsLock LocApiV02::convertGpsLockFromQMItoAPI(qmiLocLockEnumT_v02 lock)
-{
-    switch (lock) {
-      case eQMI_LOC_LOCK_MI_V02:
-        return GNSS_CONFIG_GPS_LOCK_MO;
-      case eQMI_LOC_LOCK_MT_V02:
-        return GNSS_CONFIG_GPS_LOCK_NI;
-      case eQMI_LOC_LOCK_ALL_V02:
-        return GNSS_CONFIG_GPS_LOCK_MO_AND_NI;
-      case eQMI_LOC_LOCK_NONE_V02:
-      default:
-        return GNSS_CONFIG_GPS_LOCK_NONE;
+    if (areCpAndSuplLocked) {
+        if (isAfwLocked) {
+            return eQMI_LOC_LOCK_ALL_V02;
+        } else {
+            return eQMI_LOC_LOCK_MT_V02;
+        }
+    } else {
+        if (isAfwLocked) {
+            return eQMI_LOC_LOCK_MI_V02;
+        } else {
+            return eQMI_LOC_LOCK_NONE_V02;
+        }
     }
 }
 
@@ -7185,14 +7186,21 @@ LocationError LocApiV02 :: setGpsLockSync(GnssConfigGpsLock lock)
     qmiLocSetEngineLockIndMsgT_v02 setEngineLockInd;
     locClientStatusEnumType status;
     locClientReqUnionType req_union;
+    uint32_t nfwControlBits = lock >> 1;
 
     memset(&setEngineLockReq, 0, sizeof(setEngineLockReq));
-    setEngineLockReq.lockType = convertGpsLockFromAPItoQMI((GnssConfigGpsLock)lock);;
+    setEngineLockReq.lockType = convertGpsLockFromAPItoQMI((GnssConfigGpsLock)lock);
     setEngineLockReq.subType_valid = true;
     setEngineLockReq.subType = eQMI_LOC_LOCK_ALL_SUB_V02;
     setEngineLockReq.lockClient_valid = false;
+    setEngineLockReq.clientsConfig_valid = true;
+    setEngineLockReq.clientsConfig = (uint64_t)nfwControlBits;
     req_union.pSetEngineLockReq = &setEngineLockReq;
-    LOC_LOGd("API lock type = 0x%X QMI lockType = %d", lock, setEngineLockReq.lockType);
+
+    LOC_LOGd("API lock type = 0x%X QMI lockType = %d "
+             "nfwControlBits = 0x%X clientsConfig = 0x%" PRIx64"",
+             lock, setEngineLockReq.lockType, nfwControlBits,
+             setEngineLockReq.clientsConfig);
     memset(&setEngineLockInd, 0, sizeof(setEngineLockInd));
     status = locSyncSendReq(QMI_LOC_SET_ENGINE_LOCK_REQ_V02,
                             req_union, LOC_ENGINE_SYNC_REQUEST_LONG_TIMEOUT,
@@ -7223,48 +7231,6 @@ void LocApiV02::requestForAidingData(GnssAidingDataSvMask svDataMask)
 
         sendRequestForAidingData(qmiMask);
     }));
-}
-
-/*
-  Returns
-  Current value of GPS Lock on success
-  -1 on failure
-*/
-int LocApiV02 :: getGpsLock(uint8_t subType)
-{
-    qmiLocGetEngineLockReqMsgT_v02 getEngineLockReq;
-    qmiLocGetEngineLockIndMsgT_v02 getEngineLockInd;
-    locClientStatusEnumType status;
-    locClientReqUnionType req_union;
-    int ret=0;
-    memset(&getEngineLockInd, 0, sizeof(getEngineLockInd));
-
-    //Passing req_union as a parameter even though this request has no payload
-    //since NULL or 0 gives an error during compilation
-    getEngineLockReq.subType_valid = true;
-    getEngineLockReq.subType = (qmiLocLockSubInfoEnumT_v02)subType;
-    req_union.pGetEngineLockReq = &getEngineLockReq;
-    status = locSyncSendReq(QMI_LOC_GET_ENGINE_LOCK_REQ_V02,
-                            req_union, LOC_ENGINE_SYNC_REQUEST_TIMEOUT,
-                            QMI_LOC_GET_ENGINE_LOCK_IND_V02,
-                            &getEngineLockInd);
-    if(status != eLOC_CLIENT_SUCCESS || getEngineLockInd.status != eQMI_LOC_SUCCESS_V02) {
-        LOC_LOGE("%s:%d]: Set engine lock failed. status: %s, ind status:%s\n",
-                 __func__, __LINE__,
-                 loc_get_v02_client_status_name(status),
-                 loc_get_v02_qmi_status_name(getEngineLockInd.status));
-        ret = -1;
-    }
-    else {
-        if(getEngineLockInd.lockType_valid) {
-            ret = (int)convertGpsLockFromQMItoAPI(getEngineLockInd.lockType);
-        }
-        else {
-            LOC_LOGE("%s:%d]: Lock Type not valid\n", __func__, __LINE__);
-            ret = -1;
-        }
-    }
-    return ret;
 }
 
 LocationError
