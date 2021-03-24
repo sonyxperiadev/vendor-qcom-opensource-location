@@ -42,8 +42,8 @@ enum LocationApiDataTypesVersion {
     LOCAPI_DATA_TYPES_VER_MAJOR = 1;
     // Minor - New features / API addition, new message/elemtent addition.
     // Bump the last byte of version i.e. x.2 to x.3
-    // Minor version 10: Add bit mask for basebandCarrierToNoiseDbHz in SV report
-    LOCAPI_DATA_TYPES_VER_MINOR = 10;
+    // Minor version 11: Add bit mask for gnssSignalType in SV meas report
+    LOCAPI_DATA_TYPES_VER_MINOR = 11;
 }
 
 // ============================================================================
@@ -435,6 +435,7 @@ enum PBGnssMeasurementsDataFlagsMask {
     PB_GNSS_MEASUREMENTS_DATA_FULL_ISB_BIT                     = 0x00040000;
     PB_GNSS_MEASUREMENTS_DATA_FULL_ISB_UNCERTAINTY_BIT         = 0x00080000;
     PB_GNSS_MEASUREMENTS_DATA_CYCLE_SLIP_COUNT_BIT             = 0x00100000;
+    PB_GNSS_MEASUREMENTS_DATA_GNSS_SIGNAL_TYPE_BIT             = 0x00200000;
 }
 
 enum PBGnssMeasurementsStateMask {
