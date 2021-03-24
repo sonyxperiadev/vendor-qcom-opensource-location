@@ -1,4 +1,4 @@
-/* Copyright (c) 2011-2020, The Linux Foundation. All rights reserved.
+/* Copyright (c) 2011-2021, The Linux Foundation. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -142,6 +142,9 @@ private:
   static void convertGnssConestellationMask (
             qmiLocGNSSConstellEnumT_v02 qmiConstellationEnum,
             GnssConstellationTypeMask& constellationMask);
+
+  static GnssSignalTypeMask convertQmiGnssSignalType(
+        qmiLocGnssSignalTypeMaskT_v02 qmiGnssSignalType);
 
   /* If Confidence value is less than 68%, then scale the accuracy value to 68%
      confidence.*/
@@ -386,8 +389,6 @@ public:
   virtual GnssConfigLppProfile convertLppProfile(const uint32_t lppProfile);
   virtual GnssConfigLppeControlPlaneMask convertLppeCp(const uint32_t lppeControlPlaneMask);
   virtual GnssConfigLppeUserPlaneMask convertLppeUp(const uint32_t lppeUserPlaneMask);
-  virtual GnssSignalTypeMask convertQmiGnssSignalType(
-        qmiLocGnssSignalTypeMaskT_v02 qmiGnssSignalType);
 
   void convertQmiBlacklistedSvConfigToGnssConfig(
         const qmiLocGetBlacklistSvIndMsgT_v02& qmiBlacklistConfig,
