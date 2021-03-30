@@ -643,7 +643,6 @@ locClientEventMaskType LocApiV02 :: adjustMaskIfNoSessionOrEngineOff(locClientEv
                                            QMI_LOC_EVENT_MASK_GNSS_NHZ_MEASUREMENT_REPORT_V02 |
                                            QMI_LOC_EVENT_MASK_GNSS_SV_POLYNOMIAL_REPORT_V02 |
                                            QMI_LOC_EVENT_MASK_EPHEMERIS_REPORT_V02 |
-                                           QMI_LOC_EVENT_MASK_GNSS_EVENT_REPORT_V02 |
                                            QMI_LOC_EVENT_MASK_NEXT_LS_INFO_REPORT_V02 |
                                            QMI_LOC_EVENT_MASK_LATENCY_INFORMATION_REPORT_V02;
         qmiMask = qmiMask & ~clearMask;
@@ -4121,7 +4120,11 @@ void LocApiV02::populateFeatureStatusReport
     } else {
         featureMap[LOCATION_QWES_FEATURE_TYPE_CLOCK_ESTIMATE] = false;
     }
-
+    if (featureStatusReport & QMI_LOC_FEATURE_STATUS_DGNSS_V02) {
+        featureMap[LOCATION_QWES_FEATURE_TYPE_DGNSS] = true;
+    } else {
+        featureMap[LOCATION_QWES_FEATURE_TYPE_DGNSS] = false;
+    }
 }
 
 void LocApiV02::reportSvEphemeris (
