@@ -954,7 +954,7 @@ void LocApiV02 ::
     location.flags |= LOCATION_HAS_ACCURACY_BIT;
     location.accuracy = accuracy;
 
-    struct timespec time_info_current;
+    struct timespec time_info_current = {};
     if(clock_gettime(CLOCK_REALTIME,&time_info_current) == 0) //success
     {
         location.timestamp = (time_info_current.tv_sec)*1e3 +
@@ -2546,7 +2546,7 @@ void LocApiV02 :: reportPosition (
     locationExtended.flags |= GPS_LOCATION_EXTENDED_HAS_OUTPUT_ENG_MASK;
     locationExtended.locOutputEngMask = STANDARD_POSITIONING_ENGINE;
 
-    struct timespec apTimestamp;
+    struct timespec apTimestamp = {};
     if( clock_gettime( CLOCK_BOOTTIME, &apTimestamp)== 0)
     {
        locationExtended.timeStamp.apTimeStamp.tv_sec = apTimestamp.tv_sec;
@@ -5412,7 +5412,7 @@ void LocApiV02 ::reportSvMeasurementInternal() {
             mGnssMeasurements->gnssSvMeasurementSet.svMeasSetHeader;
 
         // when we received the last sequence, timestamp the packet with AP time
-        struct timespec apTimestamp;
+        struct timespec apTimestamp = {};
         if (clock_gettime(CLOCK_BOOTTIME, &apTimestamp)== 0) {
             svMeasSetHead.apBootTimeStamp.apTimeStamp.tv_sec = apTimestamp.tv_sec;
             svMeasSetHead.apBootTimeStamp.apTimeStamp.tv_nsec = apTimestamp.tv_nsec;
@@ -7781,7 +7781,7 @@ handleWwanZppFixIndication(const qmiLocGetAvailWwanPositionIndMsgT_v02& zpp_ind)
             /* The UTC time from modem is not valid.
             In this case, we use current system time instead.*/
 
-            struct timespec time_info_current;
+            struct timespec time_info_current = {};
             clock_gettime(CLOCK_REALTIME,&time_info_current);
             zppLoc.timestamp = (time_info_current.tv_sec)*1e3 +
                                (time_info_current.tv_nsec)/1e6;
@@ -7847,7 +7847,7 @@ void LocApiV02::
             /* The UTC time from modem is not valid.
                     In this case, we use current system time instead.*/
 
-          struct timespec time_info_current;
+          struct timespec time_info_current = {};
           clock_gettime(CLOCK_REALTIME,&time_info_current);
           zppLoc.timestamp = (time_info_current.tv_sec)*1e3 +
                   (time_info_current.tv_nsec)/1e6;

@@ -1,4 +1,4 @@
-/* Copyright (c) 2011-2012, 2015-2016, The Linux Foundation. All rights reserved.
+/* Copyright (c) 2011-2012, 2015-2016, 2021 The Linux Foundation. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -421,7 +421,7 @@ static int loc_sync_wait_for_ind(
    int ret_val = 0;  /* the return value of this function: 0 = no error */
    int rc;          /* return code from pthread calls */
 
-   struct timespec expire_time;
+   struct timespec expire_time = {};
 
    pthread_mutex_lock(&slot->sync_req_lock);
 
