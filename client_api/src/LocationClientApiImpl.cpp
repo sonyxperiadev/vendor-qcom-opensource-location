@@ -871,6 +871,10 @@ static GnssMeasurements parseGnssMeasurements(const ::GnssMeasurementsNotificati
         measurement.svId = halGnssMeasurements.measurements[meas].svId;
         measurement.svType =
                 (location_client::GnssSvType)halGnssMeasurements.measurements[meas].svType;
+        if ((GNSS_SV_TYPE_GLONASS == measurement.svType) && isGloSlotUnknown(measurement.svId)) {
+            // OSN is not known, report FCN
+            measurement.svId = halGnssMeasurements.measurements[meas].gloFrequency + 96;
+        }
         measurement.timeOffsetNs = halGnssMeasurements.measurements[meas].timeOffsetNs;
         measurement.stateMask = (GnssMeasurementsStateMask)
                 halGnssMeasurements.measurements[meas].stateMask;
