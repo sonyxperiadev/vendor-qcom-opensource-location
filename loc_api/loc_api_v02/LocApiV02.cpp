@@ -513,9 +513,19 @@ LocApiV02 :: open(LOC_API_ADAPTER_EVENT_MASK_T mask)
         }
 
         // cache the mpss engine capabilities
-       mContext->setEngineCapabilities(supportedMsgList,
+        mContext->setEngineCapabilities(supportedMsgList,
             (getSupportedFeatureList_ind.feature_len != 0 ? getSupportedFeatureList_ind.feature:
             NULL), gnssMeasurementSupported);
+
+        // Parse the QWES features
+        LOC_LOGd("featureStatusReport_valid %d",
+                 getSupportedFeatureList_ind.featureStatusReport_valid);
+        if (getSupportedFeatureList_ind.featureStatusReport_valid) {
+           std::unordered_map<LocationQwesFeatureType, bool> featureMap;
+           populateFeatureStatusReport(getSupportedFeatureList_ind.featureStatusReport,
+                                       featureMap);
+           LocApiBase::reportQwesCapabilities(featureMap);
+        }
     }
   }
 
