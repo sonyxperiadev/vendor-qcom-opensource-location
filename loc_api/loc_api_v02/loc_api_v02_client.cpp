@@ -1,4 +1,4 @@
-/* Copyright (c) 2011-2016, 2018-2020, The Linux Foundation. All rights reserved.
+/* Copyright (c) 2011-2016, 2018-2021, The Linux Foundation. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -353,6 +353,11 @@ static const locClientEventIndTableStructT locClientEventIndTable[]= {
   { QMI_LOC_LATENCY_INFORMATION_IND_V02,
     sizeof(qmiLocLatencyInformationIndMsgT_v02),
     QMI_LOC_EVENT_MASK_LATENCY_INFORMATION_REPORT_V02},
+
+  // platform power state event ind
+  { QMI_LOC_EVENT_PLATFORM_POWER_STATE_CHANGED_IND_V02,
+    sizeof(qmiLocPlatformPowerStateChangedIndMsgT_v02),
+    QMI_LOC_EVENT_PLATFORM_POWER_STATE_CHANGED_IND_V02},
 };
 
 /* table to relate the respInd Id with its size */
