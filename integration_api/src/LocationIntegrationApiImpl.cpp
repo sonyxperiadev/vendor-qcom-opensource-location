@@ -1366,4 +1366,18 @@ uint32_t* LocationIntegrationApiImpl::gnssUpdateConfig(const GnssConfig& config)
     return nullptr;
 }
 
+static ILocationControlAPI* gLocationControlApiImpl = nullptr;
+static mutex gMutexForCreate;
+extern "C" ILocationControlAPI* getLocationIntegrationApiImpl()
+{
+    LocIntegrationCbs intCbs = {};
+    lock_guard<mutex> lock(gMutexForCreate);
+
+    if (nullptr == gLocationControlApiImpl) {
+        gLocationControlApiImpl = new LocationIntegrationApiImpl(intCbs);
+    }
+
+    return gLocationControlApiImpl;
+}
+
 } // namespace location_integration

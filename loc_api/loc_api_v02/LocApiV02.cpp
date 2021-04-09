@@ -4756,20 +4756,20 @@ void LocApiV02 :: reportAtlRequest(
     LOC_LOGd("handle=%d agpsType=0x%X apnTypeMask=0x%X",
         connHandle, agpsType, apnTypeMask);
 
-    LocSubId agpsSubId = LOC_DEFAULT_SUB;
+    SubId agpsSubId = DEFAULT_SUB;
     if (server_request_ptr->subId_valid) {
         switch (server_request_ptr->subId) {
         case eQMI_LOC_SYS_MODEM_AS_ID_1_V02:
-            agpsSubId = LOC_PRIMARY_SUB;
+            agpsSubId = PRIMARY_SUB;
             break;
         case eQMI_LOC_SYS_MODEM_AS_ID_2_V02:
-            agpsSubId = LOC_SECONDARY_SUB;
+            agpsSubId = SECONDARY_SUB;
             break;
         case eQMI_LOC_SYS_MODEM_AS_ID_3_V02:
-            agpsSubId = LOC_TERTIARY_SUB;
+            agpsSubId = TERTIARY_SUB;
             break;
         default:
-            agpsSubId = LOC_DEFAULT_SUB;
+            agpsSubId = DEFAULT_SUB;
             break;
         }
     }

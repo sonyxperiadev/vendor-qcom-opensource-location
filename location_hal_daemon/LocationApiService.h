@@ -1,4 +1,4 @@
-/* Copyright (c) 2018-2020 The Linux Foundation. All rights reserved.
+/* Copyright (c) 2018-2021 The Linux Foundation. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -41,7 +41,7 @@
 #include <PowerEvtHandler.h>
 #endif
 #include <location_interface.h>
-#include <LocationAPI.h>
+#include <ILocationAPI.h>
 #include <LocationApiMsg.h>
 
 #include <LocHalDaemonClientHandler.h>
@@ -295,7 +295,7 @@ private:
     // Location Control API interface
     uint32_t mLocationControlId;
     LocationControlCallbacks mControlCallabcks;
-    LocationControlAPI *mLocationControlApi;
+    ILocationControlAPI *mLocationControlApi;
 
     // Configration
     const uint32_t mAutoStartGnss;
@@ -311,7 +311,7 @@ private:
 
     // Terrestrial service related APIs
     // Location api interface for single short wwan fix
-    LocationAPI* mGtpWwanSsLocationApi;
+    ILocationAPI* mGtpWwanSsLocationApi;
     LocationCallbacks mGtpWwanSsLocationApiCallbacks;
     trackingCallback mGtpWwanPosCallback;
     // -1: not set, 0: user not opt-in, 1: user opt in

@@ -1,4 +1,4 @@
-/* Copyright (c) 2019-2020 The Linux Foundation. All rights reserved.
+/* Copyright (c) 2019-2021 The Linux Foundation. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -33,7 +33,6 @@
 
 #include <loc_pla.h>
 #include <LocIpc.h>
-#include <LocationDataTypes.h>
 #include <ILocationAPI.h>
 #include <LocationIntegrationApi.h>
 #include <MsgTask.h>
@@ -103,7 +102,7 @@ class LocationIntegrationApiImpl : public ILocationControlAPI {
 public:
     LocationIntegrationApiImpl(LocIntegrationCbs& integrationCbs);
 
-    void destroy();
+    virtual void destroy() override;
 
     // convenient methods
     inline bool sendMessage(const uint8_t* data, uint32_t length) const {
