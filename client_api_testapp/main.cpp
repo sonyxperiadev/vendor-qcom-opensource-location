@@ -73,13 +73,20 @@ static int fixCnt = 0x7fffffff;
 static uint64_t autoTestStartTimeMs = 0;
 static int autoTestTimeoutSec = 0x7FFFFFFF;
 
-enum reportType {
+enum ReportType {
     POSITION_REPORT = 1 << 0,
     NMEA_REPORT     = 1 << 1,
     SV_REPORT       = 1 << 2,
     DATA_REPORT     = 1 << 3,
     MEAS_REPORT     = 1 << 4,
     NHZ_MEAS_REPORT = 1 << 5,
+};
+
+enum TrackingSessionType {
+    NO_TRACKING = 0,
+    SIMPLE_REPORT_TRACKING = 1,
+    DETAILED_REPORT_TRACKING = 2,
+    ENGINE_REPORT_TRACKING = 3,
 };
 
 #define DISABLE_REPORT_OUTPUT "disableReportOutput"
@@ -107,6 +114,7 @@ enum reportType {
 #define CONFIG_ENGINE_RUN_STATE    "configEngineRunState"
 #define SET_USER_CONSENT           "setUserConsentForTerrestrialPositioning"
 #define GET_SINGLE_GTP_WWAN_FIX    "getSingleGtpWwanFix"
+#define CANCEL_SINGLE_GTP_WWAN_FIX "cancelSingleGtpWwanFix"
 #define CONFIG_NMEA_TYPES          "configOutputNmeaTypes"
 
 // debug utility
@@ -618,41 +626,58 @@ static void checkForAutoStart(int argc, char *argv[]) {
     bool deleteAll = false;
     uint32_t aidingDataMask = 0;
     int interval = 100;
-    LocReqEngineTypeMask reqEngMask = (LocReqEngineTypeMask) 0x0;
+    LocReqEngineTypeMask reqEngMask = (LocReqEngineTypeMask) 0x7;
     uint32_t reportType = 0xff;
+    TrackingSessionType trackingType = NO_TRACKING;
 
     //Specifying the expected options
     //The two options l and b expect numbers as argument
     static struct option long_options[] = {
         {"auto",      no_argument,       0,  'a' },
+        {"verbose",   no_argument,       0,  'V' },
+        {"nooutput",   no_argument,      0,  'N' },
         {"deleteAll", no_argument,       0,  'D' },
         {"delete",    required_argument, 0,  'd' },
+        {"session",   required_argument, 0,  's' },
         {"engine",    required_argument, 0,  'e' },
         {"interval",  required_argument, 0,  'i' },
         {"timeout", required_argument,   0,  't' },
         {"fixcnt",   required_argument,  0,  'l' },
-        {"reportType", required_argument, 0,  'r' },
+        {"reportType", required_argument, 0, 'r' },
         {0,           0,                 0,   0  }
     };
 
     int long_index =0;
     int opt = -1;
-    while ((opt = getopt_long(argc, argv, "aDVd:e:i:t:l:r:", long_options,
-                              &long_index)) != -1) {
+    while ((opt = getopt_long(argc, argv, "aVNDd:s:e:i:t:l:r:",
+                              long_options, &long_index)) != -1) {
         switch (opt) {
-             case 'a':
+             case 'a' :
                  autoRun = true;
+                 break;
+             case 'V' :
+                 detailedOutputEnabled = true;
+                 break;
+             case 'N' :
+                 outputEnabled = false;
                  break;
              case 'D':
                  deleteAll = true;
                  break;
-             case 'V':
-                 detailedOutputEnabled = true;
-                 break;
-             case 'd':
+             case 'd' :
                  aidingDataMask = atoi(optarg);
                  break;
-             case 'e':
+             case 's':
+                 printf("session type: %s\n", optarg);
+                 if (optarg[0] == 'l') {
+                     trackingType = SIMPLE_REPORT_TRACKING;
+                 } else if (optarg[0] == 'g') {
+                     trackingType = DETAILED_REPORT_TRACKING;
+                 } else {
+                     trackingType = ENGINE_REPORT_TRACKING;
+                 }
+                 break;
+             case 'e' :
                  printf("report mask: %s\n", optarg);
                  reqEngMask = (LocReqEngineTypeMask) atoi(optarg);
                  break;
@@ -668,8 +693,8 @@ static void checkForAutoStart(int argc, char *argv[]) {
                  printf("tiemout: %s\n", optarg);
                  autoTestTimeoutSec = atoi(optarg);
                  break;
-             case 'r':
-                 printf("new report type: %s\n", optarg);
+             case 'r' :
+                 printf("report type: %s\n", optarg);
                  reportType = atoi(optarg);
                  break;
              default:
@@ -678,9 +703,10 @@ static void checkForAutoStart(int argc, char *argv[]) {
         }
     }
 
-    printf("auto run %d, deleteAll %d, delete mask 0x%x, "
-           "req eng mask 0x%x, fix count %d, timeout sec: %d\n",
-           autoRun, deleteAll, aidingDataMask, reqEngMask, fixCnt, autoTestTimeoutSec);
+    printf("auto run %d, deleteAll %d, delete mask 0x%x, session type %d,"
+           "outputEnabled %d, detailedOutputEnabled %d",
+           autoRun, deleteAll, aidingDataMask, trackingType,
+           outputEnabled, detailedOutputEnabled);
 
     // check for auto-start option
     if (autoRun) {
@@ -707,36 +733,64 @@ static void checkForAutoStart(int argc, char *argv[]) {
             sleep(1);
         }
 
-        if (reqEngMask != 0) {
+        if (trackingType != NO_TRACKING) {
             pAutoStartClient = new LocationClientApi(onCapabilitiesCb);
             if (nullptr == pAutoStartClient) {
                 printf("can not create Location client API");
                 exit(1);
             }
-            EngineReportCbs reportcbs;
-            if (reportType & POSITION_REPORT) {
-                reportcbs.engLocationsCallback = EngineLocationsCb(onEngLocationsCb);
-            }
-            if (reportType & NMEA_REPORT) {
-                reportcbs.gnssNmeaCallback = GnssNmeaCb(onGnssNmeaCb);
-            }
-            if (reportType & SV_REPORT) {
-                reportcbs.gnssSvCallback = GnssSvCb(onGnssSvCb);
-            }
-            if (reportType & DATA_REPORT) {
-                reportcbs.gnssDataCallback = GnssDataCb(onGnssDataCb);
-            }
-            if (reportType & MEAS_REPORT) {
-                reportcbs.gnssMeasurementsCallback = GnssMeasurementsCb(onGnssMeasurementsCb);
-            }
-            if (reportType & NHZ_MEAS_REPORT) {
-                reportcbs.gnssNHzMeasurementsCallback = GnssMeasurementsCb(onGnssMeasurementsCb);
-            }
 
-            printf("reprot type %x, meas report: %x, tbf %d", reportType, MEAS_REPORT, interval);
-            pAutoStartClient->startPositionSession(interval, reqEngMask, reportcbs, onResponseCb);
+            if (trackingType == SIMPLE_REPORT_TRACKING) {
+                pAutoStartClient->startPositionSession(interval, 0, onLocationCb, onResponseCb);
+            } else if (trackingType == DETAILED_REPORT_TRACKING) {
+                // callbacks
+                GnssReportCbs reportcbs;
+                if (reportType & POSITION_REPORT) {
+                    reportcbs.gnssLocationCallback = GnssLocationCb(onGnssLocationCb);
+                }
+                if (reportType & NMEA_REPORT) {
+                    reportcbs.gnssNmeaCallback = GnssNmeaCb(onGnssNmeaCb);
+                }
+                if (reportType & SV_REPORT) {
+                    reportcbs.gnssSvCallback = GnssSvCb(onGnssSvCb);
+                }
+                if (reportType & DATA_REPORT) {
+                    reportcbs.gnssDataCallback = GnssDataCb(onGnssDataCb);
+                }
+                if (reportType & MEAS_REPORT) {
+                    reportcbs.gnssMeasurementsCallback = GnssMeasurementsCb(onGnssMeasurementsCb);
+                }
+                if (reportType & NHZ_MEAS_REPORT) {
+                    reportcbs.gnssNHzMeasurementsCallback =
+                            GnssMeasurementsCb(onGnssMeasurementsCb);
+                }
+                pAutoStartClient->startPositionSession(interval, reportcbs, onResponseCb);
+            } else if (reqEngMask != 0) {
+                EngineReportCbs reportcbs;
+                if (reportType & POSITION_REPORT) {
+                    reportcbs.engLocationsCallback = EngineLocationsCb(onEngLocationsCb);
+                }
+                if (reportType & NMEA_REPORT) {
+                    reportcbs.gnssNmeaCallback = GnssNmeaCb(onGnssNmeaCb);
+                }
+                if (reportType & SV_REPORT) {
+                    reportcbs.gnssSvCallback = GnssSvCb(onGnssSvCb);
+                }
+                if (reportType & DATA_REPORT) {
+                    reportcbs.gnssDataCallback = GnssDataCb(onGnssDataCb);
+                }
+                if (reportType & MEAS_REPORT) {
+                    reportcbs.gnssMeasurementsCallback = GnssMeasurementsCb(onGnssMeasurementsCb);
+                }
+                if (reportType & NHZ_MEAS_REPORT) {
+                    reportcbs.gnssNHzMeasurementsCallback =
+                            GnssMeasurementsCb(onGnssMeasurementsCb);
+                }
+
+                pAutoStartClient->startPositionSession(interval, reqEngMask,
+                                                       reportcbs, onResponseCb);
+            }
             autoTestStartTimeMs = getTimestampMs();
-
             sem_wait(&sem_autoTestCompleted);
         }
 
@@ -1005,8 +1059,21 @@ int main(int argc, char *argv[]) {
             if (!pClient) {
                 pClient = new LocationClientApi(onCapabilitiesCb);
             }
-            pClient->getSingleTerrestrialPosition(timeoutMsec, (TerrestrialTechnologyMask) techMask,
-                                                  horQoS, onGtpLocationCb, onGtpResponseCb);
+            if (pClient) {
+                pClient->getSingleTerrestrialPosition(timeoutMsec,
+                                                      (TerrestrialTechnologyMask) techMask,
+                                                      horQoS, onGtpLocationCb, onGtpResponseCb);
+            }
+        } else if (strncmp(buf, CANCEL_SINGLE_GTP_WWAN_FIX,
+                           strlen(CANCEL_SINGLE_GTP_WWAN_FIX)) == 0) {
+            // cancel the request
+            if (!pClient) {
+                pClient = new LocationClientApi(onCapabilitiesCb);
+            }
+            if (pClient) {
+                pClient->getSingleTerrestrialPosition(0, TERRESTRIAL_TECH_GTP_WWAN, 0.0,
+                                                      nullptr, onGtpResponseCb);
+            }
         } else if (strncmp(buf, CONFIG_NMEA_TYPES, strlen(CONFIG_NMEA_TYPES)) == 0) {
             static char *save = nullptr;
             NmeaTypesMask nmeaTypes = (NmeaTypesMask) NMEA_TYPE_ALL;

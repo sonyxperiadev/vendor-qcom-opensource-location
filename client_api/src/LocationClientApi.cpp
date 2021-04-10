@@ -536,9 +536,10 @@ void LocationClientApi::getSingleTerrestrialPosition(
     LOC_LOGd("timeout msec = %u, horQoS = %f,"
              "techMask = 0x%x", timeoutMsec, horQoS, techMask);
 
-    if ((timeoutMsec == 0) || (techMask != TERRESTRIAL_TECH_GTP_WWAN) ||
-        (horQoS != 0.0)) {
-        LOC_LOGe("invalid parameter: timeout %d, tech mask 0x%x, horQoS %f",
+    if ((terrestrialPositionCallback != nullptr) &&
+            ((timeoutMsec == 0) || (techMask != TERRESTRIAL_TECH_GTP_WWAN) ||
+             (horQoS != 0.0))) {
+        LOC_LOGe("invalid parameter: timeout %d msec, tech mask 0x%x, horQoS %f",
                  timeoutMsec, techMask, horQoS);
         if (responseCallback) {
             responseCallback(LOCATION_RESPONSE_PARAM_INVALID);

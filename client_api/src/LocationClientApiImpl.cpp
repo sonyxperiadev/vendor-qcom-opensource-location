@@ -2009,11 +2009,17 @@ void LocationClientApiImpl::getSingleTerrestrialPos(
                     break;
                 }
 
-                if ((mApiImpl->mSingleTerrestrialPosCb != nullptr) &&
-                        (mSingleTerrestrialPosCb != nullptr)) {
-                    // do not allow concurent single terrestrial position requests
+                if (mApiImpl->mSingleTerrestrialPosCb != nullptr) {
+                    LocationResponse response = LOCATION_RESPONSE_REQUEST_ALREADY_IN_PROGRESS;
+                    if (mSingleTerrestrialPosCb == nullptr) {
+                        // client wants to cancel the request
+                        mApiImpl->mSingleTerrestrialPosCb = nullptr;
+                        response = LOCATION_RESPONSE_SUCCESS;
+                    } // else: LOCATION_RESPONSE_REQUEST_ALREADY_IN_PROGRESS
+
                     if (mResponseCb) {
-                        mResponseCb(LOCATION_RESPONSE_REQUEST_ALREADY_IN_PROGRESS);
+                        // inform client of the response
+                        mResponseCb(response);
                     }
                     break;
                 }
@@ -2025,28 +2031,22 @@ void LocationClientApiImpl::getSingleTerrestrialPos(
                     break;
                 }
 
-                // save the new callback
-                mApiImpl->mSingleTerrestrialPosCb = mSingleTerrestrialPosCb;
-                mApiImpl->mSingleTerrestrialPosRespCb = mResponseCb;
-
-                // If client has cancelled the callback, we are done with processing
-                if (mApiImpl->mSingleTerrestrialPosCb == nullptr) {
-                    if (mResponseCb) {
-                        mResponseCb(LOCATION_RESPONSE_SUCCESS);
-                    }
-                    break;
-                }
-
                 string pbStr;
                 LocAPIGetSingleTerrestrialPosReqMsg msg(
                         mApiImpl->mSocketName, mTimeoutMsec, mTechMask, mHorQoS,
                         &mApiImpl->mPbufMsgConv);
-
                 if (msg.serializeToProtobuf(pbStr)) {
                     bool rc = mApiImpl->sendMessage(
                             reinterpret_cast<uint8_t *>((uint8_t *)pbStr.c_str()),
                                         pbStr.size());
-                    if (!rc && mResponseCb) {
+                    if (rc) {
+                        // request has been sent successfully to hal daemon,
+                        // save the new callback
+                        mApiImpl->mSingleTerrestrialPosCb = mSingleTerrestrialPosCb;
+                        mApiImpl->mSingleTerrestrialPosRespCb = mResponseCb;
+                    } else if (mResponseCb) {
+                        // request failed to send to hal daemon
+                        // inform client and the callback shall not be saved
                         mResponseCb(LOCATION_RESPONSE_UNKOWN_FAILURE);
                     }
                 }
@@ -2104,6 +2104,14 @@ void LocationClientApiImpl::capabilitesCallback(ELocMsgID msgId, const void* msg
         trackOption.setLocationOptions(mLocationOptions);
         (void)startTracking(trackOption);
     }
+
+    // hal daemon restarts
+    // inform client that gtp fix request fails and reset the variables
+    if (mSingleTerrestrialPosRespCb) {
+        mSingleTerrestrialPosRespCb(LOCATION_RESPONSE_UNKOWN_FAILURE);
+    }
+    mSingleTerrestrialPosCb = nullptr;
+    mSingleTerrestrialPosRespCb = nullptr;
 }
 
 void LocationClientApiImpl::pingTest(PingTestCb pingTestCallback) {
