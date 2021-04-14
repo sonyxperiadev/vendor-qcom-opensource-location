@@ -131,7 +131,7 @@ LocationApiService::LocationApiService(const configParamToRead & configParamRead
     mAutoStartGnss(configParamRead.autoStartGnss),
     mPowerState(POWER_STATE_UNKNOWN),
     mPositionMode((GnssSuplMode)configParamRead.positionMode),
-    mMsgTask(new MsgTask("LocHalDaemonMaintenanceMsgTask", false)),
+    mMsgTask(new MsgTask("HalMaintMsgTask", false)),
     mMaintTimer(this),
     mGtpWwanSsLocationApi(nullptr),
     mOptInTerrestrialService(-1),

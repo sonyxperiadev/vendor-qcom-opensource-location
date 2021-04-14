@@ -1,4 +1,4 @@
-/* Copyright (c) 2019-2020 The Linux Foundation. All rights reserved.
+/* Copyright (c) 2019-2021 The Linux Foundation. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -209,7 +209,7 @@ LocationIntegrationApiImpl::LocationIntegrationApiImpl(LocIntegrationCbs& integr
         return;
     }
 
-    mMsgTask = new MsgTask("IntegrationApiImpl", false);
+    mMsgTask = new MsgTask("IntApiMsgTask", false);
     // get pid to generate sokect name
     uint32_t pid = (uint32_t)getpid();
 
