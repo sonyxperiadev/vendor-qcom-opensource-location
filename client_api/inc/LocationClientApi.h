@@ -1396,6 +1396,9 @@ enum GnssMeasurementsDataFlagsMask{
     /** GnssMeasurementsData has valid
      *  GnssMeasurementsData::agcLevelDb.  <br/>   */
     GNSS_MEASUREMENTS_DATA_AUTOMATIC_GAIN_CONTROL_BIT       = (1<<17),
+    /** GnssMeasurementsData has valid
+     *  GnssMeasurementsData::gnssSignalType. <br/> */
+    GNSS_MEASUREMENTS_DATA_GNSS_SIGNAL_TYPE_BIT             = (1<<18),
 };
 
 /** Specify GNSS measurement state in
@@ -1568,6 +1571,8 @@ struct GnssMeasurementsData {
     double signalToNoiseRatioDb;
     /** Automatic gain control level, in unit of dB <br/> */
     double agcLevelDb;
+    /** Signal type of the measurement.  <br/> */
+    GnssSignalTypeMask gnssSignalType;
     /** Method to print the struct to human readable form, for logging.
      *  <br/> */
     string toString() const;
