@@ -42,8 +42,8 @@ enum LocationApiDataTypesVersion {
     LOCAPI_DATA_TYPES_VER_MAJOR = 1;
     // Minor - New features / API addition, new message/elemtent addition.
     // Bump the last byte of version i.e. x.2 to x.3
-    // Minor version 6: Add glonass frequency in GnssSv
-    LOCAPI_DATA_TYPES_VER_MINOR = 6;
+    // Minor version 8: Add isNhz in GnssMeasurements
+    LOCAPI_DATA_TYPES_VER_MINOR = 8;
 }
 
 // ============================================================================
@@ -654,6 +654,34 @@ enum PBDeadReckoningEngineConfigValidMask {
     PB_GYRO_SCALE_FACTOR_UNC_BIT          = 16;
 }
 
+enum PBNmeaTypesMask {
+    PB_NMEA_TYPE_INVALID = 0x0;
+    // GGA NMEA sentence type
+    PB_NMEA_TYPE_GGA     = 0x1;
+    // RMC NMEA sentence type
+    PB_NMEA_TYPE_RMC      = 0x2;
+    // GSA NMEA sentence type
+    PB_NMEA_TYPE_GSA      = 0x4;
+    // VTG NMEA sentence type
+    PB_NMEA_TYPE_VTG      = 0x8;
+    // GNS NMEA sentence type
+    PB_NMEA_TYPE_GNS      = 0x10;
+    // DTM NMEA sentence type
+    PB_NMEA_TYPE_DTM      = 0x20;
+    // GPGSV NMEA sentence type
+    PB_NMEA_TYPE_GPGSV    = 0x40;
+    // GLGSV NMEA sentence type for SVs from GLONASS constellation
+    PB_NMEA_TYPE_GLGSV    = 0x80;
+    // GAGSV NMEA sentence type for SVs from GALILEO constellation
+    PB_NMEA_TYPE_GAGSV    = 0x100;
+    // GQGSV NMEA sentence type for SVs from QZSS constellation
+    PB_NMEA_TYPE_GQGSV    = 0x200;
+    // GBGSV NMEA sentence type for SVs from BEIDOU constellation
+    PB_NMEA_TYPE_GBGSV    = 0x400;
+    // GIGSV NMEA sentence type for from NAVIC constellation
+    PB_NMEA_TYPE_GIGSV    = 0x800;
+}
+
 // ============================================================================
 // Messages
 // ============================================================================
@@ -1015,6 +1043,8 @@ message PBGnssMeasurementsNotification {
     repeated PBGnssMeasurementsData measurements = 1;
     // clock
     PBGnssMeasurementsClock clock = 2;
+    // NHz measurments indicator
+    bool isNhz = 3;
 }
 
 message PBLocApiGnssSystemTimeStructType {

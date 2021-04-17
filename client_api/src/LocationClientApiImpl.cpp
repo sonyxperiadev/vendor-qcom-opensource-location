@@ -1,4 +1,4 @@
-/* Copyright (c) 2018-2020, The Linux Foundation. All rights reserved.
+/* Copyright (c) 2018-2021, The Linux Foundation. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -28,6 +28,7 @@
 
 #define LOG_TAG "LocSvc_LocationClientApi"
 
+#include <inttypes.h>
 #include <sys/types.h>
 #include <unistd.h>
 #include <loc_cfg.h>
@@ -903,6 +904,7 @@ static GnssSv parseGnssSv(const ::GnssSv &halGnssSv) {
 
     gnssSv.carrierFrequencyHz = halGnssSv.carrierFrequencyHz;
     gnssSv.gnssSignalTypeMask = parseGnssSignalType(halGnssSv.gnssSignalTypeMask);
+    gnssSv.gloFrequency = halGnssSv.gloFrequency;
     return gnssSv;
 }
 
@@ -989,6 +991,7 @@ static GnssMeasurements parseGnssMeasurements(const ::GnssMeasurementsNotificati
     gnssMeasurements.clock.driftUncertaintyNsps = halGnssMeasurements.clock.driftUncertaintyNsps;
     gnssMeasurements.clock.hwClockDiscontinuityCount =
             halGnssMeasurements.clock.hwClockDiscontinuityCount;
+    gnssMeasurements.isNhz = halGnssMeasurements.isNhz;
 
     return gnssMeasurements;
 }
@@ -1180,7 +1183,8 @@ LocationClientApiImpl::LocationClientApiImpl(CapabilitiesCb capabitiescb) :
     size_t pathNameLength = strlcpy(mSocketName, sock.getNodePathname().c_str(),
                                     sizeof(mSocketName));
     if (pathNameLength >= sizeof(mSocketName)) {
-        LOC_LOGe("socket name length exceeds limit of %d bytes", sizeof(mSocketName));
+        LOC_LOGe("socket name length exceeds limit of %" PRIu32" bytes",
+                (uint32_t)sizeof(mSocketName));
         return;
     }
 
@@ -1211,7 +1215,8 @@ LocationClientApiImpl::LocationClientApiImpl(CapabilitiesCb capabitiescb) :
     size_t pathNameLength = strlcpy(mSocketName, sock.getNodePathname().c_str(),
                                     sizeof(mSocketName));
     if (pathNameLength >= sizeof(mSocketName)) {
-        LOC_LOGe("socket name length exceeds limit of %d bytes", sizeof(mSocketName));
+        LOC_LOGe("socket name length exceeds limit of %" PRIu32 " bytes",
+                (uint32_t)sizeof(mSocketName));
         return;
     }
 
@@ -1702,7 +1707,7 @@ uint32_t* LocationClientApiImpl::addGeofences(size_t count, GeofenceOption* opti
                 if (msg.serializeToProtobuf(pbStr)) {
                     bool rc = mApiImpl->sendMessage(
                             reinterpret_cast<uint8_t *>((uint8_t *)pbStr.c_str()), pbStr.size());
-                    LOC_LOGd(">>> AddGeofencesReq count=%zu", gfCountUsed);
+                    LOC_LOGd(">>> AddGeofencesReq count1=%" PRIu32 "", gfCountUsed);
                 } else {
                     LOC_LOGe("LocAPIAddGeofencesReqMsg serializeToProtobuf failed");
                 }
@@ -1746,7 +1751,7 @@ void LocationClientApiImpl::removeGeofences(size_t count, uint32_t* ids) {
                 if (msg.serializeToProtobuf(pbStr)) {
                     bool rc = mApiImpl->sendMessage(
                             reinterpret_cast<uint8_t *>((uint8_t *)pbStr.c_str()), pbStr.size());
-                    LOC_LOGd(">>> RemoveGeofencesReq count=%zu", gfCountUsed);
+                    LOC_LOGd(">>> RemoveGeofencesReq count=%" PRIu32"", gfCountUsed);
                 } else {
                     LOC_LOGe("LocAPIRemoveGeofencesReqMsg serializeToProtobuf failed");
                 }
@@ -1790,7 +1795,7 @@ void LocationClientApiImpl::modifyGeofences(
                 if (msg.serializeToProtobuf(pbStr)) {
                     bool rc = mApiImpl->sendMessage(
                             reinterpret_cast<uint8_t *>((uint8_t *)pbStr.c_str()), pbStr.size());
-                    LOC_LOGd(">>> ModifyGeofencesReq count=%zu", gfCountUsed);
+                    LOC_LOGd(">>> ModifyGeofencesReq count=%" PRIu32 "", gfCountUsed);
                 } else {
                     LOC_LOGe("LocAPIModifyGeofencesReqMsg serializeToProtobuf failed");
                 }
@@ -1831,7 +1836,7 @@ void LocationClientApiImpl::pauseGeofences(size_t count, uint32_t* ids) {
                 if (msg.serializeToProtobuf(pbStr)) {
                     bool rc = mApiImpl->sendMessage(
                             reinterpret_cast<uint8_t *>((uint8_t *)pbStr.c_str()), pbStr.size());
-                    LOC_LOGd(">>> PauseGeofencesReq count=%zu", gfCountUsed);
+                    LOC_LOGd(">>> PauseGeofencesReq count=%" PRIu32"", gfCountUsed);
                 } else {
                     LOC_LOGe("LocAPIPauseGeofencesReqMsg serializeToProtobuf failed");
                 }
@@ -1870,7 +1875,7 @@ void LocationClientApiImpl::resumeGeofences(size_t count, uint32_t* ids) {
                 if (msg.serializeToProtobuf(pbStr)) {
                     bool rc = mApiImpl->sendMessage(
                             reinterpret_cast<uint8_t *>((uint8_t *)pbStr.c_str()), pbStr.size());
-                    LOC_LOGd(">>> ResumeGeofencesReq count=%zu", gfCountUsed);
+                    LOC_LOGd(">>> ResumeGeofencesReq count=%" PRIu32"", gfCountUsed);
                 } else {
                     LOC_LOGe("LocAPIResumeGeofencesReqMsg serializeToProtobuf failed");
                 }
@@ -2231,8 +2236,8 @@ void IpcListener::onReceive(const char* data, uint32_t length,
             // encoded format to local structure
             PBLocAPIMsgHeader pbLocApiMsg;
             if (0 == pbLocApiMsg.ParseFromString(mMsgData)) {
-                LOC_LOGe("Failed to parse pbLocApiMsg from input stream!! length: %u",
-                        mMsgData.length());
+                LOC_LOGe("Failed to parse pbLocApiMsg from input stream!! length: %" PRIu32,
+                        (uint32_t) mMsgData.length());
                 return;
             }
 
@@ -2316,17 +2321,19 @@ void IpcListener::onReceive(const char* data, uint32_t length,
                         &mApiImpl.mPbufMsgConv);
                 const LocAPICollectiveRespMsg* pRespMsg = (LocAPICollectiveRespMsg*)(&msg);
                 std::vector<pair<Geofence, LocationResponse>> responses{};
-                for (int i=0; i<pRespMsg->collectiveRes.count; ++i) {
+                int count = pRespMsg->collectiveRes.resp.size();
+                LOC_LOGd("CollectiveRes Pload count:%d", count);
+                for (int i=0; i < count; i++) {
                     responses.push_back(make_pair(
                             mApiImpl.mGeofenceMap.at(
-                            (*(pRespMsg->collectiveRes.resp + i)).clientId),
+                                pRespMsg->collectiveRes.resp[i].clientId),
                             parseLocationError(
-                            (*(pRespMsg->collectiveRes.resp + i)).error)));
-                    if (LOCATION_ERROR_SUCCESS !=
-                            (*(pRespMsg->collectiveRes.resp + i)).error ||
-                            E_LOCAPI_REMOVE_GEOFENCES_MSG_ID == locApiMsg.msgId) {
+                                pRespMsg->collectiveRes.resp[i].error)));
+                    if ((LOCATION_ERROR_SUCCESS !=
+                            pRespMsg->collectiveRes.resp[i].error) ||
+                            (E_LOCAPI_REMOVE_GEOFENCES_MSG_ID == locApiMsg.msgId)) {
                         mApiImpl.eraseGeofenceMap(1, const_cast<uint32_t*>(
-                                &((*(pRespMsg->collectiveRes.resp + i)).clientId)));
+                                &(pRespMsg->collectiveRes.resp[i].clientId)));
                     }
                 }
                 if (mApiImpl.mCollectiveResCb) {
@@ -2393,10 +2400,11 @@ void IpcListener::onReceive(const char* data, uint32_t length,
                     BatchingStatus status = BATCHING_STATUS_INACTIVE;
                     if (BATCHING_STATUS_POSITION_AVAILABE ==
                             pBatchingIndMsg->batchNotification.status) {
-                        for (int i=0; i<pBatchingIndMsg->batchNotification.count; ++i) {
+                        int batchCount = pBatchingIndMsg->batchNotification.location.size();
+                        LOC_LOGd("Batch count : %d", batchCount);
+                        for (int i=0; i < batchCount; i++) {
                             locationVector.push_back(parseLocation(
-                                        *(pBatchingIndMsg->batchNotification.location +
-                                        i)));
+                                        pBatchingIndMsg->batchNotification.location[i]));
                         }
                         status = BATCHING_STATUS_ACTIVE;
                     } else if (BATCHING_STATUS_TRIP_COMPLETED ==
@@ -2428,10 +2436,10 @@ void IpcListener::onReceive(const char* data, uint32_t length,
                     const LocAPIGeofenceBreachIndMsg* pGfBreachIndMsg =
                         (LocAPIGeofenceBreachIndMsg*)(&msg);
                     std::vector<Geofence> geofences;
-                    for (int i=0; i<pGfBreachIndMsg->gfBreachNotification.count;
-                         ++i) {
+                    int gfBreachCnt = pGfBreachIndMsg->gfBreachNotification.id.size();
+                    for (int i=0; i < gfBreachCnt; i++) {
                         geofences.push_back(mApiImpl.mGeofenceMap.at(
-                                                *(pGfBreachIndMsg->gfBreachNotification.id + i)));
+                                                pGfBreachIndMsg->gfBreachNotification.id[i]));
                     }
                     if (mApiImpl.mGfBreachCb) {
                         mApiImpl.mGfBreachCb(geofences,

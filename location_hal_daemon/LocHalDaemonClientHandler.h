@@ -36,6 +36,7 @@
 
 #ifdef NO_UNORDERED_SET_OR_MAP
     #include <map>
+    #define unordered_map map
 #else
     #include <unordered_map>
 #endif
