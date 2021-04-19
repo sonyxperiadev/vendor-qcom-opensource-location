@@ -66,7 +66,7 @@ uint32_t GeofenceImpl::nextId() {
 Utilities
 ******************************************************************************/
 static GnssMeasurementsDataFlagsMask parseMeasurementsDataMask(
-    ::GnssMeasurementsDataFlagsMask in) {
+        ::GnssMeasurementsDataFlagsMask in) {
     uint32_t out = 0;
     LOC_LOGd("Hal GnssMeasurementsDataFlagsMask =0x%x ", in);
 
@@ -132,6 +132,12 @@ static GnssMeasurementsDataFlagsMask parseMeasurementsDataMask(
     }
     if (::GNSS_MEASUREMENTS_DATA_CYCLE_SLIP_COUNT_BIT & in) {
         out |= GNSS_MEASUREMENTS_DATA_CYCLE_SLIP_COUNT_BIT;
+    }
+    if (::GNSS_MEASUREMENTS_DATA_BASEBAND_CARRIER_TO_NOISE_BIT & in) {
+        out |= GNSS_MEASUREMENTS_DATA_BASEBAND_CARRIER_TO_NOISE_BIT;
+    }
+    if (::GNSS_MEASUREMENTS_DATA_GNSS_SIGNAL_TYPE_BIT & in) {
+        out |= GNSS_MEASUREMENTS_DATA_GNSS_SIGNAL_TYPE_BIT;
     }
     LOC_LOGd("LCA GnssMeasurementsDataFlagsMask =0x%x ", out);
     return static_cast<GnssMeasurementsDataFlagsMask>(out);
@@ -932,6 +938,7 @@ static GnssData parseGnssData(const ::GnssDataNotification &halGnssData) {
     return gnssData;
 }
 
+
 static GnssMeasurements parseGnssMeasurements(const ::GnssMeasurementsNotification
             &halGnssMeasurements) {
     GnssMeasurements gnssMeasurements = {};
@@ -982,11 +989,18 @@ static GnssMeasurements parseGnssMeasurements(const ::GnssMeasurementsNotificati
                 halGnssMeasurements.measurements[meas].basebandCarrierToNoiseDbHz;
         measurement.gnssSignalType =
                 parseGnssSignalType(halGnssMeasurements.measurements[meas].gnssSignalType);
-        measurement.interSignalBiasNs =
+        measurement.fullInterSignalBiasNs =
                 halGnssMeasurements.measurements[meas].fullInterSignalBiasNs;
-        measurement.interSignalBiasUncertaintyNs =
+        measurement.fullInterSignalBiasUncertaintyNs =
                 halGnssMeasurements.measurements[meas].fullInterSignalBiasUncertaintyNs;
         measurement.cycleSlipCount = halGnssMeasurements.measurements[meas].cycleSlipCount;
+
+        measurement.basebandCarrierToNoiseDbHz =
+               halGnssMeasurements.measurements[meas].basebandCarrierToNoiseDbHz;
+        measurement.fullInterSignalBiasNs =
+               halGnssMeasurements.measurements[meas].fullInterSignalBiasNs;
+        measurement.fullInterSignalBiasUncertaintyNs =
+               halGnssMeasurements.measurements[meas].fullInterSignalBiasUncertaintyNs;
 
         gnssMeasurements.measurements.push_back(measurement);
     }

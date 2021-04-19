@@ -1574,6 +1574,10 @@ uint32_t LocationApiPbMsgConv::getPBMaskForGnssMeasurementsDataFlagsMask(
     if (gnssMeasDataFlagsMask & GNSS_MEASUREMENTS_DATA_GNSS_SIGNAL_TYPE_BIT) {
         pbGnssMeasDataFlagsMask |= PB_GNSS_MEASUREMENTS_DATA_GNSS_SIGNAL_TYPE_BIT;
     }
+    if (gnssMeasDataFlagsMask & GNSS_MEASUREMENTS_DATA_BASEBAND_CARRIER_TO_NOISE_BIT) {
+        pbGnssMeasDataFlagsMask |= PB_GNSS_MEASUREMENTS_DATA_BASEBAND_CARRIER_TO_NOISE_BIT;
+    }
+
     LocApiPb_LOGv("LocApiPB: gnssMeasDataFlagsMask:%x, pbGnssMeasDataFlagsMask:%x",
             gnssMeasDataFlagsMask, pbGnssMeasDataFlagsMask);
     return pbGnssMeasDataFlagsMask;
@@ -2499,6 +2503,9 @@ uint32_t LocationApiPbMsgConv::getGnssMeasurementsDataFlagsMaskFromPB(
     }
     if (pbGnssMeasDataFlgMask & PB_GNSS_MEASUREMENTS_DATA_GNSS_SIGNAL_TYPE_BIT) {
         gnssMeasDataFlgMask |= GNSS_MEASUREMENTS_DATA_GNSS_SIGNAL_TYPE_BIT;
+    }
+    if (pbGnssMeasDataFlgMask & PB_GNSS_MEASUREMENTS_DATA_BASEBAND_CARRIER_TO_NOISE_BIT) {
+        gnssMeasDataFlgMask |= GNSS_MEASUREMENTS_DATA_BASEBAND_CARRIER_TO_NOISE_BIT;
     }
     LocApiPb_LOGv("LocApiPB: pbGnssMeasDataFlgMask:%x, gnssMeasDataFlgMask:%x",
             pbGnssMeasDataFlgMask, gnssMeasDataFlgMask);
@@ -3961,9 +3968,6 @@ int LocationApiPbMsgConv::convertGnssMeasDataToPB(const GnssMeasurementsData &gn
     // uint32 cycleSlipCount = 25;
     pbGnssMeasData->set_cycleslipcount(gnssMeasData.cycleSlipCount);
 
-    // uint32 gnssSignalType = 22;
-    pbGnssMeasData->set_gnsssignaltype(getPBMaskForGnssSignalTypeMask(gnssMeasData.gnssSignalType));
-
     // float receivedSvTimeSubNs = 26
     pbGnssMeasData->set_receivedsvtimesubns(gnssMeasData.receivedSvTimeSubNs);
 
@@ -5178,10 +5182,6 @@ int LocationApiPbMsgConv::pbConvertToGnssMeasurementsData(
 
     // uint32 cycleSlipCount = 25;
     gnssMeasData.cycleSlipCount = pbGnssMeasData.cycleslipcount();
-
-    // uint32 gnssSignalType = 22
-    gnssMeasData.gnssSignalType =
-            getGnssSignalTypeMaskFromPB(pbGnssMeasData.gnsssignaltype());
 
     // int64 receivedSvTimeSubNs = 26;
     gnssMeasData.receivedSvTimeSubNs = pbGnssMeasData.receivedsvtimesubns();

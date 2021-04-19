@@ -318,7 +318,8 @@ LocApiV02 :: LocApiV02(LOC_API_ADAPTER_EVENT_MASK_T exMask,
     mHlosQtimer2(0),
     mRefFCount(0),
     mMeasElapsedRealTimeCal(600000000),
-    mPositionElapsedRealTimeCal(30000000)
+    mPositionElapsedRealTimeCal(30000000),
+    mTimeBiases{}
 {
   // initialize loc_sync_req interface
   loc_sync_req_init();
@@ -6032,15 +6033,12 @@ bool LocApiV02 :: convertGnssMeasurements(
     int index, bool isExt, bool validDgnssSvMeas)
 {
     bool bAgcIsPresent = false;
-    qmiLocSVMeasurementStructT_v02 gnss_measurement_info;
+    const qmiLocSVMeasurementStructT_v02 &gnss_measurement_info = isExt ?
+            gnss_measurement_report_ptr.extSvMeasurement[index] :
+            gnss_measurement_report_ptr.svMeasurement[index];
     uint32_t count = mGnssMeasurements->gnssMeasNotification.count;
 
     LOC_LOGv("entering extMeas %d, qmi sv index %d, current sv count %d", isExt, index, count);
-    if (isExt) {
-        gnss_measurement_info = gnss_measurement_report_ptr.extSvMeasurement[index];
-    } else {
-        gnss_measurement_info = gnss_measurement_report_ptr.svMeasurement[index];
-    }
 
     GnssMeasurementsData& measurementData =
         mGnssMeasurements->gnssMeasNotification.measurements[count];
@@ -6213,6 +6211,7 @@ bool LocApiV02 :: convertGnssMeasurements(
         case eQMI_LOC_SV_SYSTEM_GLONASS_V02:
             measurementData.svType = GNSS_SV_TYPE_GLONASS;
             measurementData.gloFrequency = gnss_measurement_info.gloFrequency;
+            measurementData.flags |= GNSS_MEASUREMENTS_DATA_GLO_FREQUENCY_BIT;
             break;
 
         case eQMI_LOC_SV_SYSTEM_BDS_V02:
@@ -6322,7 +6321,7 @@ bool LocApiV02 :: convertGnssMeasurements(
             measurementData.stateMask |= GNSS_MEASUREMENTS_STATE_2ND_CODE_LOCK_BIT;
         }
 
-        qmiLocSVTimeSpeedStructT_v02 &svTimeSpeed = gnss_measurement_info.svTimeSpeed;
+        const qmiLocSVTimeSpeedStructT_v02 &svTimeSpeed = gnss_measurement_info.svTimeSpeed;
         double svTimeSubMsToNs = ((double)svTimeSpeed.svTimeSubMs) * NSEC_IN_MSEC;
         measurementData.receivedSvTimeNs =
                 (int64_t)gnss_measurement_info.svTimeSpeed.svTimeMs * NSEC_IN_MSEC +
@@ -6347,7 +6346,7 @@ bool LocApiV02 :: convertGnssMeasurements(
             measurementData.stateMask |= GNSS_MEASUREMENTS_STATE_2ND_CODE_LOCK_BIT;
         }
 
-        qmiLocSVTimeSpeedStructT_v02 &svTimeSpeed = gnss_measurement_info.svTimeSpeed;
+        const qmiLocSVTimeSpeedStructT_v02 &svTimeSpeed = gnss_measurement_info.svTimeSpeed;
         double svTimeNs = fmod(((double)gnss_measurement_info.svTimeSpeed.svTimeMs +
                   (double)gnss_measurement_info.svTimeSpeed.svTimeSubMs), 20) * NSEC_IN_MSEC;
         measurementData.receivedSvTimeNs = (int64_t)svTimeNs;
@@ -6364,7 +6363,7 @@ bool LocApiV02 :: convertGnssMeasurements(
 
         measurementData.receivedSvTimeNs =
              (int64_t)((double)gnss_measurement_info.svTimeSpeed.svTimeSubMs * 1e6);
-        qmiLocSVTimeSpeedStructT_v02 &svTimeSpeed = gnss_measurement_info.svTimeSpeed;
+        const qmiLocSVTimeSpeedStructT_v02 &svTimeSpeed = gnss_measurement_info.svTimeSpeed;
         double svTimeSubMsToNs = ((double)svTimeSpeed.svTimeSubMs) * NSEC_IN_MSEC;
         measurementData.receivedSvTimeNs = (int64_t)svTimeSubMsToNs;
         measurementData.receivedSvTimeSubNs = svTimeSubMsToNs -
@@ -6649,6 +6648,7 @@ bool LocApiV02 :: convertGnssMeasurements(
     if (measurementData.carrierToNoiseDbHz > gnss_measurement_info.gloRfLoss / 10.0) {
         measurementData.basebandCarrierToNoiseDbHz = measurementData.carrierToNoiseDbHz -
                 gnss_measurement_info.gloRfLoss / 10.0;
+        measurementData.flags |= GNSS_MEASUREMENTS_DATA_BASEBAND_CARRIER_TO_NOISE_BIT;
     }
 
     // intersignal bias
