@@ -34,12 +34,13 @@
 #include <stdbool.h>
 #include <WiFiDBReceiver.h>
 #include <WiFiDBProvider.h>
+#include <AltitudeReceiver.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#define CURRENT_VERSION 3
+#define CURRENT_VERSION 4
 /**
     API VERSION 1: Initial release
     API VERSION 2: Changed return value of connectToSystemStatus
@@ -47,6 +48,8 @@ extern "C" {
     API VERSION 3: Added clientData as an argument to all *connect calls.
                    Changed return value of connectToSystemStatus to SystemStatusListener*.
                    Added multiple-client support to connectToSystemStatus.
+    API VERSION 4: Added passive location listener in SystemStatus.
+                   Added AltitudeReceiver APIs.
 */
 
 /** @brief
@@ -56,6 +59,7 @@ typedef struct {
     void (*onLocationOptInUpdate)(OptInStatus optInStatus, const void* clientData);
     void (*onNetworkStatusUpdate)(bool isConected, const NlpNetwork* networksAvailable,
             uint8_t networksAvailableCount, const void* clientData);
+    void (*onLocationChange)(const NlpLocation* location, const void* clientData);
 } SystemStatusListener;
 
 /** @brief
@@ -132,6 +136,24 @@ typedef struct {
             const void* clientData);
 
     /** @brief
+        Provides an instance of AltitudeReceiver object with
+        the specified priority listener.
+
+        @param
+        listener: instance of AltitudeReceiverResponseListener,
+        implementing the required callback functions.
+        Should not be freed until disconnect function is called.
+
+        @param
+        clientData: opaque client data bundle, will be passed
+        back to client with all the callbacks.
+
+        @return AltitudeReceiver
+    */
+    const AltitudeReceiver* (*connectToAltitudeReceiver)(
+            const AltitudeReceiverResponseListener* listener, const void* clientData);
+
+    /** @brief
         Disconnect the SystemStatusListener. Indicates that client process is not
         available for any reason. {listener, clientData} must match the pair given
         to the connectToSystemStatus call.
@@ -173,6 +195,16 @@ typedef struct {
         in the connectToWiFiDBProvider call.
     */
     void (*disconnectFromWiFiDBProvider)(const WiFiDBProviderResponseListener* listene);
+
+    /** @brief
+        Disconnect the AltitudeReceiver associated with the provided listener.
+
+        @param
+        listener: instance of AltitudeReceiverResponseListener, previously provided
+        in the connectToAltitudeReceiver call.
+    */
+    void (*disconnectFromAltitudeReceiver)(
+            const AltitudeReceiverResponseListener* listener);
 } NLPApi;
 
 /** @brief
