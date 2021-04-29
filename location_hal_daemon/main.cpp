@@ -1,4 +1,4 @@
-/* Copyright (c) 2018,2020 The Linux Foundation. All rights reserved.
+/* Copyright (c) 2018,2020-2021 The Linux Foundation. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -42,8 +42,6 @@
 #include "LocationApiService.h"
 
 #define HAL_DAEMON_VERSION "1.1.0"
-
-typedef void (StartDgnssApiServiceApi)();
 
 // this function will block until the directory specified in
 // dirName has been created
@@ -157,18 +155,6 @@ int main(int argc, char *argv[])
 
     // move to root dir
     chdir("/");
-
-    // start listening for dgnss client events
-    StartDgnssApiServiceApi* pStartDgnssApiService = nullptr;
-    void* libhandle = nullptr;
-    const char* libName = "libcdfw.so";
-
-    pStartDgnssApiService =
-            (StartDgnssApiServiceApi*)dlGetSymFromLib(libhandle, libName,
-                                                      "startDgnssApiService");
-    if(nullptr != pStartDgnssApiService){
-        pStartDgnssApiService();
-    }
 
     // start listening for client events - will not return
     if (!LocationApiService::getInstance(configParamRead)) {
