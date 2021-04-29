@@ -1208,8 +1208,8 @@ struct GnssSv {
      *  BEIDOU, GALILEO). <br/>
      *  This field is always valid.  <br/> */
     GnssSvType type;
-     /** Signal-to-noise ratio at antenna of the SV, in unit of
-      * dB-Hz. <br/>
+     /** Carrier-to-noise ratio of the signal measured at antenna,
+      * in unit of dB-Hz. <br/>
       * cN0Dbhz of 0.0 indicates that this field is unknown. <br/> */
     float cN0Dbhz;
     /** Elevation of the SV, in unit of degrees. <br/>
@@ -1235,8 +1235,8 @@ struct GnssSv {
      * This field is always valid if and ony if sv is of GLONASS.
      * <br/> */
     uint16_t gloFrequency;
-   /** RF loss from antenna to baseband of the SV, in unit of
-     *  dB-Hz. <br/>
+     /** Carrier-to-noise ratio of the signal measured at baseband,
+     *  in unit of dB-Hz. <br/>
      *  This field is valid if gnssSvOptionsMask has
      *  GNSS_SV_OPTIONS_HAS_BASEBAND_CARRIER_TO_NOISE_BIT set. <br/> */
     double basebandCarrierToNoiseDbHz;
