@@ -1081,7 +1081,6 @@ LocationClientApiImpl::LocationClientApiImpl(CapabilitiesCb capabitiescb) :
     UTIL_READ_CONF(LOC_PATH_GPS_CONF, gConfigTable);
     LOC_LOGd("gDebug=%u", gDebug);
 
-    mMsgTask = new MsgTask("ClientApiImpl", false);
     // get pid to generate sokect name
     uint32_t pid = (uint32_t)getpid();
 
@@ -1115,6 +1114,11 @@ LocationClientApiImpl::LocationClientApiImpl(CapabilitiesCb capabitiescb) :
         return;
     }
 
+    // create msg task with name includes client id
+    std::string name = "LcaMsgTask";
+    name.append(to_string(mClientId));
+    mMsgTask = new MsgTask(name.c_str(), false);
+
     SockNodeEap sock(LOCATION_CLIENT_API_QSOCKET_CLIENT_SERVICE_ID,
                      pid * 100 + mClientId);
     size_t pathNameLength = strlcpy(mSocketName, sock.getNodePathname().c_str(),
@@ -1146,6 +1150,11 @@ LocationClientApiImpl::LocationClientApiImpl(CapabilitiesCb capabitiescb) :
     if (mClientId == LOCATION_CLIENT_SESSION_ID_INVALID) {
         mClientId = ++mClientIdGenerator;
     }
+
+    // create msg task with name includes client id
+    std::string name = "LcaMsgTask";
+    name.append(to_string(mClientId));
+    mMsgTask = new MsgTask(name.c_str(), false);
 
     SockNodeLocal sock(LOCATION_CLIENT_API, pid, mClientId);
     size_t pathNameLength = strlcpy(mSocketName, sock.getNodePathname().c_str(),
