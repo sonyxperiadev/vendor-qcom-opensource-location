@@ -1,4 +1,4 @@
-/* Copyright (c) 2011-2020, The Linux Foundation. All rights reserved.
+/* Copyright (c) 2011-2021, The Linux Foundation. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -162,6 +162,7 @@ private:
 
   size_t mBatchSize, mDesiredBatchSize;
   size_t mTripBatchSize, mDesiredTripBatchSize;
+  int mUseBatching1_0;
   bool mIsFirstFinalFixReported;
   bool mIsFirstStartFixReq;
   uint64_t mHlosQtimer1, mHlosQtimer2;
