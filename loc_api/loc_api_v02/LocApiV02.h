@@ -159,6 +159,7 @@ private:
   int  mMsInWeek;
   bool mAgcIsPresent;
   timeBiases mTimeBiases;
+  std::unordered_map<uint16_t, GnssSvPolynomial> mSvPolynomialMap;
 
   size_t mBatchSize, mDesiredBatchSize;
   size_t mTripBatchSize, mDesiredTripBatchSize;
