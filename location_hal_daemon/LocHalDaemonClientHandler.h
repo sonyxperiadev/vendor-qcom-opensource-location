@@ -83,6 +83,7 @@ public:
             mSubscriptionMask = 0;
             mLocationApi = LocationAPI::createInstance(mCallbacks);
         }
+        updateSubscription(0);
     }
 
     static shared_ptr<LocIpcSender> createSender(const string socket);

@@ -1,4 +1,4 @@
-/* Copyright (c) 2018-2020 The Linux Foundation. All rights reserved.
+/* Copyright (c) 2018,2020-2021 The Linux Foundation. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -77,6 +77,8 @@ int main(int argc, char *argv[])
         {"POSITION_MODE", &configParamRead.positionMode, NULL, 'n'},
     };
 
+    // read default configuration paramters
+    UTIL_READ_CONF_DEFAULT(LOC_PATH_GPS_CONF);
     // read configuration file
     UTIL_READ_CONF(LOC_PATH_GPS_CONF, configTable);
     if (configParamRead.positionMode != GNSS_SUPL_MODE_MSB) {

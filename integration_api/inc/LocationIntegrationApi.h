@@ -957,12 +957,12 @@ public:
         Config the minimum GPS week used by the GNSS standard
         position engine (SPE). <br/>
 
-        Also, if this API is called while GNSS standard position
-        engine(SPE) is in middle of a session, LocConfigCb() will still
-        be invoked shortly after to indicate the setting has been
-        accepted by SPE engine, however the actual setting can not
-        be applied until the current session ends, and this may take
-        up to 255 seconds in poor GPS signal condition. <br/>
+        This API shall not be called while GNSS standard position
+        engine(SPE) is in the middle of a session. Customer needs to
+        assure that there is no active GNSS SPE session prior to
+        issuing this command. Additionally the specified minimum GPS
+        week number shall NEVER be in the future of the current GPS
+        Week.
 
         Client should wait for the command to finish, e.g.: via
         LocConfigCb() received before issuing a second configMinGpsWeek()
@@ -972,7 +972,8 @@ public:
 
         @param
         minGpsWeek: minimum GPS week to be used by the GNSS standard
-        position engine (SPE). <br/>
+        position engine (SPE). This value shall NEVER be in the
+        future of the current GPS Week <br/>
 
         @return true, if minimum GPS week configuration has been
                 accepted for further processing. When returning
