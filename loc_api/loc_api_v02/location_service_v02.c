@@ -30,7 +30,7 @@
  *====*====*====*====*====*====*====*====*====*====*====*====*====*====*====*/
 
 /* This file was generated with Tool version 6.14.9
-   It was generated on: Tue Apr  6 2021 (Spin 0)
+   It was generated on: Thu Apr 22 2021 (Spin 0)
    From IDL File: location_service_v02.idl */
 
 #include "stdint.h"
@@ -3321,10 +3321,15 @@ static const uint8_t qmiLocSetEngineLockReqMsgT_data_v02[] = {
    QMI_IDL_GENERIC_4_BYTE,
   QMI_IDL_OFFSET8(qmiLocSetEngineLockReqMsgT_v02, subType),
 
-  QMI_IDL_TLV_FLAGS_LAST_TLV | QMI_IDL_TLV_FLAGS_OPTIONAL | (QMI_IDL_OFFSET8(qmiLocSetEngineLockReqMsgT_v02, lockClient) - QMI_IDL_OFFSET8(qmiLocSetEngineLockReqMsgT_v02, lockClient_valid)),
+  QMI_IDL_TLV_FLAGS_OPTIONAL | (QMI_IDL_OFFSET8(qmiLocSetEngineLockReqMsgT_v02, lockClient) - QMI_IDL_OFFSET8(qmiLocSetEngineLockReqMsgT_v02, lockClient_valid)),
   0x11,
    QMI_IDL_GENERIC_8_BYTE,
-  QMI_IDL_OFFSET8(qmiLocSetEngineLockReqMsgT_v02, lockClient)
+  QMI_IDL_OFFSET8(qmiLocSetEngineLockReqMsgT_v02, lockClient),
+
+  QMI_IDL_TLV_FLAGS_LAST_TLV | QMI_IDL_TLV_FLAGS_OPTIONAL | (QMI_IDL_OFFSET8(qmiLocSetEngineLockReqMsgT_v02, clientsConfig) - QMI_IDL_OFFSET8(qmiLocSetEngineLockReqMsgT_v02, clientsConfig_valid)),
+  0x12,
+   QMI_IDL_GENERIC_8_BYTE,
+  QMI_IDL_OFFSET8(qmiLocSetEngineLockReqMsgT_v02, clientsConfig)
 };
 
 static const uint8_t qmiLocSetEngineLockIndMsgT_data_v02[] = {
@@ -3355,10 +3360,15 @@ static const uint8_t qmiLocGetEngineLockIndMsgT_data_v02[] = {
    QMI_IDL_GENERIC_4_BYTE,
   QMI_IDL_OFFSET8(qmiLocGetEngineLockIndMsgT_v02, subType),
 
-  QMI_IDL_TLV_FLAGS_LAST_TLV | QMI_IDL_TLV_FLAGS_OPTIONAL | (QMI_IDL_OFFSET8(qmiLocGetEngineLockIndMsgT_v02, lockClient) - QMI_IDL_OFFSET8(qmiLocGetEngineLockIndMsgT_v02, lockClient_valid)),
+  QMI_IDL_TLV_FLAGS_OPTIONAL | (QMI_IDL_OFFSET8(qmiLocGetEngineLockIndMsgT_v02, lockClient) - QMI_IDL_OFFSET8(qmiLocGetEngineLockIndMsgT_v02, lockClient_valid)),
   0x12,
    QMI_IDL_GENERIC_8_BYTE,
-  QMI_IDL_OFFSET8(qmiLocGetEngineLockIndMsgT_v02, lockClient)
+  QMI_IDL_OFFSET8(qmiLocGetEngineLockIndMsgT_v02, lockClient),
+
+  QMI_IDL_TLV_FLAGS_LAST_TLV | QMI_IDL_TLV_FLAGS_OPTIONAL | (QMI_IDL_OFFSET8(qmiLocGetEngineLockIndMsgT_v02, clientsConfig) - QMI_IDL_OFFSET8(qmiLocGetEngineLockIndMsgT_v02, clientsConfig_valid)),
+  0x13,
+   QMI_IDL_GENERIC_8_BYTE,
+  QMI_IDL_OFFSET8(qmiLocGetEngineLockIndMsgT_v02, clientsConfig)
 };
 
 static const uint8_t qmiLocSetSbasConfigReqMsgT_data_v02[] = {
@@ -9290,7 +9300,7 @@ static const qmi_idl_service_message_table_entry loc_service_command_messages_v0
   {QMI_LOC_GET_PREDICTED_ORBITS_DATA_VALIDITY_REQ_V02, QMI_IDL_TYPE16(0, 44), 0},
   {QMI_LOC_INJECT_UTC_TIME_REQ_V02, QMI_IDL_TYPE16(0, 46), 25},
   {QMI_LOC_INJECT_POSITION_REQ_V02, QMI_IDL_TYPE16(0, 48), 540},
-  {QMI_LOC_SET_ENGINE_LOCK_REQ_V02, QMI_IDL_TYPE16(0, 50), 25},
+  {QMI_LOC_SET_ENGINE_LOCK_REQ_V02, QMI_IDL_TYPE16(0, 50), 36},
   {QMI_LOC_GET_ENGINE_LOCK_REQ_V02, QMI_IDL_TYPE16(0, 52), 7},
   {QMI_LOC_SET_SBAS_CONFIG_REQ_V02, QMI_IDL_TYPE16(0, 54), 8},
   {QMI_LOC_GET_SBAS_CONFIG_REQ_V02, QMI_IDL_TYPE16(0, 56), 0},
@@ -9589,7 +9599,7 @@ static const qmi_idl_service_message_table_entry loc_service_indication_messages
   {QMI_LOC_INJECT_UTC_TIME_IND_V02, QMI_IDL_TYPE16(0, 47), 7},
   {QMI_LOC_INJECT_POSITION_IND_V02, QMI_IDL_TYPE16(0, 49), 7},
   {QMI_LOC_SET_ENGINE_LOCK_IND_V02, QMI_IDL_TYPE16(0, 51), 7},
-  {QMI_LOC_GET_ENGINE_LOCK_IND_V02, QMI_IDL_TYPE16(0, 53), 32},
+  {QMI_LOC_GET_ENGINE_LOCK_IND_V02, QMI_IDL_TYPE16(0, 53), 43},
   {QMI_LOC_SET_SBAS_CONFIG_IND_V02, QMI_IDL_TYPE16(0, 55), 7},
   {QMI_LOC_GET_SBAS_CONFIG_IND_V02, QMI_IDL_TYPE16(0, 57), 11},
   {QMI_LOC_SET_NMEA_TYPES_IND_V02, QMI_IDL_TYPE16(0, 59), 7},
@@ -9768,7 +9778,7 @@ struct qmi_idl_service_object loc_qmi_idl_service_object_v02 = {
     sizeof(loc_service_indication_messages_v02)/sizeof(qmi_idl_service_message_table_entry) },
   { loc_service_command_messages_v02, loc_service_response_messages_v02, loc_service_indication_messages_v02},
   &loc_qmi_idl_type_table_object_v02,
-  0x8B,
+  0x8D,
   NULL
 };
 
