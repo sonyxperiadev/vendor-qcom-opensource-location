@@ -103,6 +103,11 @@ typedef uint64_t GpsSvMeasHeaderFlags;
 #define BIAS_BDSB1_BDSB2A_VALID         0x00100000
 #define BIAS_BDSB1_BDSB2A_UNC_VALID     0x00200000
 
+#define BIAS_GPSL1_GPSL2C_VALID         0x00400000
+#define BIAS_GPSL1_GPSL2C_UNC_VALID     0x00800000
+#define BIAS_GALE1_GALE5B_VALID         0x01000000
+#define BIAS_GALE1_GALE5B_UNC_VALID     0x02000000
+
 typedef struct {
     uint64_t flags;
 
@@ -111,6 +116,8 @@ typedef struct {
     float gpsL1Unc;
     float gpsL1_gpsL5;
     float gpsL1_gpsL5Unc;
+    float gpsL1_gpsL2c;
+    float gpsL1_gpsL2cUnc;
     float gpsL1_gloG1;
     float gpsL1_gloG1Unc;
     float gpsL1_galE1;
@@ -125,6 +132,9 @@ typedef struct {
     float galE1Unc;
     float galE1_galE5a;
     float galE1_galE5aUnc;
+    float galE1_galE5b;
+    float galE1_galE5bUnc;
+
     float bdsB1;
     float bdsB1Unc;
     float bdsB1_bdsB1c;
