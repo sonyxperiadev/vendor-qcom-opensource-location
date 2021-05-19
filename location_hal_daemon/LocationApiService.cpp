@@ -1455,21 +1455,9 @@ LocationApiService - power event handlers
 void LocationApiService::onPowerEvent(PowerStateType powerState) {
     std::lock_guard<std::mutex> lock(mMutex);
     LOC_LOGd("--< onPowerEvent %d", powerState);
-
     mPowerState = powerState;
-    if ((POWER_STATE_SUSPEND == powerState) ||
-            (POWER_STATE_SHUTDOWN == powerState)) {
-        suspendAllTrackingSessions();
-    } else if (POWER_STATE_RESUME == powerState) {
-        resumeAllTrackingSessions();
-    }
-
-    GnssInterface* gnssInterface = getGnssInterface();
-    if (!gnssInterface) {
-        LOC_LOGe(">-- getGnssEnergyConsumed null GnssInterface");
-        return;
-    }
-    gnssInterface->updateSystemPowerState(powerState);
+    /*GnssAdapter handles session management for suspend/resume power events*/
+    mLocationControlApi->powerStateEvent(powerState);
 }
 #endif
 
