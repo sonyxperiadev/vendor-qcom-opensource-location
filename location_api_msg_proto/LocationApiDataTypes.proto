@@ -1,4 +1,4 @@
-/* Copyright (c) 2020 The Linux Foundation. All rights reserved.
+/* Copyright (c) 2020-2021 The Linux Foundation. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -42,8 +42,8 @@ enum LocationApiDataTypesVersion {
     LOCAPI_DATA_TYPES_VER_MAJOR = 1;
     // Minor - New features / API addition, new message/elemtent addition.
     // Bump the last byte of version i.e. x.2 to x.3
-    // Minor version 8: Add isNhz in GnssMeasurements
-    LOCAPI_DATA_TYPES_VER_MINOR = 8;
+    // Minor version 11: Add bit mask for gnssSignalType in SV meas report
+    LOCAPI_DATA_TYPES_VER_MINOR = 11;
 }
 
 // ============================================================================
@@ -219,11 +219,12 @@ enum PBGnssSvTypesMask {
 
 enum PBLocApiGnssSvOptionsMask {
     PB_GNSS_SV_OPTIONS_INVALID                     = 0;
-    PB_GNSS_SV_OPTIONS_HAS_EPHEMER_BIT             = 1;
-    PB_GNSS_SV_OPTIONS_HAS_ALMANAC_BIT             = 2;
-    PB_GNSS_SV_OPTIONS_USED_IN_FIX_BIT             = 4;
-    PB_GNSS_SV_OPTIONS_HAS_CARRIER_FREQUENCY_BIT   = 8;
-    PB_GNSS_SV_OPTIONS_HAS_GNSS_SIGNAL_TYPE_BIT    = 16;
+    PB_GNSS_SV_OPTIONS_HAS_EPHEMER_BIT             = 0x1;
+    PB_GNSS_SV_OPTIONS_HAS_ALMANAC_BIT             = 0x2;
+    PB_GNSS_SV_OPTIONS_USED_IN_FIX_BIT             = 0x4;
+    PB_GNSS_SV_OPTIONS_HAS_CARRIER_FREQUENCY_BIT   = 0x8;
+    PB_GNSS_SV_OPTIONS_HAS_GNSS_SIGNAL_TYPE_BIT    = 0x10;
+    PB_GNSS_SV_OPTIONS_HAS_BASEBAND_CARRIER_TO_NOISE_BIT = 0x20;
 }
 
 enum PBGnssGloTimeStructTypeFlags {
@@ -434,6 +435,7 @@ enum PBGnssMeasurementsDataFlagsMask {
     PB_GNSS_MEASUREMENTS_DATA_FULL_ISB_BIT                     = 0x00040000;
     PB_GNSS_MEASUREMENTS_DATA_FULL_ISB_UNCERTAINTY_BIT         = 0x00080000;
     PB_GNSS_MEASUREMENTS_DATA_CYCLE_SLIP_COUNT_BIT             = 0x00100000;
+    PB_GNSS_MEASUREMENTS_DATA_GNSS_SIGNAL_TYPE_BIT             = 0x00200000;
 }
 
 enum PBGnssMeasurementsStateMask {
@@ -829,6 +831,7 @@ message PBGnssMeasurementsData {
     double fullInterSignalBiasNs = 23;
     double fullInterSignalBiasUncertaintyNs = 24;
     uint32 cycleSlipCount = 25;
+    float receivedSvTimeSubNs = 26;
 }
 
 message PBLocApiGnssLocationPositionDynamics {

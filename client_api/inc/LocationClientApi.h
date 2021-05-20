@@ -160,7 +160,10 @@ enum GnssSvOptionsMask {
     /** This SV has valid GnssSv::carrierFrequencyHz. <br/> */
     GNSS_SV_OPTIONS_HAS_CARRIER_FREQUENCY_BIT   = (1<<3),
     /** This SV has valid GnssSv::gnssSignalTypeMask. <br/>   */
-    GNSS_SV_OPTIONS_HAS_GNSS_SIGNAL_TYPE_BIT    = (1<<4)
+    GNSS_SV_OPTIONS_HAS_GNSS_SIGNAL_TYPE_BIT    = (1<<4),
+    /** This SV has valid GnssSv::basebandCarrierToNoiseDbHz.
+     *  <br/> */
+    GNSS_SV_OPTIONS_HAS_BASEBAND_CARRIER_TO_NOISE_BIT = (1<<5)
 };
 
 /**
@@ -1205,32 +1208,36 @@ struct GnssSv {
      *  BEIDOU, GALILEO). <br/>
      *  This field is always valid.  <br/> */
     GnssSvType type;
-     /** Signal-to-noise ratio at antenna of the SV, in unit of
-      * dB-Hz. <br/>
-      * This field is always valid.  <br/> */
+     /** Carrier-to-noise ratio of the signal measured at antenna,
+      * in unit of dB-Hz. <br/>
+      * cN0Dbhz of 0.0 indicates that this field is unknown. <br/> */
     float cN0Dbhz;
-    /** Elevation of the SV, in unit of degrees. <br/> This field is
-     *  always valid.  <br/> */
+    /** Elevation of the SV, in unit of degrees. <br/>
+     *  This field is always valid.  <br/> */
     float elevation;
-    /** Azimuth of the SV, in unit of degrees. <br/> This field is
-     *  always valid.  <br/> */
+    /** Azimuth of the SV, in unit of degrees. <br/>
+     *  This field is always valid.  <br/> */
     float azimuth;
     /** Bitwise OR of GnssSvOptionsMask to specify additional
      *  info and valid fields in GnssSv. <br/>
      *  This field is always valid.  <br/>  */
     GnssSvOptionsMask gnssSvOptionsMask;
-    /** Carrier frequency of the signal tracked. <br/> This field is
-     *  valid if gnssSvOptionsMask has
+    /** Carrier frequency of the signal tracked. <br/>
+     *  This field is valid if gnssSvOptionsMask has
      *  GNSS_SV_OPTIONS_HAS_CARRIER_FREQUENCY_BIT set.  <br/> */
     float carrierFrequencyHz;
     /** GNSS signal type mask of the SV. <br/>
      *  This field is valid if gnssSvOptionsMask has
      *  GNSS_SV_OPTIONS_HAS_GNSS_SIGNAL_TYPE_BIT. <br/> */
     GnssSignalTypeMask gnssSignalTypeMask;
-    /** Baseband signal strength Db Hz. <br/>
-     *  This field is always available in sv report. <br/> */
+     /** Carrier-to-noise ratio of the signal measured at baseband,
+     *  in unit of dB-Hz. <br/>
+     *  This field is valid if gnssSvOptionsMask has
+     *  GNSS_SV_OPTIONS_HAS_BASEBAND_CARRIER_TO_NOISE_BIT set. <br/> */
     double basebandCarrierToNoiseDbHz;
-    /** GLONASS frequency channel number
+    /** GLONASS frequency channel number, range is [1, 14].
+     * <br/>
+     * This field is always valid if and ony if sv is of GLONASS.
      * <br/> */
     uint16_t gloFrequency;
     /** Method to print the struct to human readable form, for logging.
@@ -1343,7 +1350,8 @@ enum GnssMeasurementsDataFlagsMask{
      *  GnssMeasurementsData::stateMask.  <br/>   */
     GNSS_MEASUREMENTS_DATA_STATE_BIT                        = (1<<2),
     /** GnssMeasurementsData has valid
-     *  GnssMeasurementsData::receivedSvTimeNs.  <br/>   */
+     *  GnssMeasurementsData::receivedSvTimeNs and
+     *  GnssMeasurementsData::receivedSvTimeSubNs.  <br/> */
     GNSS_MEASUREMENTS_DATA_RECEIVED_SV_TIME_BIT             = (1<<3),
     /** GnssMeasurementsData has valid
      *  GnssMeasurementsData::receivedSvTimeUncertaintyNs.  <br/> */
@@ -1397,6 +1405,9 @@ enum GnssMeasurementsDataFlagsMask{
     /** GnssMeasurementsData has valid
      *  GnssMeasurementsData::cycleslipCount.  <br/>   */
     GNSS_MEASUREMENTS_DATA_CYCLE_SLIP_COUNT_BIT             = (1<<20),
+    /** GnssMeasurementsData has valid
+     *  GnssMeasurementsData::gnssSignalType. <br/> */
+    GNSS_MEASUREMENTS_DATA_GNSS_SIGNAL_TYPE_BIT             = (1<<21),
 };
 
 /** Specify GNSS measurement state in
@@ -1517,8 +1528,19 @@ struct GnssMeasurementsData {
      *  GNSS measurement state. <br/>   */
     GnssMeasurementsStateMask stateMask;
     /** Received GNSS time of the week in nanoseconds when the
-     *  measurement was taken. <br/>   */
+     *  measurement was taken. <br/>
+     *  For sub nanoseconds part of the time, please refer to
+     *  of GnssMeasurementsData::receivedSvTimeSubNs. <br/>
+     *  Total time is: receivedSvTimeNs+receivedSvTimeSubNs. <br/>*/
     int64_t receivedSvTimeNs;
+
+    /** Sub nanoseconds portion of the received GNSS time of the
+     *  week when the measurement was taken. <br/>
+     *  For nanoseconds portion of the time, please refer to field
+     *  of GnssMeasurementsData::receivedSvTimeSubNs. <br/>
+     *  Total time is: receivedSvTimeNs+receivedSvTimeSubNs. <br/>*/
+    float receivedSvTimeSubNs;
+
     /** Satellite time. <br/>
      *  All SV times in the current measurement block are already
      *  propagated to a common reference time epoch, in unit of
@@ -1638,13 +1660,16 @@ enum LeapSecondSysInfoMask{
  *  LeapSecondSystemInfo.  <br/>   */
 struct LeapSecondChangeInfo {
     /** GPS timestamp that corrresponds to the last known leap
-        second change event. <br/>
-        The info can be available on two scenario: <br/>
-        1: this leap second change event has been scheduled and yet
-           to happen <br/>
-        2: this leap second change event has already happened and
-           next leap second change event has not yet been
-           scheduled. <br/>   */
+     *  second change event. <br/>
+     *  The info can be available on two scenario: <br/>
+     *  1: this leap second change event has been scheduled and yet
+     *     to happen and GPS receiver has decoded this info since
+     *     device last bootup. <br/
+     *  2: this leap second change event happened after device was
+     *     last booted up and GPS receiver has decoded this info.
+     *     Please note that if device gets rebooted after leap
+     *     second change happened, this info will become
+     *     unavailable. <br/> */
     GnssSystemTimeStructType gpsTimestampLsChange;
     /** Number of leap seconds prior to the leap second change event
      *  that corresponds to the timestamp at gpsTimestampLsChange.
@@ -1674,22 +1699,32 @@ struct LeapSecondSystemInfo {
      *  specify valid fields in LeapSecondSystemInfo. */
     LeapSecondSysInfoMask leapSecondInfoMask;
     /** Current leap seconds, in unit of seconds. <br/>
-     *  This info will only be available if the leap second change
-     *  info is not available. <br/>   */
+     *  1: When the leap second change info is available, to figure
+     *     out the current leap second info, compare current gps
+     *     time with LeapSecondChangeInfo::gpsTimestampLsChange to
+     *     know whether to choose leapSecondBefore or
+     *     leapSecondAfter as current leap second. <br/>
+     *  2: When the leap second change info is not available, then
+     *     use this field to retrieve the current leap second. <br/>
+     */
     uint8_t               leapSecondCurrent;
-    /** Leap second change event info. The info can be available on
-        two scenario: <br/>
-        1: this leap second change event has been scheduled and yet
-           to happen <br/>
-        2: this leap second change event has already happened and
-           next leap second change event has not yet been scheduled.
-           <br/>
-
-        If leap second change info is avaiable, to figure out the
-        current leap second info, compare current gps time with
-        LeapSecondChangeInfo::gpsTimestampLsChange to know whether
-        to choose leapSecondBefore or leapSecondAfter as current
-        leap second. <br/> */
+    /** GPS timestamp that corrresponds to the last known leap
+     *  second change event. <br/>
+     *  The info can be available on two scenario: <br/>
+     *  1: this leap second change event has been scheduled and yet
+     *     to happen and GPS receiver has decoded this info since
+     *     device last bootup. <br/
+     *  2: this leap second change event happened after device was
+     *     last booted up and GPS receiver has decoded this info.
+     *     Please note that if device gets rebooted after leap
+     *     second change has happened, this info will become
+     *     unavailable. <br/>
+     *
+     *   If leap second change info is avaiable, to figure out the
+     *   current leap second info, compare current gps time with
+     *   LeapSecondChangeInfo::gpsTimestampLsChange to know whether
+     *   to choose leapSecondBefore or leapSecondAfter as current
+     *   leap second. <br/> */
     LeapSecondChangeInfo  leapSecondChangeInfo;
     /** Method to print the struct to human readable form, for logging.
      *  <br/> */
@@ -1929,8 +1964,12 @@ struct GnssReportCbs {
     /** Callback to receive GnssData from modem GNSS engine.
      *  <br/> */
     GnssDataCb gnssDataCallback;
-    /** Callback to receive GnssMeasurements modem GNSS engine. <br/>  */
+    /** Callback to receive 1Hz GnssMeasurements from modem GNSS
+     *  engine. <br/> */
     GnssMeasurementsCb gnssMeasurementsCallback;
+    /** Callback to receive NHz GnssMeasurements from modem GNSS
+     *  engine. <br/> */
+    GnssMeasurementsCb gnssNHzMeasurementsCallback;
 };
 
 /** Specify the set of callbacks to receive the reports when
@@ -1956,9 +1995,12 @@ struct EngineReportCbs {
     /** Callback to receive GnssData from modem GNSS engine.
      *  <br/> */
     GnssDataCb gnssDataCallback;
-    /** Callback to receive GnssMeasurements from modem GNSS engine.
-     *  <br/> */
+    /** Callback to receive 1Hz GnssMeasurements from modem GNSS
+     *  engine. <br/> */
     GnssMeasurementsCb gnssMeasurementsCallback;
+    /** Callback to receive NHz GnssMeasurements from modem GNSS
+     *  engine. <br/> */
+    GnssMeasurementsCb gnssNHzMeasurementsCallback;
 };
 
 /**
@@ -2274,7 +2316,9 @@ public:
 
         @param responseCallback
         Callback to receive processing status, e.g.: success or
-        failure code: e.g.: timeout. <br/>
+        failure code: e.g.: timeout. If null responseCallback is
+        passed, client will not be informed of processing status,
+        e.g.:LOCATION_RESPONSE_PARAM_INVALID. <br/>
 
         When the processing status is LOCATION_RESPONSE_SUCCESS, the
         terrestrialPositionCallback will be invoked to deliver the

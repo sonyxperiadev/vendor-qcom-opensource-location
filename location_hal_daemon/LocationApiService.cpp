@@ -1,4 +1,4 @@
-/* Copyright (c) 2018-2020 The Linux Foundation. All rights reserved.
+/* Copyright (c) 2018-2021 The Linux Foundation. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -131,7 +131,7 @@ LocationApiService::LocationApiService(const configParamToRead & configParamRead
     mAutoStartGnss(configParamRead.autoStartGnss),
     mPowerState(POWER_STATE_UNKNOWN),
     mPositionMode((GnssSuplMode)configParamRead.positionMode),
-    mMsgTask("LocHalDaemonMaintenanceMsgTask"),
+    mMsgTask("HalMaintMsgTask"),
     mMaintTimer(this),
     mGtpWwanSsLocationApi(nullptr),
     mOptInTerrestrialService(-1),
@@ -1455,21 +1455,9 @@ LocationApiService - power event handlers
 void LocationApiService::onPowerEvent(PowerStateType powerState) {
     std::lock_guard<std::mutex> lock(mMutex);
     LOC_LOGd("--< onPowerEvent %d", powerState);
-
     mPowerState = powerState;
-    if ((POWER_STATE_SUSPEND == powerState) ||
-            (POWER_STATE_SHUTDOWN == powerState)) {
-        suspendAllTrackingSessions();
-    } else if (POWER_STATE_RESUME == powerState) {
-        resumeAllTrackingSessions();
-    }
-
-    GnssInterface* gnssInterface = getGnssInterface();
-    if (!gnssInterface) {
-        LOC_LOGe(">-- getGnssEnergyConsumed null GnssInterface");
-        return;
-    }
-    gnssInterface->updateSystemPowerState(powerState);
+    /*GnssAdapter handles session management for suspend/resume power events*/
+    mLocationControlApi->powerStateEvent(powerState);
 }
 #endif
 
@@ -1611,16 +1599,24 @@ void LocationApiService::getSingleTerrestrialPos(
             pClient->sendTerrestrialFix(LOCATION_ERROR_NOT_SUPPORTED, location);
         }
     } else {
+        bool terrestrialSessionStarted = (mTerrestrialFixReqs.size() != 0);
+
+        // if the request for the client is already pending
+        // remove the request first
+        auto it = mTerrestrialFixReqs.find(clientName);
+        if (it != mTerrestrialFixReqs.end()) {
+            mTerrestrialFixReqs.erase(clientName);
+        }
+
         mTerrestrialFixReqs.emplace(std::piecewise_construct,
                                     std::forward_as_tuple(clientName),
                                     std::forward_as_tuple(this, clientName));
-
-        auto it = mTerrestrialFixReqs.find(clientName);
+        it = mTerrestrialFixReqs.find(clientName);
         if (it != mTerrestrialFixReqs.end()) {
             it->second.start(pReqMsg->mTimeoutMsec, false);
         }
 
-        if (mTerrestrialFixReqs.size() == 1) {
+        if (terrestrialSessionStarted == false) {
             mGtpWwanSsLocationApi->startNetworkLocation(&mGtpWwanPosCallback);
         }
     }

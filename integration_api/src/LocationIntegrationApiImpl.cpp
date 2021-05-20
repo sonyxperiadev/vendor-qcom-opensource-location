@@ -204,7 +204,7 @@ LocationIntegrationApiImpl::LocationIntegrationApiImpl(LocIntegrationCbs& integr
         mLeverArmConfigInfo{},
         mRobustLocationConfigInfo{},
         mDreConfigInfo{},
-        mMsgTask("IntegrationApiImpl"),
+        mMsgTask("IntApiMsgTask"),
         mGtpUserConsentConfigInfo{},
         mNmeaConfigInfo{} {
     if (integrationClientAllowed() == false) {

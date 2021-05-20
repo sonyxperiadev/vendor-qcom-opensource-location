@@ -60,6 +60,8 @@ int main(int argc, char *argv[])
         {"POSITION_MODE", &configParamRead.positionMode, NULL, 'n'},
     };
 
+    // read default configuration paramters
+    UTIL_READ_CONF_DEFAULT(LOC_PATH_GPS_CONF);
     // read configuration file
     UTIL_READ_CONF(LOC_PATH_GPS_CONF, configTable);
     if (configParamRead.positionMode != GNSS_SUPL_MODE_MSB) {
