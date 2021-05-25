@@ -1262,77 +1262,77 @@ void LocApiV02::injectPositionAndCivicAddress(const Location& location,
     if (len != 0) {
         injectPosAndAddrReq.country_valid = 1;
         strlcpy(injectPosAndAddrReq.country, addr.countryCode.c_str(),
-                QMI_LOC_MAX_COUNTRY_STR_LENGTH_V02);
+                sizeof(injectPosAndAddrReq.country));
     }
 
     len = addr.adminArea.length();
     if (len != 0) {
         injectPosAndAddrReq.subdivA1_valid = 1;
         strlcpy(injectPosAndAddrReq.subdivA1, addr.adminArea.c_str(),
-                QMI_LOC_MAX_SUBDIV_A1_STR_LENGTH_V02);
+                sizeof(injectPosAndAddrReq.subdivA1));
     }
 
     len = addr.subAdminArea.length();
     if (len != 0) {
         injectPosAndAddrReq.subdivA2_valid = 1;
         strlcpy(injectPosAndAddrReq.subdivA2, addr.subAdminArea.c_str(),
-                QMI_LOC_MAX_SUBDIV_A2_STR_LENGTH_V02);
+                sizeof(injectPosAndAddrReq.subdivA2));
     }
 
     len = addr.locality.length();
     if (len != 0) {
         injectPosAndAddrReq.city_valid = 1;
         strlcpy(injectPosAndAddrReq.city, addr.locality.c_str(),
-                QMI_LOC_MAX_CITY_STR_LENGTH_V02);
+                sizeof(injectPosAndAddrReq.city));
     }
 
     len = addr.subLocality.length();
     if (len != 0) {
         injectPosAndAddrReq.cityDiv_valid = 1;
         strlcpy(injectPosAndAddrReq.cityDiv, addr.subLocality.c_str(),
-                QMI_LOC_MAX_CITYDIV_STR_LENGTH_V02);
+                sizeof(injectPosAndAddrReq.cityDiv));
     }
 
     len = addr.thoroughfare.length();
     if (len != 0) {
         injectPosAndAddrReq.street_valid = 1;
         strlcpy(injectPosAndAddrReq.street, addr.thoroughfare.c_str(),
-                QMI_LOC_MAX_STREET_STR_LENGTH_V02);
+                sizeof(injectPosAndAddrReq.street));
     }
 
     len = addr.featureName.length();
     if (len != 0) {
         injectPosAndAddrReq.landmark_valid = 1;
         strlcpy(injectPosAndAddrReq.landmark, addr.featureName.c_str(),
-                QMI_LOC_MAX_LANDMARK_STR_LENGTH_V02);
+                sizeof(injectPosAndAddrReq.landmark));
     }
 
     len = addr.postalCode.length();
     if (len != 0) {
         injectPosAndAddrReq.postalCode_valid = 1;
         strlcpy(injectPosAndAddrReq.postalCode, addr.postalCode.c_str(),
-                QMI_LOC_MAX_POSTAL_CODE_STR_LENGTH_V02);
+                sizeof(injectPosAndAddrReq.postalCode));
     }
 
     len = addr.premises.length();
     if (len != 0) {
         injectPosAndAddrReq.building_valid = 1;
         strlcpy(injectPosAndAddrReq.building, addr.premises.c_str(),
-                QMI_LOC_MAX_BUILDING_STR_LENGTH_V02);
+                sizeof(injectPosAndAddrReq.building));
     }
 
     len = addr.thoroughfare.length();
     if (len != 0) {
         injectPosAndAddrReq.primaryRoad_valid = 1;
         strlcpy(injectPosAndAddrReq.primaryRoad, addr.thoroughfare.c_str(),
-                QMI_LOC_MAX_PRIMARY_ROAD_STR_LENGTH_V02);
+                sizeof(injectPosAndAddrReq.primaryRoad));
     }
 
     len = addr.subThoroughfare.length();
     if (len != 0) {
         injectPosAndAddrReq.roadSection_valid = 1;
         strlcpy(injectPosAndAddrReq.roadSection, addr.subThoroughfare.c_str(),
-                QMI_LOC_MAX_ROAD_SECTION_STR_LENGTH_V02);
+                sizeof(injectPosAndAddrReq.roadSection));
     }
 
     LOC_LOGd("[%s:%d] QMI Civic Address: countryCode: %s, SubdivA1: %s,\n"
