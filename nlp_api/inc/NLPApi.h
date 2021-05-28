@@ -39,6 +39,7 @@
 extern "C" {
 #endif
 
+#define CURRENT_VERSION 3
 /**
     API VERSION 1: Initial release
     API VERSION 2: Changed return value of connectToSystemStatus
@@ -47,30 +48,6 @@ extern "C" {
                    Changed return value of connectToSystemStatus to SystemStatusListener*.
                    Added multiple-client support to connectToSystemStatus.
 */
-
-typedef enum {
-    OPT_OUT = 0,
-    OPT_IN  = 1,
-} OptInStatus;
-
-typedef enum {
-    TYPE_MOBILE = 0,
-    TYPE_WIFI,
-    TYPE_ETHERNET,
-    TYPE_BLUETOOTH,
-    TYPE_MMS,
-    TYPE_SUPL,
-    TYPE_DUN,
-    TYPE_HIPRI,
-    TYPE_WIMAX,
-    TYPE_PROXY,
-    TYPE_UNKNOWN,
-} NetworkType;
-
-typedef struct {
-    NetworkType networkType;
-    uint64_t networkHandle;
-} NlpNetwork;
 
 /** @brief
     Table of calls clients to implement for service to provide system level updates
@@ -202,15 +179,16 @@ typedef struct {
     Provides a C pointer to an instance of NLPApi struct after dynamic linking to lobnlp_api.so.
 */
 inline const NLPApi* linkGetNLPApi() {
-    typedef void* (getNLPApi)();
+    typedef const void* (getNLPApi)(uint32_t);
 
     getNLPApi* getter = nullptr;
     void *handle = dlopen("libnlp_client_api.so", RTLD_NOW);
     if (nullptr != handle) {
-        getter = (getNLPApi*)dlsym(handle, "getNLPApi");
+        getter = (getNLPApi*)dlsym(handle, "getNLPApiByVersion");
     }
 
-    return (nullptr != getter) ? (NLPApi*)(*getter)() : nullptr;
+    // increment this version number when aboe NLPApi changes
+    return (const NLPApi*)(nullptr != getter) ? (NLPApi*)(*getter)(CURRENT_VERSION) : nullptr;
 }
 
 #ifdef __cplusplus
