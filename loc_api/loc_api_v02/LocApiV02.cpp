@@ -972,6 +972,8 @@ void LocApiV02 ::
             (time_info_current.tv_nsec)/1e6;
     }
 
+    //Use this bit to indicate the injected position source is NLP
+    location.techMask |= LOCATION_TECHNOLOGY_WIFI_BIT;
     injectPosition(location, onDemandCpi);
 }
 
@@ -1026,7 +1028,13 @@ void LocApiV02::injectPosition(const Location& location, bool onDemandCpi)
     }
 
     injectPositionReq.positionSrc_valid = 1;
-    injectPositionReq.positionSrc = eQMI_LOC_POSITION_SRC_OTHER_V02;
+    if (LOCATION_TECHNOLOGY_WIFI_BIT & location.techMask) {
+        injectPositionReq.positionSrc = eQMI_LOC_POSITION_SRC_NLP_V02;
+    } else if (LOCATION_TECHNOLOGY_HYBRID_BIT & location.techMask) {
+        injectPositionReq.positionSrc = eQMI_LOC_POSITION_SRC_FLP_V02;
+    } else {
+        injectPositionReq.positionSrc = eQMI_LOC_POSITION_SRC_OTHER_V02;
+    }
 
     if (onDemandCpi) {
         injectPositionReq.onDemandCpi_valid = 1;
