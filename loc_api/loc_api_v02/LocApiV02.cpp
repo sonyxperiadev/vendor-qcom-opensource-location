@@ -10167,7 +10167,7 @@ LocApiV02::startDistanceBasedTracking(uint32_t sessionId,
     memset(&start_dbt_ind, 0, sizeof(start_dbt_ind));
 
     // request id
-    start_dbt_req.reqId = sessionId;
+    start_dbt_req.reqId = (uint8_t)sessionId;
 
     // distance
     start_dbt_req.minDistance = options.minDistance;
