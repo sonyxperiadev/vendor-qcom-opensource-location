@@ -1708,10 +1708,10 @@ struct LeapSecondSystemInfo {
      *     use this field to retrieve the current leap second. <br/>
      */
     uint8_t               leapSecondCurrent;
-    /** GPS timestamp that corrresponds to the last known leap
-     *  second change event. <br/>
-     *  The info can be available on two scenario: <br/>
-     *  1: this leap second change event has been scheduled and yet
+    /** GPS timestamp that corresponds to the last known leap second
+     *  change event. <br/>
+     *  The info can be available on two scenario: <br/> 1: this
+     *  leap second change event has been scheduled and yet
      *     to happen and GPS receiver has decoded this info since
      *     device last bootup. <br/
      *  2: this leap second change event happened after device was
@@ -1720,7 +1720,7 @@ struct LeapSecondSystemInfo {
      *     second change has happened, this info will become
      *     unavailable. <br/>
      *
-     *   If leap second change info is avaiable, to figure out the
+     *   If leap second change info is available, to figure out the
      *   current leap second info, compare current gps time with
      *   LeapSecondChangeInfo::gpsTimestampLsChange to know whether
      *   to choose leapSecondBefore or leapSecondAfter as current
@@ -2340,7 +2340,8 @@ public:
                                       LocationCb terrestrialPositionCallback,
                                       ResponseCb responseCallback);
 
-    /** @example example1:testTrackingApi
+    /** @example example1:testDetailedGnssReportApi
+    *
     * <pre>
     * <code>
     *    // Sample Code
@@ -2348,7 +2349,14 @@ public:
     *     //...
     * }
     * static void onResponseCb(location_client::LocationResponse response) {
-    *     //...
+    *     if (response == LOCATION_RESPONSE_SUCCESS) {
+    *         // successfully started the tracking session
+    *         // expecting to receive detailed GNSS PVT reports and other reports
+    *         // the registered callbacks
+    *     } else {
+    *         // request to start the tracking session failed
+    *         // detained GNSS PVT reports and other report callbacks will not be invoked
+    *     }
     * }
     * static void onGnssLocationCb(const GnssLocation& location) {
     *     //...
@@ -2361,7 +2369,7 @@ public:
     * static void onGnssNmeaCb(uint64_t timestamp, const std::string& nmea) {
     *     //...
     * }
-    * void testTrackingApi() {
+    * void testDetailedGnssReportApi() {
     *     LocationClientApi *pClient = new LocationClientApi(onCapabilitiesCb);
     *     if (nullptr == pClient) {
     *         LOC_LOGe("failed to create LocationClientApi instance");
@@ -2387,6 +2395,129 @@ public:
     *     //...
     *     // stop session
     *     pClient->stopPositionSession();
+    *     //...
+    * }
+    * </code>
+    * </pre>
+    */
+
+    /** @example example2:testEngineReportApi
+    * <pre>
+    * <code>
+    *    // Sample Code
+    * static void onCapabilitiesCb(location_client::LocationCapabilitiesMask mask) {
+    *     //...
+    * }
+    * static void onResponseCb(location_client::LocationResponse response) {
+    *     if (response == LOCATION_RESPONSE_SUCCESS) {
+    *         // successfully started the tracking session
+    *         // expecting to receive engine PVT reports and other reports
+    *         // the registered callbacks
+    *     } else {
+    *         // request to start the tracking session failed
+    *         // engine PVT reports and other report callbacks will not be invoked
+    *     }
+    * }
+    * static void onEngLocationsCb(const std::vector<location_client::GnssLocation>& locations) {
+    *     for (auto gnssLocation : locations) {
+    *          if (gnssLocation.locOutputEngType == LOC_OUTPUT_ENGINE_FUSED) {
+    *               // This is fused report, check engines contributed to the fused report
+    *               if (gnssLocation.locOutputEngMask & STANDARD_POSITIONING_ENGINE) {
+    *                   // standard position engine contributed to the fix
+    *               }
+    *               if (gnssLocation.locOutputEngMask & RECISE_POSITIONING_ENGINE) {
+    *                   // standard position engine contributed to the fix
+    *               }
+    *               if (gnssLocation.locOutputEngMask & DEAD_RECKONING_ENGINE) {
+    *                   // standard position engine contributed to the fix
+    *               }
+    *          } else if (gnssLocation.locOutputEngType == LOC_OUTPUT_ENGINE_SPE) {
+    *               // This is unmodified and prompt SPE report
+    *          } else if (gnssLocation.locOutputEngType == LOC_OUTPUT_ENGINE_PPE) {
+    *              // This is unmodified and prompt PPE report
+    *          }
+    *     }
+    * }
+    *
+    * static void onGnssSvCb(const std::vector<location_client::GnssSv>& gnssSvs) {
+    *     //...
+    * }
+    *
+    * static void onGnssNmeaCb(uint64_t timestamp, const std::string& nmea) {
+    *     //...
+    * }
+    * static void onGnssDataCb(const location_client::GnssData& gnssData) {
+    *     //...
+    * }
+    * static void onGnssMeasurementsCb(const location_client::GnssMeasurements& gnssMeasurements) {
+    *     //...
+    * }
+    *
+    * void testEngineReportApi() {
+    *     LocationClientApi *pClient = new LocationClientApi(onCapabilitiesCb);
+    *     if (nullptr == pClient) {
+    *         LOC_LOGe("failed to create LocationClientApi instance");
+    *         return;
+    *     }
+    *
+    *     uint32_t interval = 1000;
+    *     // Request position from fused engine, SPE and PPE engines
+    *     // Adjust reqEngMask to client need
+    *     LocReqEngineTypeMask reqEngMask = (LOC_REQ_ENGINE_FUSED_BIT | LOC_REQ_ENGINE_SPE_BIT |
+    *                                       LOC_REQ_ENGINE_PPE_BIT);
+    *
+    *     // set callbacks
+    *     EngineReportCbs enginecbs;
+    *     enginecbs.engLocationsCallback = EngineLocationsCb(onEngLocationsCb);
+    *     enginecbs.gnssSvCallback = GnssSvCb(onGnssSvCb);
+    *     enginecbs.gnssNmeaCallback = GnssNmeaCb(onGnssNmeaCb);
+    *     enginecbs.gnssMeasurementsCallback = GnssMeasurementsCb(onGnssMeasurementsCb);
+    *     enginecbs.gnssNHzMeasurementsCallback = GnssMeasurementsCb(onGnssMeasurementsCb);
+    *     enginecbs.gnssDataCallback = GnssDataCb(onGnssDataCb);
+    *
+    *     // start tracking session
+    *     pClient->startPositionSession(interval, reqEngMask, enginecbs, onResponseCb);
+    *     //...
+    *     // stop session
+    *     pClient->stopPositionSession();
+    *     //...
+    * }
+    * </code>
+    * </pre>
+    */
+
+   /** @example example3:testSingleShotTerrestrialFixApi
+    * <pre>
+    * <code>
+    *    // Sample Code
+    * static void onCapabilitiesCb(location_client::LocationCapabilitiesMask mask) {
+    *     //...
+    * }
+    * static void onResponseCb(location_client::LocationResponse response) {
+    *     if (response == LOCATION_RESPONSE_SUCCESS) {
+    *         // successfully requested single shot gtp location
+    *         // onGtpLocationCb() will be invoked once to deliver gtp location
+    *     } else {
+    *         // request for single shot gtp fix failed
+    *         // onGtpLocationCb() will not be invoked
+    *     }
+    * }
+    * static void onGtpLocationCb(const location_client::Location& location) {
+    *   //...
+    * }
+    * void testSingleShotTerrestrialFixApi() {
+    *     LocationClientApi *pClient = new LocationClientApi(onCapabilitiesCb);
+    *     if (nullptr == pClient) {
+    *         LOC_LOGe("failed to create LocationClientApi instance");
+    *         return;
+    *     }
+    *     uint32_t timeoutMsec = 60000,
+    *     uint32_t gtpTechmask = TERRESTRIAL_TECH_GTP_WWAN;
+    *     pClient->getSingleTerrestrialPosition(timeoutMsec,
+    *                                           (TerrestrialTechnologyMask) gtpTechMask,
+    *                                           0.0, onGtpLocationCb, onResponseCb);
+    *     //...
+    * }
     * </code>
     * </pre>
     */
@@ -2481,7 +2612,7 @@ public:
     */
     void stopBatchingSession();
 
-    /** @example example2:testBatchingApi
+    /** @example example4:testBatchingApi
     * <pre>
     * <code>
     *    // Sample Code
@@ -2547,7 +2678,7 @@ public:
     */
     void resumeGeofences(std::vector<Geofence>& geofences);
 
-    /** @example example3:testGeofenceApi
+    /** @example example5:testGeofenceApi
     * <pre>
     * <code>
     *    // Sample Code
@@ -2616,6 +2747,44 @@ public:
     void getGnssEnergyConsumed(GnssEnergyConsumedCb gnssEnergyConsumedCallback,
                                ResponseCb responseCallback);
 
+
+    /** @example example6:testEnergyConsumedApi
+     * <pre>
+     * <code>
+     *    // Sample Code
+     * static void onCapabilitiesCb(location_client::LocationCapabilitiesMask mask) {
+     *     //...
+     * }
+     * static void onResponseCb(location_client::LocationResponse response) {
+     *     if (response == LOCATION_RESPONSE_SUCCESS) {
+     *         // successfully requested GNSS energy consumed info
+     *         // expecting to receive energy consumed info via ongnssEnergyConsumedInfoCb()
+     *     } else {
+     *         // request to retrieve GNSS energy consumed info failed
+     *         // ongnssEnergyConsumedInfoCb will not be invoked
+     *     }
+     * }
+     * static void ongnssEnergyConsumedInfoCb(const GnssEnergyConsumedInfo& gnssEneryConsumed) {
+     *   if (gnssEneryConsumed.flags & ENERGY_CONSUMED_SINCE_FIRST_BOOT_BIT) {
+     *       print("enery consumed since bootup: " +
+     *             gnssEneryConsumed.totalEnergyConsumedSinceFirstBoot);
+     *   }
+     * }
+     * void testEnergyConsumedApi() {
+     *     LocationClientApi *pClient = new LocationClientApi(onCapabilitiesCb);
+     *     if (nullptr == pClient) {
+     *         LOC_LOGe("failed to create LocationClientApi instance");
+     *         return;
+     *     }
+     *
+     *     pClient->getGnssEnergyConsumed(gnssEnergyConsumedInfoCb,
+     *        gnssEnergyConsumedResponseCb);
+     *     //...
+     * }
+     * </code>
+     * </pre>
+     */
+
     /** @brief
         Register/update listener to receive location system info
         that are not tied with positioning session, e.g.: next leap
@@ -2636,7 +2805,48 @@ public:
         */
     void updateLocationSystemInfoListener(LocationSystemInfoCb locSystemInfoCallback,
                                           ResponseCb responseCallback);
-
+    /** @example example7:testRegisterForSystemEventApi
+    * <pre>
+    * <code>
+    *    // Sample Code
+    * static void onCapabilitiesCb(location_client::LocationCapabilitiesMask mask) {
+    *     //...
+    * }
+    * static void onResponseCb(location_client::LocationResponse response) {
+    *     if (response == LOCATION_RESPONSE_SUCCESS) {
+    *         // successfully registered for system info update
+    *         // expecting to receive current leap second and leap second change event
+    *         via onLocationSystemInfoCb()
+    *     } else {
+    *         // failed to register for system info update
+    *         // onLocationSystemInfoCb() will not be invoked
+    *     }
+    * }
+    * static void onLocationSystemInfoCb(const location_client::LocationSystemInfo& systemInfo) {
+    *   if (systemInfo.systemInfoMask & LEAP_SECOND_SYS_INFO_CURRENT_LEAP_SECONDS_BIT) {
+    *       // current leap second info is valid
+    *   }
+    *   if (systemInfo.systemInfoMask & LEAP_SECOND_SYS_INFO_LEAP_SECOND_CHANGE_BIT) {
+    *       // leap second change event info is valid
+    *   }
+    * }
+    * void testRegisterForSystemEventApi() {
+    *     LocationClientApi *pClient = new LocationClientApi(onCapabilitiesCb);
+    *     if (nullptr == pClient) {
+    *         LOC_LOGe("failed to create LocationClientApi instance");
+    *         return;
+    *     }
+    *     // register for system info update
+    *     pClient->updateLocationSystemInfoListener(onLocationSystemInfoCb,
+    *             onResponseCb);
+    *     ...
+    *     // unregister for system info update when the info is no longer needed
+    *     pClient->updateLocationSystemInfoListener(null, null);
+    *     //...
+    * }
+    * </code>
+    * </pre>
+    */
 
     /** @brief
         Get the year of Hardware information.<br/>
