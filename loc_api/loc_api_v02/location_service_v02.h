@@ -63,7 +63,7 @@
  *====*====*====*====*====*====*====*====*====*====*====*====*====*====*====*/
 
 /* This file was generated with Tool version 6.14.7
-   It was generated on: Sun Feb 21 2021 (Spin 0)
+   It was generated on: Fri Jun 18 2021 (Spin 0)
    From IDL File: location_service_v02.idl */
 
 /** @defgroup loc_qmi_consts Constant values defined in the IDL */
@@ -89,11 +89,11 @@ extern "C" {
 /** Major Version Number of the IDL used to generate this file */
 #define LOC_V02_IDL_MAJOR_VERS 0x02
 /** Revision Number of the IDL used to generate this file */
-#define LOC_V02_IDL_MINOR_VERS 0x88
+#define LOC_V02_IDL_MINOR_VERS 0x8F
 /** Major Version Number of the qmi_idl_compiler used to generate this file */
 #define LOC_V02_IDL_TOOL_VERS 0x06
 /** Maximum Defined Message ID */
-#define LOC_V02_MAX_MESSAGE_ID 0x00E2
+#define LOC_V02_MAX_MESSAGE_ID 0x00E4
 /**
     @}
   */
@@ -417,6 +417,102 @@ extern "C" {
 
 /**  Number of INS element size two.    */
 #define QMI_LOC_INS_ELEMENT_SIZE_TWO_V02 2
+
+/**  Max string length of Country field.  */
+#define QMI_LOC_MAX_COUNTRY_STR_LENGTH_V02 2
+
+/**  Max string length of Subdivision A1 field.  */
+#define QMI_LOC_MAX_SUBDIV_A1_STR_LENGTH_V02 32
+
+/**  Max string length of Subdivision A2 field.  */
+#define QMI_LOC_MAX_SUBDIV_A2_STR_LENGTH_V02 32
+
+/**  Max string length of City field.  */
+#define QMI_LOC_MAX_CITY_STR_LENGTH_V02 32
+
+/**  Max string length of City Division field.  */
+#define QMI_LOC_MAX_CITYDIV_STR_LENGTH_V02 32
+
+/**  Max string length of Neighbourhood field.  */
+#define QMI_LOC_MAX_NEIGHBORHOOD_STR_LENGTH_V02 32
+
+/**  Max string length of Street field.  */
+#define QMI_LOC_MAX_STREET_STR_LENGTH_V02 64
+
+/**  Max string length of Leading Street Direction field.  */
+#define QMI_LOC_MAX_LEADING_STREET_DIR_STR_LENGTH_V02 2
+
+/**  Max string length of Trailing Street Suffix field.  */
+#define QMI_LOC_MAX_TRAILING_STREET_SUFFIX_STR_LENGTH_V02 2
+
+/**  Max string length of Street Suffix field.  */
+#define QMI_LOC_MAX_STREET_SUFFIX_STR_LENGTH_V02 16
+
+/**  Max string length of House Number field.  */
+#define QMI_LOC_MAX_HOUSE_NUMBER_STR_LENGTH_V02 16
+
+/**  Max string length of House Number Suffix field.  */
+#define QMI_LOC_MAX_HOUSE_NUMBER_SUFFIX_STR_LENGTH_V02 16
+
+/**  Max string length of Landmark field.  */
+#define QMI_LOC_MAX_LANDMARK_STR_LENGTH_V02 32
+
+/**  Max string length of Additional Location Information field.  */
+#define QMI_LOC_MAX_ADDITIONAL_LOC_INFO_STR_LENGTH_V02 32
+
+/**  Max string length of Floor field.  */
+#define QMI_LOC_MAX_FLOOR_STR_LENGTH_V02 4
+
+/**  Max string length of Name field.  */
+#define QMI_LOC_MAX_NAME_STR_LENGTH_V02 32
+
+/**  Max string length of Postal Code field.  */
+#define QMI_LOC_MAX_POSTAL_CODE_STR_LENGTH_V02 16
+
+/**  Max string length of Positioning method field.  */
+#define QMI_LOC_MAX_POSITIONING_METHOD_STR_LENGTH_V02 16
+
+/**  Max string length of Building field.  */
+#define QMI_LOC_MAX_BUILDING_STR_LENGTH_V02 64
+
+/**  Max string length of Unit field.  */
+#define QMI_LOC_MAX_UNIT_STR_LENGTH_V02 8
+
+/**  Max string length of Room field.  */
+#define QMI_LOC_MAX_ROOM_STR_LENGTH_V02 8
+
+/**  Max string length of Place type field.  */
+#define QMI_LOC_MAX_PLACE_TYPE_STR_LENGTH_V02 16
+
+/**  Max string length of Postal Community type field.  */
+#define QMI_LOC_MAX_POSTAL_COMM_TYPE_STR_LENGTH_V02 32
+
+/**  Max string length of Post Office Box field.  */
+#define QMI_LOC_MAX_POST_OFFICE_BOX_STR_LENGTH_V02 8
+
+/**  Max string length of Additional Code field.  */
+#define QMI_LOC_MAX_ADDITIONAL_CODE_STR_LENGTH_V02 16
+
+/**  Max string length of Seat field.  */
+#define QMI_LOC_MAX_SEAT_STR_LENGTH_V02 8
+
+/**  Max string length of Primary Road field.  */
+#define QMI_LOC_MAX_PRIMARY_ROAD_STR_LENGTH_V02 64
+
+/**  Max string length of Road Section field.  */
+#define QMI_LOC_MAX_ROAD_SECTION_STR_LENGTH_V02 16
+
+/**  Max string length of Road branch field.  */
+#define QMI_LOC_MAX_ROAD_BRANCH_STR_LENGTH_V02 16
+
+/**  Max string length of Road Sub branch field.  */
+#define QMI_LOC_MAX_ROAD_SUB_BRANCH_STR_LENGTH_V02 16
+
+/**  Max string length of Road Pre Modifier field.  */
+#define QMI_LOC_MAX_ROAD_PRE_MODIFIER_STR_LENGTH_V02 16
+
+/**  Max string length of Road Post Modifier field.  */
+#define QMI_LOC_MAX_ROAD_POST_MODIFIER_STR_LENGTH_V02 16
 /**
     @}
   */
@@ -608,7 +704,8 @@ typedef uint64_t qmiLocEventRegMaskT_v02;
 #define QMI_LOC_EVENT_MASK_GNSS_EVENT_REPORT_V02 ((qmiLocEventRegMaskT_v02)0x100000000000ull) /**<  The QMI_LOC_EVENT_REPORT indication. \n  */
 #define QMI_LOC_EVENT_MASK_QUERY_XTRA_INFO_V02 ((qmiLocEventRegMaskT_v02)0x200000000000ull) /**<  Event indication to trigger XTRA config query from the control point. \n */
 #define QMI_LOC_EVENT_MASK_SAP_INS_PARAMETERS_REPORT_V02 ((qmiLocEventRegMaskT_v02)0x400000000000ull) /**<  QMI_LOC_EVENT_SAP_INS_PARAMETERS indication. \n  */
-#define QMI_LOC_EVENT_MASK_LATENCY_INFORMATION_REPORT_V02 ((qmiLocEventRegMaskT_v02)0x800000000000ull) /**<  QMI_LOC_LATENCY_INFORMATION indication.        */
+#define QMI_LOC_EVENT_MASK_LATENCY_INFORMATION_REPORT_V02 ((qmiLocEventRegMaskT_v02)0x800000000000ull) /**<  QMI_LOC_LATENCY_INFORMATION indication.       */
+#define QMI_LOC_EVENT_MASK_PLATFORM_POWER_STATE_CHANGED_V02 ((qmiLocEventRegMaskT_v02)0x0001000000000000ull) /**<  QMI_LOC_EVENT_PLATFORM_POWER_STATE_CHANGED indication.  */
 /** @addtogroup loc_qmi_enums
     @{
   */
@@ -720,6 +817,7 @@ typedef struct {
       - QMI_LOC_EVENT_MASK_QUERY_XTRA_INFO (0x200000000000) --  Event indication to trigger XTRA config query from the control point. \n
       - QMI_LOC_EVENT_MASK_SAP_INS_PARAMETERS_REPORT (0x400000000000) --  QMI_LOC_EVENT_SAP_INS_PARAMETERS indication. \n
       - QMI_LOC_EVENT_MASK_LATENCY_INFORMATION_REPORT (0x800000000000) --  QMI_LOC_LATENCY_INFORMATION indication.
+      - QMI_LOC_EVENT_MASK_PLATFORM_POWER_STATE_CHANGED (0x0001000000000000) --  QMI_LOC_EVENT_PLATFORM_POWER_STATE_CHANGED indication.
 
  Multiple events can be registered by ORing the individual masks and
  sending them in this TLV. Set all unused bits in this mask to 0.
@@ -1098,7 +1196,9 @@ typedef uint32_t qmiLocPosTechMaskT_v02;
 #define QMI_LOC_POS_TECH_MASK_AFLT_V02 ((qmiLocPosTechMaskT_v02)0x00000040) /**<  AFLT was used to generate the fix. \n  */
 #define QMI_LOC_POS_TECH_MASK_HYBRID_V02 ((qmiLocPosTechMaskT_v02)0x00000080) /**<  GNSS and network-provided measurements were used to
         generate the fix. \n  */
-#define QMI_LOC_POS_TECH_MASK_DRE_V02 ((qmiLocPosTechMaskT_v02)0x00000100) /**<  Dead reckoning engine (DRE) was used to generate the fix.  */
+#define QMI_LOC_POS_TECH_MASK_DRE_V02 ((qmiLocPosTechMaskT_v02)0x00000100) /**<  Dead reckoning engine (DRE) was used to generate the fix. \n  */
+#define QMI_LOC_POS_TECH_MASK_INS_V02 ((qmiLocPosTechMaskT_v02)0x00000200) /**<  INS was used to generate the fix. \n  */
+#define QMI_LOC_POS_TECH_MASK_PDR_V02 ((qmiLocPosTechMaskT_v02)0x00000400) /**<  PDR was used to generate the fix.  */
 /** @addtogroup loc_qmi_enums
     @{
   */
@@ -1589,7 +1689,9 @@ typedef struct {
       - QMI_LOC_POS_TECH_MASK_AFLT (0x00000040) --  AFLT was used to generate the fix. \n
       - QMI_LOC_POS_TECH_MASK_HYBRID (0x00000080) --  GNSS and network-provided measurements were used to
         generate the fix. \n
-      - QMI_LOC_POS_TECH_MASK_DRE (0x00000100) --  Dead reckoning engine (DRE) was used to generate the fix.
+      - QMI_LOC_POS_TECH_MASK_DRE (0x00000100) --  Dead reckoning engine (DRE) was used to generate the fix. \n
+      - QMI_LOC_POS_TECH_MASK_INS (0x00000200) --  INS was used to generate the fix. \n
+      - QMI_LOC_POS_TECH_MASK_PDR (0x00000400) --  PDR was used to generate the fix.
  */
 
   /* Optional */
@@ -1912,6 +2014,13 @@ typedef struct {
   /**<   Single-sided maximum time bias uncertainty.\n
        - Units -- Milliseconds
   */
+
+  /* Optional */
+  /*  Data Blob  */
+  uint8_t payload_valid;  /**< Must be set to true if payload is being passed */
+  uint32_t payload_len;  /**< Must be set to # of elements in payload */
+  uint8_t payload[4096];
+  /**<   Data blob payload  */
 }qmiLocEventPositionReportIndMsgT_v02;  /* Message */
 /**
     @}
@@ -3068,6 +3177,19 @@ typedef enum {
     @}
   */
 
+/** @addtogroup loc_qmi_enums
+    @{
+  */
+typedef enum {
+  QMILOCINJECTEDORBITSPECIALFILETYPEENUMT_MIN_ENUM_VAL_V02 = -2147483647, /**< To force a 32 bit signed enum.  Do not change or use*/
+  eQMI_LOC_INJECTED_ORBIT_FILE_XTRA_V02 = 1, /**<  xtra assistance file \n */
+  eQMI_LOC_INJECTED_ORBIT_FILE_NAVIC_V02 = 2, /**<  Navic xtra assistance file  */
+  QMILOCINJECTEDORBITSPECIALFILETYPEENUMT_MAX_ENUM_VAL_V02 = 2147483647 /**< To force a 32 bit signed enum.  Do not change or use*/
+}qmiLocInjectedOrbitSpecialFileTypeEnumT_v02;
+/**
+    @}
+  */
+
 /** @addtogroup loc_qmi_aggregates
     @{
   */
@@ -3096,6 +3218,22 @@ typedef struct {
        secondary, and so on. \n
        A maximum number of three servers can be specified. */
 }qmiLocPredictedOrbitsServerListStructT_v02;  /* Type */
+/**
+    @}
+  */
+
+/** @addtogroup loc_qmi_aggregates
+    @{
+  */
+typedef struct {
+
+  qmiLocInjectedOrbitSpecialFileTypeEnumT_v02 fileType;
+  /**<   Xtra assistance file type. */
+
+  uint32_t downloadInterval;
+  /**<   Download interval of the xtra assistance file. \n
+         - Units -- Minutes  */
+}qmiLocPredictedOrbitsSpecialFileTypeStructT_v02;  /* Type */
 /**
     @}
   */
@@ -3142,6 +3280,12 @@ typedef struct {
   uint32_t updateRate;
   /**<   Update rate for the data type indicated. \n
        - Units -- Seconds  */
+
+  /* Optional */
+  /*  Special File Type Info */
+  uint8_t fileInfo_valid;  /**< Must be set to true if fileInfo is being passed */
+  qmiLocPredictedOrbitsSpecialFileTypeStructT_v02 fileInfo;
+  /**<   File type and download interval information */
 }qmiLocEventInjectPredictedOrbitsReqIndMsgT_v02;  /* Message */
 /**
     @}
@@ -3311,6 +3455,23 @@ typedef struct {
        - 0x00 (FALSE) -- GPS engine is not in E911 mode \n
        - 0x01 (TRUE) -- GPS engine is in E911 mode
    */
+
+  /* Optional */
+  /*  Civic Address Mode */
+  uint8_t civicAddressNeeded_valid;  /**< Must be set to true if civicAddressNeeded is being passed */
+  uint8_t civicAddressNeeded;
+  /**<   Specifies whether the Civic address is needed or not.
+       Values: \n
+       - 0x00 (FALSE) -- Civic Address is not needed \n
+       - 0x01 (TRUE) -- Civic Address is needed
+
+    NOTE: If the civic address is available with the AP, the AP Shall inject
+    the same using the new QMI API QMI_LOC_INJECT_LOCATION_CIVIC_ADDRESS.
+
+        If the civic address is not available, the AP shall NOT use the new QMI API
+    QMI_LOC_INJECT_LOCATION_CIVIC_ADDRESS. The existing DBH injection API should
+        be used to inject hybrid location is available.
+  */
 }qmiLocEventWifiReqIndMsgT_v02;  /* Message */
 /**
     @}
@@ -5381,9 +5542,10 @@ typedef enum {
   eQMI_LOC_POSITION_SRC_TERRESTRIAL_V02 = 4, /**<  Position source is Terrestrial \n */
   eQMI_LOC_POSITION_SRC_GNSS_TERRESTRIAL_HYBRID_V02 = 5, /**<  Position source is GNSS Terrestrial Hybrid \n  */
   eQMI_LOC_POSITION_SRC_OTHER_V02 = 6, /**<  Other sources \n  */
-  eQMI_LOC_POSITION_SRC_DRE_V02 = 7, /**<  Position source is the dead reckoning engine  */
+  eQMI_LOC_POSITION_SRC_DRE_V02 = 7, /**<  Position source is the dead reckoning engine \n  */
   eQMI_LOC_POSITION_SRC_FLP_V02 = 8, /**<  Position source is Fused Location Provider  */
   eQMI_LOC_POSITION_SRC_NLP_V02 = 9, /**<  Position source is Network Location Provider  */
+  eQMI_LOC_POSITION_SRC_FLP_ALE_V02 = 10, /**<  Position source is derived from Source MPSS  */
   QMILOCPOSITIONSRCENUMT_MAX_ENUM_VAL_V02 = 2147483647 /**< To force a 32 bit signed enum.  Do not change or use*/
 }qmiLocPositionSrcEnumT_v02;
 /**
@@ -5548,9 +5710,10 @@ typedef struct {
       - eQMI_LOC_POSITION_SRC_TERRESTRIAL (4) --  Position source is Terrestrial \n
       - eQMI_LOC_POSITION_SRC_GNSS_TERRESTRIAL_HYBRID (5) --  Position source is GNSS Terrestrial Hybrid \n
       - eQMI_LOC_POSITION_SRC_OTHER (6) --  Other sources \n
-      - eQMI_LOC_POSITION_SRC_DRE (7) --  Position source is the dead reckoning engine
+      - eQMI_LOC_POSITION_SRC_DRE (7) --  Position source is the dead reckoning engine \n
       - eQMI_LOC_POSITION_SRC_FLP (8) --  Position source is Fused Location Provider
-      - eQMI_LOC_POSITION_SRC_NLP (9) --  Position source is Network Location Provider  \n
+      - eQMI_LOC_POSITION_SRC_NLP (9) --  Position source is Network Location Provider
+      - eQMI_LOC_POSITION_SRC_FLP_ALE (10) --  Position source is derived from Source MPSS  \n
  If altitude is specified and the altitude source is not specified, the engine
  assumes that the altitude was obtained using the specified position source. \n
  If both altitude and altitude source are specified, the engine assumes
@@ -5714,6 +5877,16 @@ typedef uint64_t qmiLocLockClientMaskT_v02;
 #define QMI_LOC_LOCK_CLIENT_MASK_AFW_V02 ((qmiLocLockClientMaskT_v02)0x00000001ull) /**<  Lock AFW client \n */
 #define QMI_LOC_LOCK_CLIENT_MASK_NFW_V02 ((qmiLocLockClientMaskT_v02)0x00000002ull) /**<  Lock NFW client \n */
 #define QMI_LOC_LOCK_CLIENT_MASK_PRIVILEGED_V02 ((qmiLocLockClientMaskT_v02)0x00000004ull) /**<  Lock privileged client  */
+typedef uint64_t qmiLocClientsMaskT_v02;
+#define QMI_LOC_MASK_UTH_CLIENT_IMS_V02 ((qmiLocClientsMaskT_v02)0x00000001ull) /**<  Lock/Unlock IMS Client \n  */
+#define QMI_LOC_MASK_UTH_CLIENT_SIM_V02 ((qmiLocClientsMaskT_v02)0x00000002ull) /**<  Lock/Unlock SIM Client \n  */
+#define QMI_LOC_MASK_UTH_CLIENT_MDT_V02 ((qmiLocClientsMaskT_v02)0x00000004ull) /**<  Lock/Unlock MDT Client \n  */
+#define QMI_LOC_MASK_UTH_CLIENT_TLOC_V02 ((qmiLocClientsMaskT_v02)0x00000008ull) /**<  Lock/Unlock TLOC Client \n  */
+#define QMI_LOC_MASK_UTH_CLIENT_RLOC_V02 ((qmiLocClientsMaskT_v02)0x00000010ull) /**<  Lock/Unlock RLOC Client \n  */
+#define QMI_LOC_MASK_UTH_CLIENT_V2X_V02 ((qmiLocClientsMaskT_v02)0x00000020ull) /**<  Lock/Unlock V2X Client \n  */
+#define QMI_LOC_MASK_OEM_CLIENT_R1_V02 ((qmiLocClientsMaskT_v02)0x00000040ull) /**<  Lock/Unlock reserved UTH OEM R1 client \n    */
+#define QMI_LOC_MASK_OEM_CLIENT_R2_V02 ((qmiLocClientsMaskT_v02)0x00000080ull) /**<  Lock/Unlock reserved UTH OEM R2 client \n    */
+#define QMI_LOC_MASK_OEM_CLIENT_R3_V02 ((qmiLocClientsMaskT_v02)0x00000100ull) /**<  Lock/Unlock reserved UTH OEM R3 client \n    */
 /** @addtogroup loc_qmi_messages
     @{
   */
@@ -5744,16 +5917,34 @@ typedef struct {
  */
 
   /* Optional */
-  /*  Lock Client */
+  /*  Lock Client (Deprecated) */
   uint8_t lockClient_valid;  /**< Must be set to true if lockClient is being passed */
   qmiLocLockClientMaskT_v02 lockClient;
-  /**<   If specified by the control point, the client(s) are
+  /**<   (Deprecated)
+ If specified by the control point, the client(s) are
  blocked to request position.
  Note: lockClient overwrites lockType
  Values: \n
       - QMI_LOC_LOCK_CLIENT_MASK_AFW (0x00000001) --  Lock AFW client \n
       - QMI_LOC_LOCK_CLIENT_MASK_NFW (0x00000002) --  Lock NFW client \n
       - QMI_LOC_LOCK_CLIENT_MASK_PRIVILEGED (0x00000004) --  Lock privileged client
+ */
+
+  /* Optional */
+  /*  Clients Config   */
+  uint8_t clientsConfig_valid;  /**< Must be set to true if clientsConfig is being passed */
+  qmiLocClientsMaskT_v02 clientsConfig;
+  /**<   Bitmask indicating the Clients location request Lock Configuration \n
+ Valid bitmasks: \n
+      - QMI_LOC_MASK_UTH_CLIENT_IMS (0x00000001) --  Lock/Unlock IMS Client \n
+      - QMI_LOC_MASK_UTH_CLIENT_SIM (0x00000002) --  Lock/Unlock SIM Client \n
+      - QMI_LOC_MASK_UTH_CLIENT_MDT (0x00000004) --  Lock/Unlock MDT Client \n
+      - QMI_LOC_MASK_UTH_CLIENT_TLOC (0x00000008) --  Lock/Unlock TLOC Client \n
+      - QMI_LOC_MASK_UTH_CLIENT_RLOC (0x00000010) --  Lock/Unlock RLOC Client \n
+      - QMI_LOC_MASK_UTH_CLIENT_V2X (0x00000020) --  Lock/Unlock V2X Client \n
+      - QMI_LOC_MASK_OEM_CLIENT_R1 (0x00000040) --  Lock/Unlock reserved UTH OEM R1 client \n
+      - QMI_LOC_MASK_OEM_CLIENT_R2 (0x00000080) --  Lock/Unlock reserved UTH OEM R2 client \n
+      - QMI_LOC_MASK_OEM_CLIENT_R3 (0x00000100) --  Lock/Unlock reserved UTH OEM R3 client \n
  */
 }qmiLocSetEngineLockReqMsgT_v02;  /* Message */
 /**
@@ -5861,14 +6052,32 @@ typedef struct {
  */
 
   /* Optional */
-  /*  Lock Client */
+  /*  Lock Client (Deprecated) */
   uint8_t lockClient_valid;  /**< Must be set to true if lockClient is being passed */
   qmiLocLockClientMaskT_v02 lockClient;
-  /**<   The client(s) who have been locked to request position.
+  /**<   (Deprecated)
+ The client(s) who have been locked to request position.
  Values: \n
       - QMI_LOC_LOCK_CLIENT_MASK_AFW (0x00000001) --  Lock AFW client \n
       - QMI_LOC_LOCK_CLIENT_MASK_NFW (0x00000002) --  Lock NFW client \n
       - QMI_LOC_LOCK_CLIENT_MASK_PRIVILEGED (0x00000004) --  Lock privileged client
+ */
+
+  /* Optional */
+  /*  Clients Config   */
+  uint8_t clientsConfig_valid;  /**< Must be set to true if clientsConfig is being passed */
+  qmiLocClientsMaskT_v02 clientsConfig;
+  /**<   Bitmask indicating the Clients location request Lock Configuration \n
+ Valid bitmasks: \n
+      - QMI_LOC_MASK_UTH_CLIENT_IMS (0x00000001) --  Lock/Unlock IMS Client \n
+      - QMI_LOC_MASK_UTH_CLIENT_SIM (0x00000002) --  Lock/Unlock SIM Client \n
+      - QMI_LOC_MASK_UTH_CLIENT_MDT (0x00000004) --  Lock/Unlock MDT Client \n
+      - QMI_LOC_MASK_UTH_CLIENT_TLOC (0x00000008) --  Lock/Unlock TLOC Client \n
+      - QMI_LOC_MASK_UTH_CLIENT_RLOC (0x00000010) --  Lock/Unlock RLOC Client \n
+      - QMI_LOC_MASK_UTH_CLIENT_V2X (0x00000020) --  Lock/Unlock V2X Client \n
+      - QMI_LOC_MASK_OEM_CLIENT_R1 (0x00000040) --  Lock/Unlock reserved UTH OEM R1 client \n
+      - QMI_LOC_MASK_OEM_CLIENT_R2 (0x00000080) --  Lock/Unlock reserved UTH OEM R2 client \n
+      - QMI_LOC_MASK_OEM_CLIENT_R3 (0x00000100) --  Lock/Unlock reserved UTH OEM R3 client \n
  */
 }qmiLocGetEngineLockIndMsgT_v02;  /* Message */
 /**
@@ -7316,6 +7525,7 @@ typedef struct {
       - QMI_LOC_EVENT_MASK_QUERY_XTRA_INFO (0x200000000000) --  Event indication to trigger XTRA config query from the control point. \n
       - QMI_LOC_EVENT_MASK_SAP_INS_PARAMETERS_REPORT (0x400000000000) --  QMI_LOC_EVENT_SAP_INS_PARAMETERS indication. \n
       - QMI_LOC_EVENT_MASK_LATENCY_INFORMATION_REPORT (0x800000000000) --  QMI_LOC_LATENCY_INFORMATION indication.
+      - QMI_LOC_EVENT_MASK_PLATFORM_POWER_STATE_CHANGED (0x0001000000000000) --  QMI_LOC_EVENT_PLATFORM_POWER_STATE_CHANGED indication.
  */
 }qmiLocGetRegisteredEventsIndMsgT_v02;  /* Message */
 /**
@@ -8421,7 +8631,8 @@ typedef uint64_t qmiLocLppeUpAuxTechMaskT_v02;
 #define QMI_LOC_LPPE_MASK_UP_RESERVED_2_BIT_V02 ((qmiLocLppeUpAuxTechMaskT_v02)0x00000020ull) /**<  Reserved for future use. \n    */
 #define QMI_LOC_LPPE_MASK_UP_RESERVED_3_BIT_V02 ((qmiLocLppeUpAuxTechMaskT_v02)0x00000040ull) /**<  Reserved for future use. \n    */
 #define QMI_LOC_LPPE_MASK_UP_RESERVED_4_BIT_V02 ((qmiLocLppeUpAuxTechMaskT_v02)0x00000080ull) /**<  Reserved for future use \n    */
-#define QMI_LOC_LPPE_MASK_UP_NON_E911_V02 ((qmiLocLppeUpAuxTechMaskT_v02)0x00000100ull) /**<  Enable the LPPe Capabilities for Non E911 NILR user plane sessions.  */
+#define QMI_LOC_LPPE_MASK_UP_NON_E911_V02 ((qmiLocLppeUpAuxTechMaskT_v02)0x00000100ull) /**<  Enable the LPPe Capabilities for Non E911 NILR user plane sessions. \n  */
+#define QMI_LOC_LPPE_MASK_UP_CIV_ADDRESS_V02 ((qmiLocLppeUpAuxTechMaskT_v02)0x00000200ull) /**<  Enable shipping the Civic Address to the server.  */
 typedef uint64_t qmiLocLppeCpAuxTechMaskT_v02;
 #define QMI_LOC_LPPE_MASK_CP_DBH_V02 ((qmiLocLppeCpAuxTechMaskT_v02)0x00000001ull) /**<  Enable Device-Based Hybrid (3D High Accuracy Position) mode on the LPPe control plane.\n  */
 #define QMI_LOC_LPPE_MASK_CP_AP_WIFI_MEASUREMENT_V02 ((qmiLocLppeCpAuxTechMaskT_v02)0x00000002ull) /**<  Enable WLAN AP Measurement mode on the LPPe control plane. \n */
@@ -8431,7 +8642,8 @@ typedef uint64_t qmiLocLppeCpAuxTechMaskT_v02;
 #define QMI_LOC_LPPE_MASK_CP_RESERVED_2_BIT_V02 ((qmiLocLppeCpAuxTechMaskT_v02)0x00000020ull) /**<  Reserved for future use \n    */
 #define QMI_LOC_LPPE_MASK_CP_RESERVED_3_BIT_V02 ((qmiLocLppeCpAuxTechMaskT_v02)0x00000040ull) /**<  Reserved for future use \n    */
 #define QMI_LOC_LPPE_MASK_CP_RESERVED_4_BIT_V02 ((qmiLocLppeCpAuxTechMaskT_v02)0x00000080ull) /**<  Reserved for future use \n    */
-#define QMI_LOC_LPPE_MASK_CP_NON_E911_V02 ((qmiLocLppeCpAuxTechMaskT_v02)0x00000100ull) /**<  Enable the LPPe Capabilities for Non E911 NILR control plane sessions.  */
+#define QMI_LOC_LPPE_MASK_CP_NON_E911_V02 ((qmiLocLppeCpAuxTechMaskT_v02)0x00000100ull) /**<  Enable the LPPe Capabilities for Non E911 NILR control plane sessions. \n  */
+#define QMI_LOC_LPPE_MASK_CP_CIV_ADDRESS_V02 ((qmiLocLppeCpAuxTechMaskT_v02)0x00000200ull) /**<  Enable shipping the Civic Address to the server.  */
 /** @addtogroup loc_qmi_messages
     @{
   */
@@ -8571,7 +8783,8 @@ typedef struct {
       - QMI_LOC_LPPE_MASK_UP_RESERVED_2_BIT (0x00000020) --  Reserved for future use. \n
       - QMI_LOC_LPPE_MASK_UP_RESERVED_3_BIT (0x00000040) --  Reserved for future use. \n
       - QMI_LOC_LPPE_MASK_UP_RESERVED_4_BIT (0x00000080) --  Reserved for future use \n
-      - QMI_LOC_LPPE_MASK_UP_NON_E911 (0x00000100) --  Enable the LPPe Capabilities for Non E911 NILR user plane sessions.
+      - QMI_LOC_LPPE_MASK_UP_NON_E911 (0x00000100) --  Enable the LPPe Capabilities for Non E911 NILR user plane sessions. \n
+      - QMI_LOC_LPPE_MASK_UP_CIV_ADDRESS (0x00000200) --  Enable shipping the Civic Address to the server.
  */
 
   /* Optional */
@@ -8588,7 +8801,8 @@ typedef struct {
       - QMI_LOC_LPPE_MASK_CP_RESERVED_2_BIT (0x00000020) --  Reserved for future use \n
       - QMI_LOC_LPPE_MASK_CP_RESERVED_3_BIT (0x00000040) --  Reserved for future use \n
       - QMI_LOC_LPPE_MASK_CP_RESERVED_4_BIT (0x00000080) --  Reserved for future use \n
-      - QMI_LOC_LPPE_MASK_CP_NON_E911 (0x00000100) --  Enable the LPPe Capabilities for Non E911 NILR control plane sessions.
+      - QMI_LOC_LPPE_MASK_CP_NON_E911 (0x00000100) --  Enable the LPPe Capabilities for Non E911 NILR control plane sessions. \n
+      - QMI_LOC_LPPE_MASK_CP_CIV_ADDRESS (0x00000200) --  Enable shipping the Civic Address to the server.
  */
 
   /* Optional */
@@ -8836,7 +9050,8 @@ typedef struct {
       - QMI_LOC_LPPE_MASK_UP_RESERVED_2_BIT (0x00000020) --  Reserved for future use. \n
       - QMI_LOC_LPPE_MASK_UP_RESERVED_3_BIT (0x00000040) --  Reserved for future use. \n
       - QMI_LOC_LPPE_MASK_UP_RESERVED_4_BIT (0x00000080) --  Reserved for future use \n
-      - QMI_LOC_LPPE_MASK_UP_NON_E911 (0x00000100) --  Enable the LPPe Capabilities for Non E911 NILR user plane sessions.
+      - QMI_LOC_LPPE_MASK_UP_NON_E911 (0x00000100) --  Enable the LPPe Capabilities for Non E911 NILR user plane sessions. \n
+      - QMI_LOC_LPPE_MASK_UP_CIV_ADDRESS (0x00000200) --  Enable shipping the Civic Address to the server.
  */
 
   /* Optional */
@@ -8853,7 +9068,8 @@ typedef struct {
       - QMI_LOC_LPPE_MASK_CP_RESERVED_2_BIT (0x00000020) --  Reserved for future use \n
       - QMI_LOC_LPPE_MASK_CP_RESERVED_3_BIT (0x00000040) --  Reserved for future use \n
       - QMI_LOC_LPPE_MASK_CP_RESERVED_4_BIT (0x00000080) --  Reserved for future use \n
-      - QMI_LOC_LPPE_MASK_CP_NON_E911 (0x00000100) --  Enable the LPPe Capabilities for Non E911 NILR control plane sessions.
+      - QMI_LOC_LPPE_MASK_CP_NON_E911 (0x00000100) --  Enable the LPPe Capabilities for Non E911 NILR control plane sessions. \n
+      - QMI_LOC_LPPE_MASK_CP_CIV_ADDRESS (0x00000200) --  Enable shipping the Civic Address to the server.
  */
 
   /* Optional */
@@ -11304,7 +11520,9 @@ typedef struct {
       - QMI_LOC_POS_TECH_MASK_AFLT (0x00000040) --  AFLT was used to generate the fix. \n
       - QMI_LOC_POS_TECH_MASK_HYBRID (0x00000080) --  GNSS and network-provided measurements were used to
         generate the fix. \n
-      - QMI_LOC_POS_TECH_MASK_DRE (0x00000100) --  Dead reckoning engine (DRE) was used to generate the fix.
+      - QMI_LOC_POS_TECH_MASK_DRE (0x00000100) --  Dead reckoning engine (DRE) was used to generate the fix. \n
+      - QMI_LOC_POS_TECH_MASK_INS (0x00000200) --  INS was used to generate the fix. \n
+      - QMI_LOC_POS_TECH_MASK_PDR (0x00000400) --  PDR was used to generate the fix.
  */
 
   /* Optional */
@@ -11433,6 +11651,14 @@ typedef struct {
       - QMI_LOC_MASK_GNSS_SIGNAL_TYPE_SBAS_L1_CA (0x00020000) --  SBAS L1_CA RF band
       - QMI_LOC_MASK_GNSS_SIGNAL_TYPE_NAVIC_L5 (0x00040000) --  NavIC L5 RF band \n
       - QMI_LOC_MASK_GNSS_SIGNAL_TYPE_BEIDOU_B2A_Q (0x00080000) --  BeiDou B2A_Q RF band  */
+
+  /* Optional */
+  /*  Conformity Index */
+  uint8_t conformityIndex_valid;  /**< Must be set to true if conformityIndex is being passed */
+  float conformityIndex;
+  /**<   Indicates how well the various input data considered for navigation solution conforms to expectations. \n
+       - Range -- 0 (least conforming) to 1 (most conforming)
+  */
 }qmiLocGetBestAvailablePositionIndMsgT_v02;  /* Message */
 /**
     @}
@@ -12526,7 +12752,9 @@ typedef struct {
       - QMI_LOC_POS_TECH_MASK_AFLT (0x00000040) --  AFLT was used to generate the fix. \n
       - QMI_LOC_POS_TECH_MASK_HYBRID (0x00000080) --  GNSS and network-provided measurements were used to
         generate the fix. \n
-      - QMI_LOC_POS_TECH_MASK_DRE (0x00000100) --  Dead reckoning engine (DRE) was used to generate the fix.
+      - QMI_LOC_POS_TECH_MASK_DRE (0x00000100) --  Dead reckoning engine (DRE) was used to generate the fix. \n
+      - QMI_LOC_POS_TECH_MASK_INS (0x00000200) --  INS was used to generate the fix. \n
+      - QMI_LOC_POS_TECH_MASK_PDR (0x00000400) --  PDR was used to generate the fix.
  */
 
   uint64_t timestampUtc;
@@ -12810,6 +13038,8 @@ typedef struct {
        Values: \n
        - 0x01 (TRUE) -- GPS engine is in E911 mode \n
        - 0x00 (FALSE) -- GPS engine is not in E911 mode
+
+       Note: e911Mode shall be set as TRUE for Non-E911 Wifi Ap injections.
     */
 }qmiLocEventInjectWifiApDataReqIndMsgT_v02;  /* Message */
 /**
@@ -14910,6 +15140,13 @@ typedef struct {
   uint8_t maxSubSeqNum_valid;  /**< Must be set to true if maxSubSeqNum is being passed */
   uint8_t maxSubSeqNum;
   /**<   Maximum number of sub-sequence numbers for a specified sequence number. */
+
+  /* Optional */
+  /*  Data Blob  */
+  uint8_t payload_valid;  /**< Must be set to true if payload is being passed */
+  uint32_t payload_len;  /**< Must be set to # of elements in payload */
+  uint8_t payload[2048];
+  /**<   Data blob payload  */
 }qmiLocEventGnssSvMeasInfoIndMsgT_v02;  /* Message */
 /**
     @}
@@ -16621,9 +16858,10 @@ typedef struct {
       - eQMI_LOC_POSITION_SRC_TERRESTRIAL (4) --  Position source is Terrestrial \n
       - eQMI_LOC_POSITION_SRC_GNSS_TERRESTRIAL_HYBRID (5) --  Position source is GNSS Terrestrial Hybrid \n
       - eQMI_LOC_POSITION_SRC_OTHER (6) --  Other sources \n
-      - eQMI_LOC_POSITION_SRC_DRE (7) --  Position source is the dead reckoning engine
+      - eQMI_LOC_POSITION_SRC_DRE (7) --  Position source is the dead reckoning engine \n
       - eQMI_LOC_POSITION_SRC_FLP (8) --  Position source is Fused Location Provider
       - eQMI_LOC_POSITION_SRC_NLP (9) --  Position source is Network Location Provider
+      - eQMI_LOC_POSITION_SRC_FLP_ALE (10) --  Position source is derived from Source MPSS
  */
 
   /* Optional */
@@ -17745,6 +17983,12 @@ typedef struct {
  Values: \n
       - eQMI_LOC_XTRA_DATA (0) --  Default is XTRA format.
  */
+
+  /* Optional */
+  /*  Special File Type Info */
+  uint8_t fileInfo_valid;  /**< Must be set to true if fileInfo is being passed */
+  qmiLocPredictedOrbitsSpecialFileTypeStructT_v02 fileInfo;
+  /**<   File type and download interval information */
 }qmiLocInjectXtraDataReqMsgT_v02;  /* Message */
 /**
     @}
@@ -17880,6 +18124,8 @@ typedef enum {
   eQMI_LOC_SUPPORTED_FEATURE_EDGNSS_V02 = 13, /**<  Support enhanced DGNSS  */
   eQMI_LOC_SUPPORTED_FEATURE_MULTIBAND_CONFIG_V02 = 14, /**<  Support the multiband GNSS configuration feature  */
   eQMI_LOC_SUPPORTED_FEATURE_QMI_AGNSS_CONFIG_DISABLED_V02 = 15, /**<  Support the AGNSS configuration for DSDA   */
+  eQMI_LOC_SUPPORTED_FEATURE_MULTIPLE_ATTRIBUTION_APPS_V02 = 16, /**<  Support the Multiple Attribution Apps(UTH clients Lock control) feature    */
+  eQMI_LOC_SUPPORTED_FEATURE_FLP_NLP_SOURCE_V02 = 17, /**<  Support the FLP, NLP Z-Source provider feature    */
   QMILOCSUPPORTEDFEATUREENUMT_MAX_ENUM_VAL_V02 = 2147483647 /**< To force a 32 bit signed enum.  Do not change or use*/
 }qmiLocSupportedFeatureEnumT_v02;
 /**
@@ -17895,6 +18141,8 @@ typedef uint64_t qmiLocFeaturesStatusMaskT_v02;
 #define QMI_LOC_FEATURE_STATUS_TIME_FREQUENCY_V02 ((qmiLocFeaturesStatusMaskT_v02)0x00000020ull) /**<  Time and Frequency status.\n  */
 #define QMI_LOC_FEATURE_STATUS_TIME_UNCERTAINTY_V02 ((qmiLocFeaturesStatusMaskT_v02)0x00000040ull) /**<  Time Uncertainty  status. \n */
 #define QMI_LOC_FEATURE_STATUS_CLOCK_ESTIMATE_V02 ((qmiLocFeaturesStatusMaskT_v02)0x00000080ull) /**<  Clock Estimate status. \n */
+#define QMI_LOC_FEATURE_STATUS_DGNSS_V02 ((qmiLocFeaturesStatusMaskT_v02)0x00000100ull) /**<  DGNSS feature status. \n */
+#define QMI_LOC_FEATURE_STATUS_QPPE_V02 ((qmiLocFeaturesStatusMaskT_v02)0x00000200ull) /**<  QPPE feature status.  */
 /** @addtogroup loc_qmi_messages
     @{
   */
@@ -17950,6 +18198,8 @@ typedef struct {
       - QMI_LOC_FEATURE_STATUS_TIME_FREQUENCY (0x00000020) --  Time and Frequency status.\n
       - QMI_LOC_FEATURE_STATUS_TIME_UNCERTAINTY (0x00000040) --  Time Uncertainty  status. \n
       - QMI_LOC_FEATURE_STATUS_CLOCK_ESTIMATE (0x00000080) --  Clock Estimate status. \n
+      - QMI_LOC_FEATURE_STATUS_DGNSS (0x00000100) --  DGNSS feature status. \n
+      - QMI_LOC_FEATURE_STATUS_QPPE (0x00000200) --  QPPE feature status.
  */
 }qmiLocGetSupportedFeatureIndMsgT_v02;  /* Message */
 /**
@@ -18634,6 +18884,41 @@ typedef struct {
   /*  MP XTRA Version */
   uint8_t mpVersion_valid;  /**< Must be set to true if mpVersion is being passed */
   qmiLocVersionStructT_v02 mpVersion;
+
+  /* Optional */
+  /*  Gnss Usable Constellation Config */
+  uint8_t usableConstellationConfig_valid;  /**< Must be set to true if usableConstellationConfig is being passed */
+  qmiLocGNSSConstellEnumT_v02 usableConstellationConfig;
+
+  /* Optional */
+  /*  Gnss Forced Enable Config */
+  uint8_t forcedEnableConfig_valid;  /**< Must be set to true if forcedEnableConfig is being passed */
+  qmiLocGNSSConstellEnumT_v02 forcedEnableConfig;
+
+  /* Optional */
+  /*  Gnss Multiband Enabled */
+  uint8_t multibandEnabled_valid;  /**< Must be set to true if multibandEnabled is being passed */
+  uint8_t multibandEnabled;
+
+  /* Optional */
+  /*  XTRA File Version */
+  uint8_t xtraFileVersion_valid;  /**< Must be set to true if xtraFileVersion is being passed */
+  qmiLocVersionStructT_v02 xtraFileVersion;
+
+  /* Optional */
+  /*  SIM MCC(Mobile Country Code) Value */
+  uint8_t mccPrimarySimSlot_valid;  /**< Must be set to true if mccPrimarySimSlot is being passed */
+  uint16_t mccPrimarySimSlot;
+
+  /* Optional */
+  /*  SIM MCC(Mobile Country Code) Value */
+  uint8_t mccSecondarySimSlot_valid;  /**< Must be set to true if mccSecondarySimSlot is being passed */
+  uint16_t mccSecondarySimSlot;
+
+  /* Optional */
+  /*  SIM MCC(Mobile Country Code) Value */
+  uint8_t mccTertiarySimSlot_valid;  /**< Must be set to true if mccTertiarySimSlot is being passed */
+  uint16_t mccTertiarySimSlot;
 }qmiLocQueryXtraInfoIndMsgT_v02;  /* Message */
 /**
     @}
@@ -21185,6 +21470,8 @@ typedef struct {
       - QMI_LOC_FEATURE_STATUS_TIME_FREQUENCY (0x00000020) --  Time and Frequency status.\n
       - QMI_LOC_FEATURE_STATUS_TIME_UNCERTAINTY (0x00000040) --  Time Uncertainty  status. \n
       - QMI_LOC_FEATURE_STATUS_CLOCK_ESTIMATE (0x00000080) --  Clock Estimate status. \n
+      - QMI_LOC_FEATURE_STATUS_DGNSS (0x00000100) --  DGNSS feature status. \n
+      - QMI_LOC_FEATURE_STATUS_QPPE (0x00000200) --  QPPE feature status.
  */
 }qmiLocEventReportIndMsgT_v02;  /* Message */
 /**
@@ -21342,7 +21629,12 @@ typedef enum {
   eQMI_LOC_SIM_V02 = 3, /**<  SIM requests the location \n  */
   eQMI_LOC_MDT_V02 = 4, /**<  MDT requests the location \n  */
   eQMI_LOC_TLOC_V02 = 5, /**<  Trusted location requests the location \n */
-  eQMI_LOC_OTHER_V02 = 6, /**<  Other protocol stack requests the location  */
+  eQMI_LOC_OTHER_V02 = 6, /**<  Other protocol stack requests the location \n  */
+  eQMI_LOC_RLOC_V02 = 7, /**<  Robust Location Client requests the location  \n  */
+  eQMI_LOC_V2X_V02 = 8, /**<  V2X Client requests the location \n  */
+  eQMI_LOC_R1_V02 = 9, /**<  Reserved UTH OEM Client 1 requests the location  \n  */
+  eQMI_LOC_R2_V02 = 10, /**<  Reserved UTH OEM Client 2 requests the location  \n  */
+  eQMI_LOC_R3_V02 = 11, /**<  Reserved UTH OEM Client 3 requests the location    */
   QMILOCREQUESTPROTOCOLENUMT_MAX_ENUM_VAL_V02 = 2147483647 /**< To force a 32 bit signed enum.  Do not change or use*/
 }qmiLocRequestProtocolEnumT_v02;
 /**
@@ -21409,7 +21701,12 @@ typedef struct {
       - eQMI_LOC_SIM (3) --  SIM requests the location \n
       - eQMI_LOC_MDT (4) --  MDT requests the location \n
       - eQMI_LOC_TLOC (5) --  Trusted location requests the location \n
-      - eQMI_LOC_OTHER (6) --  Other protocol stack requests the location
+      - eQMI_LOC_OTHER (6) --  Other protocol stack requests the location \n
+      - eQMI_LOC_RLOC (7) --  Robust Location Client requests the location  \n
+      - eQMI_LOC_V2X (8) --  V2X Client requests the location \n
+      - eQMI_LOC_R1 (9) --  Reserved UTH OEM Client 1 requests the location  \n
+      - eQMI_LOC_R2 (10) --  Reserved UTH OEM Client 2 requests the location  \n
+      - eQMI_LOC_R3 (11) --  Reserved UTH OEM Client 3 requests the location
  */
 
   /* Mandatory */
@@ -22217,12 +22514,42 @@ typedef struct {
   */
 /** Indication Message; Requests the control point to query XTRA information. */
 typedef struct {
-  /* This element is a placeholder to prevent the declaration of
-     an empty struct.  DO NOT USE THIS FIELD UNDER ANY CIRCUMSTANCE */
-  char __placeholder;
-}qmiLocEventQueryXtraInfoReqIndMsgT_v02;
 
-  /* Message */
+  /* Optional */
+  /*  Gnss Usable Constellation Config */
+  uint8_t usableConstellationConfig_valid;  /**< Must be set to true if usableConstellationConfig is being passed */
+  qmiLocGNSSConstellEnumT_v02 usableConstellationConfig;
+
+  /* Optional */
+  /*  Gnss Forced Enable Config */
+  uint8_t forcedEnableConfig_valid;  /**< Must be set to true if forcedEnableConfig is being passed */
+  qmiLocGNSSConstellEnumT_v02 forcedEnableConfig;
+
+  /* Optional */
+  /*  Gnss Multiband Enabled */
+  uint8_t multibandEnabled_valid;  /**< Must be set to true if multibandEnabled is being passed */
+  uint8_t multibandEnabled;
+
+  /* Optional */
+  /*  XTRA File Version */
+  uint8_t xtraFileVersion_valid;  /**< Must be set to true if xtraFileVersion is being passed */
+  qmiLocVersionStructT_v02 xtraFileVersion;
+
+  /* Optional */
+  /*  SIM MCC(Mobile Country Code) Value */
+  uint8_t mccPrimarySimSlot_valid;  /**< Must be set to true if mccPrimarySimSlot is being passed */
+  uint16_t mccPrimarySimSlot;
+
+  /* Optional */
+  /*  SIM MCC(Mobile Country Code) Value */
+  uint8_t mccSecondarySimSlot_valid;  /**< Must be set to true if mccSecondarySimSlot is being passed */
+  uint16_t mccSecondarySimSlot;
+
+  /* Optional */
+  /*  SIM MCC(Mobile Country Code) Value */
+  uint8_t mccTertiarySimSlot_valid;  /**< Must be set to true if mccTertiarySimSlot is being passed */
+  uint16_t mccTertiarySimSlot;
+}qmiLocEventQueryXtraInfoReqIndMsgT_v02;  /* Message */
 /**
     @}
   */
@@ -22936,6 +23263,441 @@ typedef struct {
     @}
   */
 
+/** @addtogroup loc_qmi_messages
+    @{
+  */
+/** Request Message; Injects the Civic Address. */
+typedef struct {
+
+  /* Optional */
+  /*  Latitude */
+  uint8_t latitude_valid;  /**< Must be set to true if latitude is being passed */
+  double latitude;
+  /**<   Latitude (specified in WGS84 datum).\n
+        - Units -- Degrees \n
+        - Range -- -90.0 to 90.0 \n
+
+        Note: Positive values indicate northern latitude,
+        Negative values indicate southern latitude
+   */
+
+  /* Optional */
+  /*  Longitude */
+  uint8_t longitude_valid;  /**< Must be set to true if longitude is being passed */
+  double longitude;
+  /**<   Latitude (specified in WGS84 datum).\n
+        - Units -- Degrees \n
+        - Range -- -180.0 to 180.0 \n
+
+        Note: Positive values indicate eastern longitude,
+        Negative values indicate western longitude
+   */
+
+  /* Optional */
+  /*  Horizontal Position Uncertainty */
+  uint8_t horUncCircular_valid;  /**< Must be set to true if horUncCircular is being passed */
+  float horUncCircular;
+  /**<   Horizontal position uncertainty (circular).\n
+        - Units -- Meters
+   */
+
+  /* Optional */
+  /*  Horizontal Confidence */
+  uint8_t horConfidence_valid;  /**< Must be set to true if horConfidence is being passed */
+  uint8_t horConfidence;
+  /**<   Horizontal confidence, as defined by ETSI TS 101 109\n
+        - Units -- Percent (1 to 99)\n
+        - 0, 101 to 255 -- invalid value\n
+        - If 100 is received, reinterpret to 99 \n
+
+        Note: This field must be specified together with horizontal uncertainty.
+        If not specified when horUncCircular is set, the default value is 50.
+   */
+
+  /* Optional */
+  /*  Altitude w.r.t Ellipsoid */
+  uint8_t altitudeWrtEllipsoid_valid;  /**< Must be set to true if altitudeWrtEllipsoid is being passed */
+  float altitudeWrtEllipsoid;
+  /**<   Altitude with respect to the WGS84 ellipsoid.\n
+        - Units -- Meters
+        - Positive = height
+        - Negative = depth
+   */
+
+  /* Optional */
+  /*  Altitude w.r.t Mean sea Level */
+  uint8_t altitudeWrtMeanSeaLevel_valid;  /**< Must be set to true if altitudeWrtMeanSeaLevel is being passed */
+  float altitudeWrtMeanSeaLevel;
+  /**<   Altitude with respect to mean sea level. \n
+        - Units -- Meters
+   */
+
+  /* Optional */
+  /*  Vertical uncertainty */
+  uint8_t vertUnc_valid;  /**< Must be set to true if vertUnc is being passed */
+  float vertUnc;
+  /**<   Vertical uncertainty; mandatory when either altitudeWrtEllipsoid
+        or altitudeWrtMeanSeaLevel is specified. \n
+        - Units -- Meters
+   */
+
+  /* Optional */
+  /*  Vertical Confidence */
+  uint8_t vertConfidence_valid;  /**< Must be set to true if vertConfidence is being passed */
+  uint8_t vertConfidence;
+  /**<   Vertical confidence, as defined by ETSI TS 101 109. \n
+        - Units -- Percent (0-99)\n
+        - 0 -- invalid value \n
+        - 100 to 256 -- not used \n
+        - If 100 is received, reinterpret to 99 \n
+
+        Note: This field must be specified together with the vertical uncertainty.
+        If not specified, the default value is 50.
+    */
+
+  /* Optional */
+  /*  Altitude Source */
+  uint8_t source_valid;  /**< Must be set to true if source is being passed */
+  qmiLocAltSrcEnumT_v02 source;
+  /**<   Specifies the source of the altitude.
+ Values: \n
+      - eQMI_LOC_ALT_SRC_UNKNOWN (0) --  Source is unknown \n
+      - eQMI_LOC_ALT_SRC_GPS (1) --  GPS is the source \n
+      - eQMI_LOC_ALT_SRC_CELL_ID (2) --  Cell ID provided the source \n
+      - eQMI_LOC_ALT_SRC_ENHANCED_CELL_ID (3) --  Source is enhanced cell ID \n
+      - eQMI_LOC_ALT_SRC_WIFI (4) --  Wi-Fi is the source \n
+      - eQMI_LOC_ALT_SRC_TERRESTRIAL (5) --  Terrestrial source \n
+      - eQMI_LOC_ALT_SRC_TERRESTRIAL_HYBRID (6) --  Hybrid terrestrial source \n
+      - eQMI_LOC_ALT_SRC_ALTITUDE_DATABASE (7) --  Altitude database is the source \n
+      - eQMI_LOC_ALT_SRC_BAROMETRIC_ALTIMETER (8) --  Barometric altimeter is the source \n
+      - eQMI_LOC_ALT_SRC_OTHER (9) --  Other sources
+ */
+
+  /* Optional */
+  /*  UTC timestamp */
+  uint8_t timestampUtc_valid;  /**< Must be set to true if timestampUtc is being passed */
+  uint64_t timestampUtc;
+  /**<   UTC timestamp. \n
+        - Units -- Milliseconds (since Jan. 1, 1970)
+   */
+
+  /* Optional */
+  /*  Position age */
+  uint8_t timestampAge_valid;  /**< Must be set to true if timestampAge is being passed */
+  int32_t timestampAge;
+  /**<   Position age, which is an estimate of how long ago this fix was made. \n
+        - Units -- Milliseconds
+   */
+
+  /* Optional */
+  /*  Position Source */
+  uint8_t positionSrc_valid;  /**< Must be set to true if positionSrc is being passed */
+  qmiLocPositionSrcEnumT_v02 positionSrc;
+  /**<   Source from which this position was obtained.
+ Values: \n
+      - eQMI_LOC_POSITION_SRC_GNSS (0) --  Position source is GNSS \n
+      - eQMI_LOC_POSITION_SRC_CELLID (1) --  Position source is Cell ID \n
+      - eQMI_LOC_POSITION_SRC_ENH_CELLID (2) --  Position source is Enhanced Cell ID \n
+      - eQMI_LOC_POSITION_SRC_WIFI (3) --  Position source is Wi-Fi \n
+      - eQMI_LOC_POSITION_SRC_TERRESTRIAL (4) --  Position source is Terrestrial \n
+      - eQMI_LOC_POSITION_SRC_GNSS_TERRESTRIAL_HYBRID (5) --  Position source is GNSS Terrestrial Hybrid \n
+      - eQMI_LOC_POSITION_SRC_OTHER (6) --  Other sources \n
+      - eQMI_LOC_POSITION_SRC_DRE (7) --  Position source is the dead reckoning engine \n
+      - eQMI_LOC_POSITION_SRC_FLP (8) --  Position source is Fused Location Provider
+      - eQMI_LOC_POSITION_SRC_NLP (9) --  Position source is Network Location Provider
+      - eQMI_LOC_POSITION_SRC_FLP_ALE (10) --  Position source is derived from Source MPSS
+
+ If altitude is specified and the altitude source is not specified, the engine
+ assumes that the altitude was obtained using the specified position source. \n
+ If both altitude and altitude source are specified, the engine assumes
+ that only latitude and longitude were obtained using the specified position source.
+
+ */
+
+  /* Optional */
+  /*  Country */
+  uint8_t country_valid;  /**< Must be set to true if country is being passed */
+  char country[QMI_LOC_MAX_COUNTRY_STR_LENGTH_V02 + 1];
+  /**<   The country is identified by the two-letter ISO 3166 code. E.g. US. \n
+       - Type -- NULL-terminated string
+   */
+
+  /* Optional */
+  /*  Subdivision A1 */
+  uint8_t subdivA1_valid;  /**< Must be set to true if subdivA1 is being passed */
+  char subdivA1[QMI_LOC_MAX_SUBDIV_A1_STR_LENGTH_V02 + 1];
+  /**<   national subdivisions (state, region, province, prefecture). E.g. New York. \n
+       - Type -- NULL-terminated string
+   */
+
+  /* Optional */
+  /*  Subdivision A2 */
+  uint8_t subdivA2_valid;  /**< Must be set to true if subdivA2 is being passed */
+  char subdivA2[QMI_LOC_MAX_SUBDIV_A2_STR_LENGTH_V02 + 1];
+  /**<   county, parish, gun (JP), district (IN), E.g.  King County. \n
+       - Type -- NULL-terminated string
+   */
+
+  /* Optional */
+  /*  City */
+  uint8_t city_valid;  /**< Must be set to true if city is being passed */
+  char city[QMI_LOC_MAX_CITY_STR_LENGTH_V02 + 1];
+  /**<   city, township, shi (JP). E.g. New York. \n
+       - Type -- NULL-terminated string
+   */
+
+  /* Optional */
+  /*  City Division */
+  uint8_t cityDiv_valid;  /**< Must be set to true if cityDiv is being passed */
+  char cityDiv[QMI_LOC_MAX_CITYDIV_STR_LENGTH_V02 + 1];
+  /**<   city division, borough, city district, ward, chou (JP). E.g. Manhattan \n
+       - Type -- NULL-terminated string
+   */
+
+  /* Optional */
+  /*  Neighborhood */
+  uint8_t neighborhood_valid;  /**< Must be set to true if neighborhood is being passed */
+  char neighborhood[QMI_LOC_MAX_NEIGHBORHOOD_STR_LENGTH_V02 + 1];
+  /**<   neighborhood, block. E.g. Morningside Heights \n
+       - Type -- NULL-terminated string
+   */
+
+  /* Optional */
+  /*  Street */
+  uint8_t street_valid;  /**< Must be set to true if street is being passed */
+  char street[QMI_LOC_MAX_STREET_STR_LENGTH_V02 + 1];
+  /**<   street. E.g. Broadway \n
+       - Type -- NULL-terminated string
+   */
+
+  /* Optional */
+  /*  Leading Street Direction */
+  uint8_t leadingStreetDirection_valid;  /**< Must be set to true if leadingStreetDirection is being passed */
+  char leadingStreetDirection[QMI_LOC_MAX_LEADING_STREET_DIR_STR_LENGTH_V02 + 1];
+  /**<   Leading street direction. E.g. N, W \n
+       - Type -- NULL-terminated string
+   */
+
+  /* Optional */
+  /*  Trailing Street Suffix */
+  uint8_t trailingStreetSuffix_valid;  /**< Must be set to true if trailingStreetSuffix is being passed */
+  char trailingStreetSuffix[QMI_LOC_MAX_TRAILING_STREET_SUFFIX_STR_LENGTH_V02 + 1];
+  /**<   Trailing street suffix. E.g. SW \n
+       - Type -- NULL-terminated string
+   */
+
+  /* Optional */
+  /*  Street Suffix */
+  uint8_t streetSuffix_valid;  /**< Must be set to true if streetSuffix is being passed */
+  char streetSuffix[QMI_LOC_MAX_STREET_SUFFIX_STR_LENGTH_V02 + 1];
+  /**<   Street suffix. E.g. Avenue, Platz, Street \n
+       - Type -- NULL-terminated string
+   */
+
+  /* Optional */
+  /*  House Number */
+  uint8_t houseNumber_valid;  /**< Must be set to true if houseNumber is being passed */
+  char houseNumber[QMI_LOC_MAX_HOUSE_NUMBER_STR_LENGTH_V02 + 1];
+  /**<   House number, numeric part only. E.g. 123 \n
+       - Type -- NULL-terminated string
+   */
+
+  /* Optional */
+  /*  House Number Suffix */
+  uint8_t houserNumberSuffix_valid;  /**< Must be set to true if houserNumberSuffix is being passed */
+  char houserNumberSuffix[QMI_LOC_MAX_HOUSE_NUMBER_SUFFIX_STR_LENGTH_V02 + 1];
+  /**<   House number suffix. E.2. A, 1/2 \n
+       - Type -- NULL-terminated string
+   */
+
+  /* Optional */
+  /*  Landmark */
+  uint8_t landmark_valid;  /**< Must be set to true if landmark is being passed */
+  char landmark[QMI_LOC_MAX_LANDMARK_STR_LENGTH_V02 + 1];
+  /**<   Landmark or vanity address. E.g. Low Library \n
+       - Type -- NULL-terminated string
+   */
+
+  /* Optional */
+  /*  Additional Location Information */
+  uint8_t additionalLocInfo_valid;  /**< Must be set to true if additionalLocInfo is being passed */
+  char additionalLocInfo[QMI_LOC_MAX_ADDITIONAL_LOC_INFO_STR_LENGTH_V02 + 1];
+  /**<   Additional location information E.g. Room 543 \n
+       - Type -- NULL-terminated string
+   */
+
+  /* Optional */
+  /*  Floor */
+  uint8_t floor_valid;  /**< Must be set to true if floor is being passed */
+  char floor[QMI_LOC_MAX_FLOOR_STR_LENGTH_V02 + 1];
+  /**<   Floor E.g. 5 \n
+       - Type -- NULL-terminated string
+   */
+
+  /* Optional */
+  /*  Name */
+  uint8_t name_valid;  /**< Must be set to true if name is being passed */
+  char name[QMI_LOC_MAX_NAME_STR_LENGTH_V02 + 1];
+  /**<   Name (residence, business or office occupant) E.g. Joe Barbershop \n
+       - Type -- NULL-terminated string
+   */
+
+  /* Optional */
+  /*  Postal Code */
+  uint8_t postalCode_valid;  /**< Must be set to true if postalCode is being passed */
+  char postalCode[QMI_LOC_MAX_POSTAL_CODE_STR_LENGTH_V02 + 1];
+  /**<   Postal code E.g. 10027-0401 \n
+       - Type -- NULL-terminated string
+   */
+
+  /* Optional */
+  /*  Positioning Method */
+  uint8_t positioningMethod_valid;  /**< Must be set to true if positioningMethod is being passed */
+  char positioningMethod[QMI_LOC_MAX_POSITIONING_METHOD_STR_LENGTH_V02 + 1];
+  /**<   Positioning Method. E.g. A-GPS derived. \n
+       - Type -- NULL-terminated string
+   */
+
+  /* Optional */
+  /*  Building */
+  uint8_t building_valid;  /**< Must be set to true if building is being passed */
+  char building[QMI_LOC_MAX_BUILDING_STR_LENGTH_V02 + 1];
+  /**<   Building (structure) e.g. Hope Theater. \n
+       - Type -- NULL-terminated string
+   */
+
+  /* Optional */
+  /*  Unit */
+  uint8_t unit_valid;  /**< Must be set to true if unit is being passed */
+  char unit[QMI_LOC_MAX_UNIT_STR_LENGTH_V02 + 1];
+  /**<   Apartment/suite E.g. 12a \n
+       - Type -- NULL-terminated string
+   */
+
+  /* Optional */
+  /*  Room */
+  uint8_t room_valid;  /**< Must be set to true if room is being passed */
+  char room[QMI_LOC_MAX_ROOM_STR_LENGTH_V02 + 1];
+  /**<   Room E.g. 450F \n
+       - Type -- NULL-terminated string
+   */
+
+  /* Optional */
+  /*  Place Type */
+  uint8_t placeType_valid;  /**< Must be set to true if placeType is being passed */
+  char placeType[QMI_LOC_MAX_PLACE_TYPE_STR_LENGTH_V02 + 1];
+  /**<   Place-type E.g. office \n
+       - Type -- NULL-terminated string
+   */
+
+  /* Optional */
+  /*  Postal Community Name */
+  uint8_t postalCommunityName_valid;  /**< Must be set to true if postalCommunityName is being passed */
+  char postalCommunityName[QMI_LOC_MAX_POSTAL_COMM_TYPE_STR_LENGTH_V02 + 1];
+  /**<   Postal community name E.g. Leonia \n
+       - Type -- NULL-terminated string
+   */
+
+  /* Optional */
+  /*  Post Office Box */
+  uint8_t poBox_valid;  /**< Must be set to true if poBox is being passed */
+  char poBox[QMI_LOC_MAX_POST_OFFICE_BOX_STR_LENGTH_V02 + 1];
+  /**<   Post Office Box (p. O Box). E.g. U40 \n
+       - Type -- NULL-terminated string
+   */
+
+  /* Optional */
+  /*  Additional Code */
+  uint8_t additionalCode_valid;  /**< Must be set to true if additionalCode is being passed */
+  char additionalCode[QMI_LOC_MAX_ADDITIONAL_CODE_STR_LENGTH_V02 + 1];
+  /**<   Additional Code e.g. 132030000003 \n
+       - Type -- NULL-terminated string
+   */
+
+  /* Optional */
+  /*  Seat */
+  uint8_t seat_valid;  /**< Must be set to true if seat is being passed */
+  char seat[QMI_LOC_MAX_SEAT_STR_LENGTH_V02 + 1];
+  /**<   Seat (desk, cubicle, workstation) E.g. WS 181 \n
+       - Type -- NULL-terminated string
+   */
+
+  /* Optional */
+  /*  Primary Road */
+  uint8_t primaryRoad_valid;  /**< Must be set to true if primaryRoad is being passed */
+  char primaryRoad[QMI_LOC_MAX_PRIMARY_ROAD_STR_LENGTH_V02 + 1];
+  /**<   Primary road or street E.g. Broadway. \n
+       - Type -- NULL-terminated string
+   */
+
+  /* Optional */
+  /*  Road Section */
+  uint8_t roadSection_valid;  /**< Must be set to true if roadSection is being passed */
+  char roadSection[QMI_LOC_MAX_ROAD_SECTION_STR_LENGTH_V02 + 1];
+  /**<   Road section E.g. 14 \n
+       - Type -- NULL-terminated string
+   */
+
+  /* Optional */
+  /*  Road Branch */
+  uint8_t roadBranch_valid;  /**< Must be set to true if roadBranch is being passed */
+  char roadBranch[QMI_LOC_MAX_ROAD_BRANCH_STR_LENGTH_V02 + 1];
+  /**<   Road branch E.g. Lane 7 \n
+       - Type -- NULL-terminated string
+   */
+
+  /* Optional */
+  /*  Road Sub Branch */
+  uint8_t roadSubBranch_valid;  /**< Must be set to true if roadSubBranch is being passed */
+  char roadSubBranch[QMI_LOC_MAX_ROAD_SUB_BRANCH_STR_LENGTH_V02 + 1];
+  /**<   Road sub-branch E.g. Alley 8 \n
+       - Type -- NULL-terminated string
+   */
+
+  /* Optional */
+  /*  Road Pre Modifier */
+  uint8_t roadPreModifier_valid;  /**< Must be set to true if roadPreModifier is being passed */
+  char roadPreModifier[QMI_LOC_MAX_ROAD_PRE_MODIFIER_STR_LENGTH_V02 + 1];
+  /**<   Road Pre modifier E.g. Old \n
+       - Type -- NULL-terminated string
+   */
+
+  /* Optional */
+  /*  Road Post Modifier */
+  uint8_t roadPostModifier_valid;  /**< Must be set to true if roadPostModifier is being passed */
+  char roadPostModifier[QMI_LOC_MAX_ROAD_POST_MODIFIER_STR_LENGTH_V02 + 1];
+  /**<   Road Post Modifier E.g. Extended \n
+       - Type -- NULL-terminated string
+   */
+}qmiLocInjectLocationCivicAddressReqMsgT_v02;  /* Message */
+/**
+    @}
+  */
+
+/** @addtogroup loc_qmi_messages
+    @{
+  */
+/** Indication Message; Sends the GNSS engine power state issued to the control point. */
+typedef struct {
+
+  /* Optional */
+  /*  Old Power State  */
+  uint8_t powerStateOld_valid;  /**< Must be set to true if powerStateOld is being passed */
+  qmiLocPlatformPowerStateEnumT_v02 powerStateOld;
+  /**<   Old Power State. */
+
+  /* Optional */
+  /*  New Power State */
+  uint8_t powerStateNew_valid;  /**< Must be set to true if powerStateNew is being passed */
+  qmiLocPlatformPowerStateEnumT_v02 powerStateNew;
+  /**<   New Power State. Clients should deregister for all events and indication \n
+       when GNSS is in SUSPENDED state and register again when RESUME event is  \n
+       received */
+}qmiLocPlatformPowerStateChangedIndMsgT_v02;  /* Message */
+/**
+    @}
+  */
+
 /* Conditional compilation tags for message removal */
 //#define REMOVE_QMI_LOC_ADD_CIRCULAR_GEOFENCE_V02
 //#define REMOVE_QMI_LOC_ADD_GEOFENCE_CONTEXT_V02
@@ -22989,6 +23751,7 @@ typedef struct {
 //#define REMOVE_QMI_LOC_EVENT_NI_NOTIFY_VERIFY_REQ_V02
 //#define REMOVE_QMI_LOC_EVENT_NMEA_V02
 //#define REMOVE_QMI_LOC_EVENT_PEDOMETER_CONTROL_V02
+//#define REMOVE_QMI_LOC_EVENT_PLATFORM_POWER_STATE_CHANGED_V02
 //#define REMOVE_QMI_LOC_EVENT_POSITION_REPORT_V02
 //#define REMOVE_QMI_LOC_EVENT_QUERY_XTRA_INFO_REQ_V02
 //#define REMOVE_QMI_LOC_EVENT_QZSS_EPHEMERIS_REPORT_V02
@@ -23057,6 +23820,7 @@ typedef struct {
 //#define REMOVE_QMI_LOC_INJECT_FDCL_DATA_V02
 //#define REMOVE_QMI_LOC_INJECT_GSM_CELL_INFO_V02
 //#define REMOVE_QMI_LOC_INJECT_GTP_CLIENT_DOWNLOADED_DATA_V02
+//#define REMOVE_QMI_LOC_INJECT_LOCATION_CIVIC_ADDRESS_V02
 //#define REMOVE_QMI_LOC_INJECT_MOTION_DATA_V02
 //#define REMOVE_QMI_LOC_INJECT_NETWORK_INITIATED_MESSAGE_V02
 //#define REMOVE_QMI_LOC_INJECT_PLATFORM_POWER_STATE_V02
@@ -23609,6 +24373,10 @@ typedef struct {
 #define QMI_LOC_GET_MULTIBAND_CONFIG_RESP_V02 0x00E1
 #define QMI_LOC_GET_MULTIBAND_CONFIG_IND_V02 0x00E1
 #define QMI_LOC_LATENCY_INFORMATION_IND_V02 0x00E2
+#define QMI_LOC_INJECT_LOCATION_CIVIC_ADDRESS_REQ_V02 0x00E3
+#define QMI_LOC_INJECT_LOCATION_CIVIC_ADDRESS_RESP_V02 0x00E3
+#define QMI_LOC_INJECT_LOCATION_CIVIC_ADDRESS_IND_V02 0x00E3
+#define QMI_LOC_EVENT_PLATFORM_POWER_STATE_CHANGED_IND_V02 0x00E4
 /**
     @}
   */
