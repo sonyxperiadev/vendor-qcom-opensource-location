@@ -4616,10 +4616,46 @@ void LocApiV02::reportLocationRequestNotification(
         strlcpy(notification.requestorId,
                 loc_req_notif->requestorId,
                 sizeof(notification.requestorId));
+
+        const char* nfwClient[] = { "NFW_CLIENT_CP", "NFW_CLIENT_SUPL", "NFW_CLIENT_IMS",
+                                    "NFW_CLIENT_SIM", "NFW_CLIENT_MDT", "NFW_CLIENT_TLOC",
+                                    "NFW_CLIENT_OTHER", "NFW_CLIENT_RLOC", "NFW_CLIENT_V2X",
+                                    "NFW_CLIENT_R1", "NFW_CLIENT_R2", "NFW_CLIENT_R3" };
+        char packageName[LOC_MAX_PARAM_STRING];
+
         // proxyAppPackageName is "" for emergency
-        strlcpy(notification.proxyAppPackageName,
-                ContextBase::mGps_conf.PROXY_APP_PACKAGE_NAME,
-                sizeof(notification.proxyAppPackageName));
+        if (ContextBase::isFeatureSupported(LOC_SUPPORTED_FEATURE_MULTIPLE_ATTRIBUTION_APPS) &&
+            loc_req_notif->protocolStack >= eQMI_LOC_CTRL_PLANE_V02 &&
+            loc_req_notif->protocolStack <= eQMI_LOC_R3_V02 &&
+            eQMI_LOC_OTHER_V02 != loc_req_notif->protocolStack) {
+
+            if (mPackageName[loc_req_notif->protocolStack].empty()) {
+                const loc_param_s_type nfw_packages_table[] =
+                {
+                    {nfwClient[loc_req_notif->protocolStack], &packageName,  NULL, 's' },
+                };
+                UTIL_READ_CONF(LOC_PATH_GPS_CONF_STR, nfw_packages_table);
+                mPackageName[loc_req_notif->protocolStack] = packageName;
+            }
+            strlcpy(notification.proxyAppPackageName,
+                    mPackageName[loc_req_notif->protocolStack].c_str(),
+                    sizeof(notification.proxyAppPackageName));
+        } else {
+            // we need any of the apps in this case, all should
+            // be provisioned with the same package name
+            // so we will use NFW_CLIENT_CP for simplicity
+            if (mPackageName[eQMI_LOC_CTRL_PLANE_V02].empty()) {
+                const loc_param_s_type nfw_packages_table[] =
+                {
+                    {nfwClient[eQMI_LOC_CTRL_PLANE_V02], &packageName,  NULL, 's' },
+                };
+                UTIL_READ_CONF(LOC_PATH_GPS_CONF_STR, nfw_packages_table);
+                mPackageName[eQMI_LOC_CTRL_PLANE_V02] = packageName;
+            }
+            strlcpy(notification.proxyAppPackageName,
+                    mPackageName[eQMI_LOC_CTRL_PLANE_V02].c_str(),
+                    sizeof(notification.proxyAppPackageName));
+        }
     }
 
     if (!isImpossibleScenario) {
