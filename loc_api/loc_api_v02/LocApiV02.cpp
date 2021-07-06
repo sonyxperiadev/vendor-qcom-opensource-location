@@ -6818,8 +6818,10 @@ bool LocApiV02 :: convertGnssMeasurements(
         bFound = true;
     }
 
+    /* For GAL E5 (code type Q) svId could be +50 */
     if (gnss_measurement_info.gnssSvId >= GAL_SV_PRN_MIN &&
-        gnss_measurement_info.gnssSvId <= GAL_SV_PRN_MAX) {
+        gnss_measurement_info.gnssSvId <= GAL_SV_PRN_MAX &&
+        GNSS_MEASUREMENTS_CODE_TYPE_Q == measurementData.codeType) {
         it = mSvPolynomialMap.find(gnss_measurement_info.gnssSvId + 50);
         if (it != mSvPolynomialMap.end()) {
             svPolynomial = it->second;
