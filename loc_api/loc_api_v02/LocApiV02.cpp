@@ -1012,15 +1012,14 @@ void LocApiV02::injectPosition(const Location& location, bool onDemandCpi)
         }
     }
 
-    if (LOCATION_HAS_ALTITUDE_BIT & location.flags) {
+    // Altitude is vaild only if Vert Unc is vaild and visa-versa
+    if ((LOCATION_HAS_ALTITUDE_BIT & location.flags) &&
+            (LOCATION_HAS_VERTICAL_ACCURACY_BIT & location.flags)) {
         injectPositionReq.altitudeWrtEllipsoid_valid = 1;
         injectPositionReq.altitudeWrtEllipsoid = location.altitude;
         injectPositionReq.altSourceInfo_valid = 1;
         injectPositionReq.altSourceInfo.source = eQMI_LOC_ALT_SRC_OTHER_V02;
         injectPositionReq.altSourceInfo.linkage = eQMI_LOC_ALT_SRC_LINKAGE_FULLY_INTERDEPENDENT_V02;
-    }
-
-    if (LOCATION_HAS_VERTICAL_ACCURACY_BIT & location.flags) {
         injectPositionReq.vertUnc_valid = 1;
         injectPositionReq.vertUnc = location.verticalAccuracy;
         injectPositionReq.vertConfidence_valid = 1;
