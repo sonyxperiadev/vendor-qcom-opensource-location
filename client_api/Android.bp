@@ -4,8 +4,6 @@ cc_library_shared {
     name: "liblocation_client_api.impl",
     vendor: true,
 
-    sanitize: GNSS_SANITIZE,
-
     //# Libs
     shared_libs: [
         "libgps.utils",
