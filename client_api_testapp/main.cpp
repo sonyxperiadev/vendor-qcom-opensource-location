@@ -112,6 +112,7 @@ enum TrackingSessionType {
 #define CONFIG_MIN_SV_ELEVATION    "configMinSvElevation"
 #define GET_MIN_SV_ELEVATION       "getMinSvElevation"
 #define CONFIG_ENGINE_RUN_STATE    "configEngineRunState"
+#define CONFIG_ENGINE_INTEGRITY_RISK "configEngineIntegrityRisk"
 #define SET_USER_CONSENT           "setUserConsentForTerrestrialPositioning"
 #define GET_SINGLE_GTP_WWAN_FIX    "getSingleGtpWwanFix"
 #define GET_MULTIPLE_GTP_WWAN_FIXES  "getMultipleGtpWwanFixes"
@@ -388,6 +389,7 @@ static void printHelp() {
     printf("%s: get multiple wan fix: numOfFixes tbfMsec timeout_msec 0.0 1\n",
            GET_MULTIPLE_GTP_WWAN_FIXES);
     printf("%s: config nmea types \n", CONFIG_NMEA_TYPES);
+    printf("%s: config engine integrity risk \n", CONFIG_ENGINE_INTEGRITY_RISK);
 }
 
 void setRequiredPermToRunAsLocClient() {
@@ -750,6 +752,7 @@ static bool checkForAutoStart(int argc, char *argv[]) {
                  aidingDataMask = atoi(optarg);
                  break;
              case 's':
+                 printf("session type: %s\n", optarg);
                  if (optarg[0] == 'l') {
                      trackingType = SIMPLE_REPORT_TRACKING;
                  } else if (optarg[0] == 'g') {
@@ -761,14 +764,19 @@ static bool checkForAutoStart(int argc, char *argv[]) {
              case 'e' :
                  printf("report mask: %s\n", optarg);
                  reqEngMask = (LocReqEngineTypeMask) atoi(optarg);
+                 trackingType = ENGINE_REPORT_TRACKING;
                  break;
              case 'l':
                  printf("fix cnt: %s\n", optarg);
                  fixCnt = atoi(optarg);
+                 trackingType = ENGINE_REPORT_TRACKING;
                  break;
             case 'i':
                  printf("interval: %s\n", optarg);
                  interval = atoi(optarg);
+                 if (trackingType == NO_TRACKING) {
+                     trackingType = ENGINE_REPORT_TRACKING;
+                 }
                  break;
              case 't':
                  printf("tiemout: %s\n", optarg);
@@ -1102,6 +1110,27 @@ int main(int argc, char *argv[]) {
             printf("eng type %d, eng state %d\n", engType, engState);
             bool retVal = pIntClient->configEngineRunState(engType, engState);
             printf("configEngineRunState returned %d\n", retVal);
+        } else if (strncmp(buf, CONFIG_ENGINE_INTEGRITY_RISK,
+                           strlen(CONFIG_ENGINE_INTEGRITY_RISK)) == 0) {
+            printf("%s 1(SPE)/2(PPE)/3(DRE)/4(VPE) integrity_risk_level",
+                   CONFIG_ENGINE_INTEGRITY_RISK);
+            static char *save = nullptr;
+            LocIntegrationEngineType engType = (LocIntegrationEngineType)0;
+            uint32_t integrityRisk = (LocIntegrationEngineRunState) 0;
+            // skip first argument of configEngineRunState
+            char* token = strtok_r(buf, " ", &save);
+            token = strtok_r(NULL, " ", &save);
+            if (token != NULL) {
+               engType = (LocIntegrationEngineType) atoi(token);
+                token = strtok_r(NULL, " ", &save);
+                if (token != NULL) {
+                    integrityRisk =  atoi(token);
+                }
+            }
+            printf("eng type %d, integrity risk %u\n", engType, integrityRisk);
+            bool retVal = pIntClient->configEngineIntegrityRisk(engType, integrityRisk);
+            printf("configEngineIntegrityRisk returned %d\n", retVal);
+
         } else if (strncmp(buf, SET_USER_CONSENT, strlen(SET_USER_CONSENT)) == 0) {
             static char *save = nullptr;
             bool userConsent = false;

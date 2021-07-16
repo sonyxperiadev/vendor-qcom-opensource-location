@@ -1095,7 +1095,12 @@ string GnssLocation::toString() const {
     out += FIELDVAL_DEC(enuVelocityVRPBased[1]);
     out += FIELDVAL_DEC(enuVelocityVRPBased[2]);
     out += FIELDVAL_MASK(drSolutionStatusMask, DrSolutionStatusMask_tbl);
+    out += FIELDVAL_DEC(altitudeAssumed);
     out += FIELDVAL_MASK(sessionStatus, LocSessionStatus_tbl);
+    out += FIELDVAL_DEC(integrityRiskUsed);
+    out += FIELDVAL_DEC(protectAlongTrack);
+    out += FIELDVAL_DEC(protectCrossTrack);
+    out += FIELDVAL_DEC(protectVertical);
 
     return out;
 }

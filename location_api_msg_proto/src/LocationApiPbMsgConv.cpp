@@ -213,6 +213,9 @@ ELocMsgID LocationApiPbMsgConv::getEnumForPBELocMsgID(const PBELocMsgID &pbLocMs
         case PB_E_INTAPI_CONFIG_OUTPUT_NMEA_TYPES_MSG_ID:
             eLocMsgId = E_INTAPI_CONFIG_OUTPUT_NMEA_TYPES_MSG_ID;
             break;
+        case PB_E_INTAPI_CONFIG_ENGINE_INTEGRITY_RISK_MSG_ID:
+            eLocMsgId = E_INTAPI_CONFIG_ENGINE_INTEGRITY_RISK_MSG_ID;
+            break;
         case PB_E_INTAPI_GET_ROBUST_LOCATION_CONFIG_REQ_MSG_ID:
             eLocMsgId = E_INTAPI_GET_ROBUST_LOCATION_CONFIG_REQ_MSG_ID;
             break;
@@ -747,6 +750,9 @@ PBELocMsgID LocationApiPbMsgConv::getPBEnumForELocMsgID(const ELocMsgID &eLocMsg
             break;
         case E_INTAPI_CONFIG_OUTPUT_NMEA_TYPES_MSG_ID:
             pbLocMsgId = PB_E_INTAPI_CONFIG_OUTPUT_NMEA_TYPES_MSG_ID;
+            break;
+        case E_INTAPI_CONFIG_ENGINE_INTEGRITY_RISK_MSG_ID:
+            pbLocMsgId = PB_E_INTAPI_CONFIG_ENGINE_INTEGRITY_RISK_MSG_ID;
             break;
         case E_INTAPI_GET_ROBUST_LOCATION_CONFIG_REQ_MSG_ID:
             pbLocMsgId = PB_E_INTAPI_GET_ROBUST_LOCATION_CONFIG_REQ_MSG_ID;
@@ -1442,6 +1448,22 @@ uint32_t LocationApiPbMsgConv::getPBMaskForGnssLocationInfoExtFlagMask(
 
     if (gnssLocInfoFlagMask & GNSS_LOCATION_INFO_SESSION_STATUS_BIT) {
         pbGnssLocInfoFlagMask |= PB_GNSS_LOCATION_INFO_SESSION_STATUS_BIT;
+    }
+
+    if (gnssLocInfoFlagMask & GNSS_LOCATION_INFO_INTEGRITY_RISK_USED_BIT) {
+        pbGnssLocInfoFlagMask |= PB_GNSS_LOCATION_INFO_INTEGRITY_RISK_USED_BIT;
+    }
+
+    if (gnssLocInfoFlagMask & GNSS_LOCATION_INFO_PROTECT_ALONG_TRACK_BIT) {
+        pbGnssLocInfoFlagMask |= PB_GNSS_LOCATION_INFO_PROTECT_ALONG_TRACK_BIT;
+    }
+
+    if (gnssLocInfoFlagMask & GNSS_LOCATION_INFO_PROTECT_CROSS_TRACK_BIT) {
+        pbGnssLocInfoFlagMask |= PB_GNSS_LOCATION_INFO_PROTECT_CROSS_TRACK_BIT;
+    }
+
+    if (gnssLocInfoFlagMask & GNSS_LOCATION_INFO_PROTECT_VERTICAL_BIT) {
+        pbGnssLocInfoFlagMask |= PB_GNSS_LOCATION_INFO_PROTECT_VERTICAL_BIT;
     }
 
     return pbGnssLocInfoFlagMask;
@@ -2635,6 +2657,19 @@ uint64_t LocationApiPbMsgConv::getGnssLocationInfoFlagMaskFromPB(
         gnssLocInfoFlagMask |= GNSS_LOCATION_INFO_SESSION_STATUS_BIT;
     }
 
+    if (pbGnssLocInfoExtFlagMask & PB_GNSS_LOCATION_INFO_INTEGRITY_RISK_USED_BIT) {
+        gnssLocInfoFlagMask |= GNSS_LOCATION_INFO_INTEGRITY_RISK_USED_BIT;
+    }
+    if (pbGnssLocInfoExtFlagMask & PB_GNSS_LOCATION_INFO_PROTECT_ALONG_TRACK_BIT ) {
+        gnssLocInfoFlagMask |= GNSS_LOCATION_INFO_PROTECT_ALONG_TRACK_BIT ;
+    }
+    if (pbGnssLocInfoExtFlagMask & PB_GNSS_LOCATION_INFO_PROTECT_CROSS_TRACK_BIT) {
+        gnssLocInfoFlagMask |= GNSS_LOCATION_INFO_PROTECT_CROSS_TRACK_BIT;
+    }
+    if (pbGnssLocInfoExtFlagMask & PB_GNSS_LOCATION_INFO_PROTECT_VERTICAL_BIT) {
+        gnssLocInfoFlagMask |= GNSS_LOCATION_INFO_PROTECT_VERTICAL_BIT;
+    }
+
     LocApiPb_LOGv("LocApiPB: pbGnssLocInfoFlagMask:0x%x, pbGnssLocInfoExtFlagMask:0x%x, "
                   "gnssLocInfoFlagMask:0x%" PRIu64"", pbGnssLocInfoFlagMask,
                   pbGnssLocInfoExtFlagMask, gnssLocInfoFlagMask);
@@ -3557,9 +3592,18 @@ int LocationApiPbMsgConv::convertGnssLocInfoNotifToPB(
     // bool altitudeAssumed = 41;
     pbGnssLocInfoNotif->set_altitudeassumed(gnssLocInfoNotif.altitudeAssumed);
 
-    // bool sessionStatus = 42
+    // bool sessionStatus = 42;
     pbGnssLocInfoNotif->set_sessionstatus(
             getPBEnumForLocSessionStatus(gnssLocInfoNotif.sessionStatus));
+
+    // uint32 integrityRiskUsed = 43;
+    pbGnssLocInfoNotif->set_integrityriskused(gnssLocInfoNotif.integrityRiskUsed);
+    // float    protectAlongTrack = 44;
+    pbGnssLocInfoNotif->set_protectalongtrack(gnssLocInfoNotif.protectAlongTrack);
+    // float    protectCrossTrack = 45;
+    pbGnssLocInfoNotif->set_protectcrosstrack(gnssLocInfoNotif.protectCrossTrack);
+    // float    protectVertical = 46;
+    pbGnssLocInfoNotif->set_protectvertical(gnssLocInfoNotif.protectVertical);
 
     LocApiPb_LOGv("LocApiPB: gnssLocInfoNotif - GLocInfoFlgMask:%" PRIu64", pdop:%f, hdop:%f, "
             "vdop:%f",
@@ -4675,6 +4719,15 @@ int LocationApiPbMsgConv::pbConvertToGnssLocInfoNotif(
     // bool sessionStatus = 42;
     gnssLocInfoNotif.sessionStatus = getLocSessionStatusFromPB(
             pbGnssLocInfoNotif.sessionstatus());
+
+    // uint32 integrityRiskUsed = 43;
+    gnssLocInfoNotif.integrityRiskUsed= pbGnssLocInfoNotif.integrityriskused();
+    // float    protectAlongTrack = 44;
+    gnssLocInfoNotif.protectAlongTrack= pbGnssLocInfoNotif.protectalongtrack();
+    // float    protectCrossTrack = 45;
+    gnssLocInfoNotif.protectCrossTrack = pbGnssLocInfoNotif.protectcrosstrack();
+    // float    protectVertical = 46;
+    gnssLocInfoNotif.protectVertical = pbGnssLocInfoNotif.protectvertical();
 
     LOC_LOGv("LocApiPB: pbGnssLocInfoNotif -GLocInfoFlgMask:%" PRIu64", pdop:%f, hdop:%f, vdop:%f",
             gnssLocInfoNotif.flags, gnssLocInfoNotif.pdop, gnssLocInfoNotif.hdop,

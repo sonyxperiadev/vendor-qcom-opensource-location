@@ -242,6 +242,7 @@ private:
     void configUserConsentTerrestrialPositioning(
             LocConfigUserConsentTerrestrialPositioningReqMsg* pMsg);
     void configOutputNmeaTypes(const LocConfigOutputNmeaTypesReqMsg* pMsg);
+    void configEngineIntegrityRisk(const LocConfigEngineIntegrityRiskReqMsg* pMsg);
 
     // Location configuration API get/read requests
     void getGnssConfig(const LocAPIMsgHeader* pReqMsg,

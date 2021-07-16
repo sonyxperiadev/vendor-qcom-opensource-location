@@ -88,6 +88,9 @@ enum LocConfigTypeEnum{
     CONFIG_USER_CONSENT_TERRESTRIAL_POSITIONING = 12,
     /** Config the output nmea sentence types. <br/> */
     CONFIG_OUTPUT_NMEA_TYPES = 13,
+    /** Config the integrity risk level of the position engine.
+     *  <br/> */
+    CONFIG_ENGINE_INTEGRITY_RISK = 14,
 
     /** Get configuration regarding robust location setting used by
      *  the GNSS standard position engine (SPE).  <br/> */
@@ -1270,7 +1273,69 @@ public:
     */
     bool configOutputNmeaTypes(NmeaTypesMask enabledNmeaTypes);
 
-   /** @example example1:testGetConfigApi
+   /** @brief
+        This API is used to instruct the specified engine to use
+        the provided integrity risk level for protection level
+        calculation in position report. This API can be called via
+        a position session is in progress.  <br/>
+
+        Prior to calling this API for a particular engine, the
+        engine shall not calcualte the protection levels and shall
+        not include the protection levels in its position report.
+        <br/>
+
+        Currently, only PPE engine will support this function.
+        LocConfigCb() will return LOC_INT_RESPONSE_NOT_SUPPORTED
+        when request is made to none-PPE engines. <br/>
+
+        Please note that the configured integrity risk level is not
+        persistent. Upon reboot of the processor that hosts the
+        location hal daemon, if the client process that configures
+        the integrity risk level resides on the same processor as
+        location hal daemon, it is expected that the client process
+        to get re-launched and reconfigure the integrity risk
+        level. If the client process that configures the integrity
+        risk level resides on a diffrent processor as the location
+        hal daemon, upon location hal daemon restarts, location hal
+        daemon will receive the configured integrity risk level
+        automatically again from location integration api library
+        running on the client process on the different processor
+        and thus the client process does not need to call this API
+        again. <br/>
+
+        @param
+        engType: the engine that is instructed to use the specified
+        integrity risk level for protection level calculation. The
+        protection level will be returned back in
+        LocationClientApi::GnssLocation. <br/>
+
+        @param
+        integrityRisk: the integrity risk level used for
+        calculating protection level in
+        LocationClientApi::GnssLocation. <br/>
+
+        The integrity risk is defined as a probability per epoch,
+        in unit of 2.5e-10. The valid range for actual integrity is
+        [2.5e-10, 1-2.5e-10]), this corresponds to range of [1,
+        4e9-1] of this parameter. <br/>
+
+        If the specified value of integrityRisk is NOT in the valid
+        range of [1, 4e9-1], the engine shall disable/invalidate
+        the protection levels in the position report. <br/>
+
+        @return true, if the API request has been accepted. The
+                status will be returned via configCB. When returning
+                true, LocConfigCb() will be invoked to deliver
+                asynchronous processing status.
+                <br/>
+
+        @return false, if the API request has not been accepted for
+                further processing. <br/>
+    */
+    bool configEngineIntegrityRisk(LocIntegrationEngineType engineType,
+                                   uint32_t integrityRisk);
+
+    /** @example example1:testGetConfigApi
     * <pre>
     * <code>
     *    // Sample Code
