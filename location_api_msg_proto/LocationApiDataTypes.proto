@@ -33,6 +33,8 @@
 
 syntax = "proto3";
 
+option optimize_for = LITE_RUNTIME;
+
 // ============================================================================
 // Proto file versioning
 // ============================================================================
@@ -42,8 +44,8 @@ enum LocationApiDataTypesVersion {
     LOCAPI_DATA_TYPES_VER_MAJOR = 1;
     // Minor - New features / API addition, new message/elemtent addition.
     // Bump the last byte of version i.e. x.2 to x.3
-    // Minor version 13: Add integrity risk and protection level support in PVT report
-    LOCAPI_DATA_TYPES_VER_MINOR = 13;
+    // Minor version 14: Add option for using protobuf-lite at runtime
+    LOCAPI_DATA_TYPES_VER_MINOR = 14;
 }
 
 // ============================================================================
