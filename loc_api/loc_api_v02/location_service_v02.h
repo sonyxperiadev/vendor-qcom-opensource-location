@@ -63,7 +63,7 @@
  *====*====*====*====*====*====*====*====*====*====*====*====*====*====*====*/
 
 /* This file was generated with Tool version 6.14.9
-   It was generated on: Thu Apr 22 2021 (Spin 0)
+   It was generated on: Fri Jun 18 2021 (Spin 0)
    From IDL File: location_service_v02.idl */
 
 /** @defgroup loc_qmi_consts Constant values defined in the IDL */
@@ -89,11 +89,11 @@ extern "C" {
 /** Major Version Number of the IDL used to generate this file */
 #define LOC_V02_IDL_MAJOR_VERS 0x02
 /** Revision Number of the IDL used to generate this file */
-#define LOC_V02_IDL_MINOR_VERS 0x8D
+#define LOC_V02_IDL_MINOR_VERS 0x8F
 /** Major Version Number of the qmi_idl_compiler used to generate this file */
 #define LOC_V02_IDL_TOOL_VERS 0x06
 /** Maximum Defined Message ID */
-#define LOC_V02_MAX_MESSAGE_ID 0x00E3
+#define LOC_V02_MAX_MESSAGE_ID 0x00E4
 /**
     @}
   */
@@ -704,7 +704,8 @@ typedef uint64_t qmiLocEventRegMaskT_v02;
 #define QMI_LOC_EVENT_MASK_GNSS_EVENT_REPORT_V02 ((qmiLocEventRegMaskT_v02)0x100000000000ull) /**<  The QMI_LOC_EVENT_REPORT indication. \n  */
 #define QMI_LOC_EVENT_MASK_QUERY_XTRA_INFO_V02 ((qmiLocEventRegMaskT_v02)0x200000000000ull) /**<  Event indication to trigger XTRA config query from the control point. \n */
 #define QMI_LOC_EVENT_MASK_SAP_INS_PARAMETERS_REPORT_V02 ((qmiLocEventRegMaskT_v02)0x400000000000ull) /**<  QMI_LOC_EVENT_SAP_INS_PARAMETERS indication. \n  */
-#define QMI_LOC_EVENT_MASK_LATENCY_INFORMATION_REPORT_V02 ((qmiLocEventRegMaskT_v02)0x800000000000ull) /**<  QMI_LOC_LATENCY_INFORMATION indication.        */
+#define QMI_LOC_EVENT_MASK_LATENCY_INFORMATION_REPORT_V02 ((qmiLocEventRegMaskT_v02)0x800000000000ull) /**<  QMI_LOC_LATENCY_INFORMATION indication.       */
+#define QMI_LOC_EVENT_MASK_PLATFORM_POWER_STATE_CHANGED_V02 ((qmiLocEventRegMaskT_v02)0x0001000000000000ull) /**<  QMI_LOC_EVENT_PLATFORM_POWER_STATE_CHANGED indication.  */
 /** @addtogroup loc_qmi_enums
     @{
   */
@@ -816,6 +817,7 @@ typedef struct {
       - QMI_LOC_EVENT_MASK_QUERY_XTRA_INFO (0x200000000000) --  Event indication to trigger XTRA config query from the control point. \n
       - QMI_LOC_EVENT_MASK_SAP_INS_PARAMETERS_REPORT (0x400000000000) --  QMI_LOC_EVENT_SAP_INS_PARAMETERS indication. \n
       - QMI_LOC_EVENT_MASK_LATENCY_INFORMATION_REPORT (0x800000000000) --  QMI_LOC_LATENCY_INFORMATION indication.
+      - QMI_LOC_EVENT_MASK_PLATFORM_POWER_STATE_CHANGED (0x0001000000000000) --  QMI_LOC_EVENT_PLATFORM_POWER_STATE_CHANGED indication.
 
  Multiple events can be registered by ORing the individual masks and
  sending them in this TLV. Set all unused bits in this mask to 0.
@@ -2012,6 +2014,13 @@ typedef struct {
   /**<   Single-sided maximum time bias uncertainty.\n
        - Units -- Milliseconds
   */
+
+  /* Optional */
+  /*  Data Blob  */
+  uint8_t payload_valid;  /**< Must be set to true if payload is being passed */
+  uint32_t payload_len;  /**< Must be set to # of elements in payload */
+  uint8_t payload[4096];
+  /**<   Data blob payload  */
 }qmiLocEventPositionReportIndMsgT_v02;  /* Message */
 /**
     @}
@@ -5536,6 +5545,7 @@ typedef enum {
   eQMI_LOC_POSITION_SRC_DRE_V02 = 7, /**<  Position source is the dead reckoning engine \n  */
   eQMI_LOC_POSITION_SRC_FLP_V02 = 8, /**<  Position source is Fused Location Provider  */
   eQMI_LOC_POSITION_SRC_NLP_V02 = 9, /**<  Position source is Network Location Provider  */
+  eQMI_LOC_POSITION_SRC_FLP_ALE_V02 = 10, /**<  Position source is derived from Source MPSS  */
   QMILOCPOSITIONSRCENUMT_MAX_ENUM_VAL_V02 = 2147483647 /**< To force a 32 bit signed enum.  Do not change or use*/
 }qmiLocPositionSrcEnumT_v02;
 /**
@@ -5702,7 +5712,8 @@ typedef struct {
       - eQMI_LOC_POSITION_SRC_OTHER (6) --  Other sources \n
       - eQMI_LOC_POSITION_SRC_DRE (7) --  Position source is the dead reckoning engine \n
       - eQMI_LOC_POSITION_SRC_FLP (8) --  Position source is Fused Location Provider
-      - eQMI_LOC_POSITION_SRC_NLP (9) --  Position source is Network Location Provider  \n
+      - eQMI_LOC_POSITION_SRC_NLP (9) --  Position source is Network Location Provider
+      - eQMI_LOC_POSITION_SRC_FLP_ALE (10) --  Position source is derived from Source MPSS  \n
  If altitude is specified and the altitude source is not specified, the engine
  assumes that the altitude was obtained using the specified position source. \n
  If both altitude and altitude source are specified, the engine assumes
@@ -7514,6 +7525,7 @@ typedef struct {
       - QMI_LOC_EVENT_MASK_QUERY_XTRA_INFO (0x200000000000) --  Event indication to trigger XTRA config query from the control point. \n
       - QMI_LOC_EVENT_MASK_SAP_INS_PARAMETERS_REPORT (0x400000000000) --  QMI_LOC_EVENT_SAP_INS_PARAMETERS indication. \n
       - QMI_LOC_EVENT_MASK_LATENCY_INFORMATION_REPORT (0x800000000000) --  QMI_LOC_LATENCY_INFORMATION indication.
+      - QMI_LOC_EVENT_MASK_PLATFORM_POWER_STATE_CHANGED (0x0001000000000000) --  QMI_LOC_EVENT_PLATFORM_POWER_STATE_CHANGED indication.
  */
 }qmiLocGetRegisteredEventsIndMsgT_v02;  /* Message */
 /**
@@ -15128,6 +15140,13 @@ typedef struct {
   uint8_t maxSubSeqNum_valid;  /**< Must be set to true if maxSubSeqNum is being passed */
   uint8_t maxSubSeqNum;
   /**<   Maximum number of sub-sequence numbers for a specified sequence number. */
+
+  /* Optional */
+  /*  Data Blob  */
+  uint8_t payload_valid;  /**< Must be set to true if payload is being passed */
+  uint32_t payload_len;  /**< Must be set to # of elements in payload */
+  uint8_t payload[2048];
+  /**<   Data blob payload  */
 }qmiLocEventGnssSvMeasInfoIndMsgT_v02;  /* Message */
 /**
     @}
@@ -16842,6 +16861,7 @@ typedef struct {
       - eQMI_LOC_POSITION_SRC_DRE (7) --  Position source is the dead reckoning engine \n
       - eQMI_LOC_POSITION_SRC_FLP (8) --  Position source is Fused Location Provider
       - eQMI_LOC_POSITION_SRC_NLP (9) --  Position source is Network Location Provider
+      - eQMI_LOC_POSITION_SRC_FLP_ALE (10) --  Position source is derived from Source MPSS
  */
 
   /* Optional */
@@ -18105,6 +18125,7 @@ typedef enum {
   eQMI_LOC_SUPPORTED_FEATURE_MULTIBAND_CONFIG_V02 = 14, /**<  Support the multiband GNSS configuration feature  */
   eQMI_LOC_SUPPORTED_FEATURE_QMI_AGNSS_CONFIG_DISABLED_V02 = 15, /**<  Support the AGNSS configuration for DSDA   */
   eQMI_LOC_SUPPORTED_FEATURE_MULTIPLE_ATTRIBUTION_APPS_V02 = 16, /**<  Support the Multiple Attribution Apps(UTH clients Lock control) feature    */
+  eQMI_LOC_SUPPORTED_FEATURE_FLP_NLP_SOURCE_V02 = 17, /**<  Support the FLP, NLP Z-Source provider feature    */
   QMILOCSUPPORTEDFEATUREENUMT_MAX_ENUM_VAL_V02 = 2147483647 /**< To force a 32 bit signed enum.  Do not change or use*/
 }qmiLocSupportedFeatureEnumT_v02;
 /**
@@ -18120,7 +18141,8 @@ typedef uint64_t qmiLocFeaturesStatusMaskT_v02;
 #define QMI_LOC_FEATURE_STATUS_TIME_FREQUENCY_V02 ((qmiLocFeaturesStatusMaskT_v02)0x00000020ull) /**<  Time and Frequency status.\n  */
 #define QMI_LOC_FEATURE_STATUS_TIME_UNCERTAINTY_V02 ((qmiLocFeaturesStatusMaskT_v02)0x00000040ull) /**<  Time Uncertainty  status. \n */
 #define QMI_LOC_FEATURE_STATUS_CLOCK_ESTIMATE_V02 ((qmiLocFeaturesStatusMaskT_v02)0x00000080ull) /**<  Clock Estimate status. \n */
-#define QMI_LOC_FEATURE_STATUS_DGNSS_V02 ((qmiLocFeaturesStatusMaskT_v02)0x00000100ull) /**<  DGNSS feature status.  */
+#define QMI_LOC_FEATURE_STATUS_DGNSS_V02 ((qmiLocFeaturesStatusMaskT_v02)0x00000100ull) /**<  DGNSS feature status. \n */
+#define QMI_LOC_FEATURE_STATUS_QPPE_V02 ((qmiLocFeaturesStatusMaskT_v02)0x00000200ull) /**<  QPPE feature status.  */
 /** @addtogroup loc_qmi_messages
     @{
   */
@@ -18176,7 +18198,8 @@ typedef struct {
       - QMI_LOC_FEATURE_STATUS_TIME_FREQUENCY (0x00000020) --  Time and Frequency status.\n
       - QMI_LOC_FEATURE_STATUS_TIME_UNCERTAINTY (0x00000040) --  Time Uncertainty  status. \n
       - QMI_LOC_FEATURE_STATUS_CLOCK_ESTIMATE (0x00000080) --  Clock Estimate status. \n
-      - QMI_LOC_FEATURE_STATUS_DGNSS (0x00000100) --  DGNSS feature status.
+      - QMI_LOC_FEATURE_STATUS_DGNSS (0x00000100) --  DGNSS feature status. \n
+      - QMI_LOC_FEATURE_STATUS_QPPE (0x00000200) --  QPPE feature status.
  */
 }qmiLocGetSupportedFeatureIndMsgT_v02;  /* Message */
 /**
@@ -21447,7 +21470,8 @@ typedef struct {
       - QMI_LOC_FEATURE_STATUS_TIME_FREQUENCY (0x00000020) --  Time and Frequency status.\n
       - QMI_LOC_FEATURE_STATUS_TIME_UNCERTAINTY (0x00000040) --  Time Uncertainty  status. \n
       - QMI_LOC_FEATURE_STATUS_CLOCK_ESTIMATE (0x00000080) --  Clock Estimate status. \n
-      - QMI_LOC_FEATURE_STATUS_DGNSS (0x00000100) --  DGNSS feature status.
+      - QMI_LOC_FEATURE_STATUS_DGNSS (0x00000100) --  DGNSS feature status. \n
+      - QMI_LOC_FEATURE_STATUS_QPPE (0x00000200) --  QPPE feature status.
  */
 }qmiLocEventReportIndMsgT_v02;  /* Message */
 /**
@@ -23381,6 +23405,7 @@ typedef struct {
       - eQMI_LOC_POSITION_SRC_DRE (7) --  Position source is the dead reckoning engine \n
       - eQMI_LOC_POSITION_SRC_FLP (8) --  Position source is Fused Location Provider
       - eQMI_LOC_POSITION_SRC_NLP (9) --  Position source is Network Location Provider
+      - eQMI_LOC_POSITION_SRC_FLP_ALE (10) --  Position source is derived from Source MPSS
 
  If altitude is specified and the altitude source is not specified, the engine
  assumes that the altitude was obtained using the specified position source. \n
@@ -23649,6 +23674,30 @@ typedef struct {
     @}
   */
 
+/** @addtogroup loc_qmi_messages
+    @{
+  */
+/** Indication Message; Sends the GNSS engine power state issued to the control point. */
+typedef struct {
+
+  /* Optional */
+  /*  Old Power State  */
+  uint8_t powerStateOld_valid;  /**< Must be set to true if powerStateOld is being passed */
+  qmiLocPlatformPowerStateEnumT_v02 powerStateOld;
+  /**<   Old Power State. */
+
+  /* Optional */
+  /*  New Power State */
+  uint8_t powerStateNew_valid;  /**< Must be set to true if powerStateNew is being passed */
+  qmiLocPlatformPowerStateEnumT_v02 powerStateNew;
+  /**<   New Power State. Clients should deregister for all events and indication \n
+       when GNSS is in SUSPENDED state and register again when RESUME event is  \n
+       received */
+}qmiLocPlatformPowerStateChangedIndMsgT_v02;  /* Message */
+/**
+    @}
+  */
+
 /* Conditional compilation tags for message removal */
 //#define REMOVE_QMI_LOC_ADD_CIRCULAR_GEOFENCE_V02
 //#define REMOVE_QMI_LOC_ADD_GEOFENCE_CONTEXT_V02
@@ -23702,6 +23751,7 @@ typedef struct {
 //#define REMOVE_QMI_LOC_EVENT_NI_NOTIFY_VERIFY_REQ_V02
 //#define REMOVE_QMI_LOC_EVENT_NMEA_V02
 //#define REMOVE_QMI_LOC_EVENT_PEDOMETER_CONTROL_V02
+//#define REMOVE_QMI_LOC_EVENT_PLATFORM_POWER_STATE_CHANGED_V02
 //#define REMOVE_QMI_LOC_EVENT_POSITION_REPORT_V02
 //#define REMOVE_QMI_LOC_EVENT_QUERY_XTRA_INFO_REQ_V02
 //#define REMOVE_QMI_LOC_EVENT_QZSS_EPHEMERIS_REPORT_V02
@@ -24326,6 +24376,7 @@ typedef struct {
 #define QMI_LOC_INJECT_LOCATION_CIVIC_ADDRESS_REQ_V02 0x00E3
 #define QMI_LOC_INJECT_LOCATION_CIVIC_ADDRESS_RESP_V02 0x00E3
 #define QMI_LOC_INJECT_LOCATION_CIVIC_ADDRESS_IND_V02 0x00E3
+#define QMI_LOC_EVENT_PLATFORM_POWER_STATE_CHANGED_IND_V02 0x00E4
 /**
     @}
   */
