@@ -42,8 +42,8 @@ enum LocationApiDataTypesVersion {
     LOCAPI_DATA_TYPES_VER_MAJOR = 1;
     // Minor - New features / API addition, new message/elemtent addition.
     // Bump the last byte of version i.e. x.2 to x.3
-    // Minor version 12: Add valdity bit for basebandCarrierToNoiseDbHz in LCA SV meas report
-    LOCAPI_DATA_TYPES_VER_MINOR = 12;
+    // Minor version 13: Add integrity risk and protection level support in PVT report
+    LOCAPI_DATA_TYPES_VER_MINOR = 13;
 }
 
 // ============================================================================
@@ -190,7 +190,11 @@ enum PBGnssLocationInfoFlagMask {
 enum PBGnssLocationInfoExtFlagMask {
     PB_GNSS_LOCATION_INFO_EXT_INVALID          = 0;
     PB_GNSS_LOCATION_INFO_ALTITUDE_ASSUMED_BIT = 0x1; // valid altitude mean sea level
-    PB_GNSS_LOCATION_INFO_SESSION_STATUS_BIT   = 0x2; // valid altitude mean sea level
+    PB_GNSS_LOCATION_INFO_SESSION_STATUS_BIT      = 0x2;  // valid session status
+    PB_GNSS_LOCATION_INFO_INTEGRITY_RISK_USED_BIT = 0x4;  // valid integrity risk level used
+    PB_GNSS_LOCATION_INFO_PROTECT_ALONG_TRACK_BIT = 0x8;  // valid protection level along track
+    PB_GNSS_LOCATION_INFO_PROTECT_CROSS_TRACK_BIT = 0x10; // valid protection level cross track
+    PB_GNSS_LOCATION_INFO_PROTECT_VERTICAL_BIT    = 0x20; // valid protection level vertical
 };
 
 enum PBGnssLocationNavSolutionMask {
@@ -1028,6 +1032,15 @@ message PBGnssLocationInfoNotification {
     bool altitudeAssumed = 41;
     // PBLocationSessionStatus, validity is set via extFlags
     PBLocationSessionStatus sessionStatus = 42;
+    // Integrity risk level, validity is set via extFlags
+    uint32 integrityRiskUsed = 43;
+    // Along-track protection level,
+    // protection level along track, validity is set via extFlags
+    float    protectAlongTrack = 44;
+    // Cross-track protection level, validity is set via extFlags
+    float    protectCrossTrack = 45;
+    // Vertical component protection level, validity is set via extFlags
+    float    protectVertical = 46;;
 }
 
 message PBGnssDataNotification {

@@ -44,8 +44,8 @@ enum LocationApiMsgVersion {
     LOCAPI_MSG_VER_MAJOR = 1;
     // Minor - New features / API addition, new message/elemtent addition.
     // Bump the last byte of version i.e. x.2 to x.3
-    // Minor version 6: add nHz measurement subscription
-    LOCAPI_MSG_VER_MINOR = 5;
+    // Minor version 7: add integrity risk support
+    LOCAPI_MSG_VER_MINOR = 7;
 }
 
 // ============================================================================
@@ -131,6 +131,7 @@ enum PBELocMsgID {
     PB_E_INTAPI_CONFIG_ENGINE_RUN_STATE_MSG_ID = 210;
     PB_E_INTAPI_CONFIG_USER_CONSENT_TERRESTRIAL_POSITIONING_MSG_ID = 211;
     PB_E_INTAPI_CONFIG_OUTPUT_NMEA_TYPES_MSG_ID = 212;
+    PB_E_INTAPI_CONFIG_ENGINE_INTEGRITY_RISK_MSG_ID = 213;
 
     // integration API config retrieval request/response
     PB_E_INTAPI_GET_ROBUST_LOCATION_CONFIG_REQ_MSG_ID  = 300;
@@ -528,6 +529,13 @@ message PBLocConfigUserConsentTerrestrialPositioningReqMsg {
 // PB_E_INTAPI_CONFIG_OUTPUT_NMEA_TYPES_MSG_ID
 message PBLocConfigOutputNmeaTypesReqMsg {
     uint32 nmeaTypesMask = 1;
+}
+
+// defintion for message with msg id of
+// PB_E_INTAPI_CONFIG_ENGINE_INTEGRITY_RISK_MSG_ID
+message PBLocConfigEngineIntegrityRiskReqMsg {
+    PBLocApiPositioningEngineMask engType = 1;
+    uint32 integrityRisk = 2;
 }
 
 //******************************************************************************
