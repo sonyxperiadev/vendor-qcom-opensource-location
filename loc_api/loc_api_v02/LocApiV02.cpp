@@ -110,7 +110,7 @@ template struct loc_core::LocApiResponseData<LocApiBatchData>;
 template struct loc_core::LocApiResponseData<LocApiGeofenceData>;
 template struct loc_core::LocApiResponseData<LocGpsLocation>;
 
-const float CarrierFrequencies[] = {
+const double CarrierFrequencies[] = {
     0.0,                                // UNKNOWN
     GPS_L1C_CARRIER_FREQUENCY,          // L1C
     SBAS_L1_CA_CARRIER_FREQUENCY,       // SBAS_L1
@@ -3454,11 +3454,11 @@ void LocApiV02 :: reportPosition (
 }
 
 /*convert signal type to carrier frequency*/
-float LocApiV02::convertSignalTypeToCarrierFrequency(
+double LocApiV02::convertSignalTypeToCarrierFrequency(
     qmiLocGnssSignalTypeMaskT_v02 signalType,
     uint8_t gloFrequency)
 {
-    float carrierFrequency = 0.0;
+    double carrierFrequency = 0.0;
 
     LOC_LOGv("signalType = 0x%" PRIx64 , signalType);
     switch (signalType) {
@@ -3481,7 +3481,7 @@ float LocApiV02::convertSignalTypeToCarrierFrequency(
     case QMI_LOC_MASK_GNSS_SIGNAL_TYPE_GLONASS_G1_V02:
         carrierFrequency = GLONASS_G1_CARRIER_FREQUENCY;
         if ((gloFrequency >= 1 && gloFrequency <= 14)) {
-            carrierFrequency += ((gloFrequency - 8) * 562500);
+            carrierFrequency += ((gloFrequency - 8) * 562500.0);
         }
         LOC_LOGv("GLO carFreq after conversion = %f", carrierFrequency);
         break;
@@ -3489,7 +3489,7 @@ float LocApiV02::convertSignalTypeToCarrierFrequency(
     case QMI_LOC_MASK_GNSS_SIGNAL_TYPE_GLONASS_G2_V02:
         carrierFrequency = GLONASS_G2_CARRIER_FREQUENCY;
         if ((gloFrequency >= 1 && gloFrequency <= 14)) {
-            carrierFrequency += ((gloFrequency - 8) * 437500);
+            carrierFrequency += ((gloFrequency - 8) * 437500.0);
         }
         LOC_LOGv("GLO carFreq after conversion = %f", carrierFrequency);
         break;
@@ -6568,7 +6568,8 @@ bool LocApiV02 :: convertGnssMeasurements(
         // The formula is f(k) = fc + k * 0.5625;
         // This is applicable for GLONASS G1 only, where fc = 1602MHz
         if ((gnss_measurement_info.gloFrequency >= 1 && gnss_measurement_info.gloFrequency <= 14)) {
-            measurementData.carrierFrequencyHz += (gnss_measurement_info.gloFrequency - 8) * 562500;
+            measurementData.carrierFrequencyHz +=
+                    (gnss_measurement_info.gloFrequency - 8) * 562500.0;
         }
         measurementData.carrierFrequencyHz += CarrierFrequencies[measurementData.svType];
         measurementData.flags |= GNSS_MEASUREMENTS_DATA_CARRIER_FREQUENCY_BIT;
