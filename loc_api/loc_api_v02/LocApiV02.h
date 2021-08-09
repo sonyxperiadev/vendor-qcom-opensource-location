@@ -192,7 +192,7 @@ private:
       qmiLocNiNotifyVerifyEnumT_v02 notif_priv);
 
   /*convert signal type to carrier frequency*/
-  static float convertSignalTypeToCarrierFrequency(
+  static double convertSignalTypeToCarrierFrequency(
       qmiLocGnssSignalTypeMaskT_v02 signalType,
       uint8_t gloFrequency);
 
