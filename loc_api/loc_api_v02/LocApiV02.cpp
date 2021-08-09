@@ -6860,7 +6860,9 @@ bool LocApiV02 :: convertGnssMeasurements(
                         svPolynomial,
                         mGnssMeasurements->gnssSvMeasurementSet.svMeasSetHeader,
                         measurementData);
-        measurementData.flags |= GNSS_MEASUREMENTS_DATA_SATELLITE_PVT_BIT;
+        if (ret) {
+            measurementData.flags |= GNSS_MEASUREMENTS_DATA_SATELLITE_PVT_BIT;
+        }
     }
 
     LOC_LOGv(" GNSS measurement raw data received from modem:\n"
