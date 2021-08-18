@@ -981,6 +981,8 @@ void LocApiV02 ::
             (time_info_current.tv_nsec)/1e6;
     }
 
+    //Use this bit to indicate the injected position source is NLP
+    location.techMask |= LOCATION_TECHNOLOGY_WIFI_BIT;
     injectPosition(location, onDemandCpi);
 }
 
@@ -1059,11 +1061,11 @@ void LocApiV02::injectPosition(const Location& location, bool onDemandCpi)
     }
 
     LOC_LOGv("Lat=%lf, Lon=%lf, Acc=%.2lf rawAcc=%.2lf horConfidence=%d"
-             "rawHorConfidence=%d onDemandCpi=%d",
+             "rawHorConfidence=%d onDemandCpi=%d, positionSrc: %d, location.techMask: %u",
              injectPositionReq.latitude, injectPositionReq.longitude,
              injectPositionReq.horUncCircular, injectPositionReq.rawHorUncCircular,
              injectPositionReq.horConfidence, injectPositionReq.rawHorConfidence,
-             injectPositionReq.onDemandCpi);
+             injectPositionReq.onDemandCpi, injectPositionReq.positionSrc, location.techMask);
 
     LOC_SEND_SYNC_REQ(InjectPosition, INJECT_POSITION, injectPositionReq);
 
