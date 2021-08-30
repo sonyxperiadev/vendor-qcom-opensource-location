@@ -1348,15 +1348,15 @@ void LocApiV02::injectPositionAndCivicAddress(const Location& location,
 
     len = addr.subThoroughfare.length();
     if (len != 0) {
-        injectPosAndAddrReq.roadSection_valid = 1;
-        strlcpy(injectPosAndAddrReq.roadSection, addr.subThoroughfare.c_str(),
-                sizeof(injectPosAndAddrReq.roadSection));
+        injectPosAndAddrReq.houseNumber_valid = 1;
+        strlcpy(injectPosAndAddrReq.houseNumber, addr.subThoroughfare.c_str(),
+                sizeof(injectPosAndAddrReq.houseNumber));
     }
 
     LOC_LOGd("[%s:%d] QMI Civic Address: countryCode: %s, SubdivA1: %s,\n"
             "SubdivA2: %s, City: %s, CityDiv: %s\n"
             "Street: %s, landmark: %s, postalCode: %s\n"
-            "Building: %s, PrimaryRoad: %s, RoadSection: %s", __func__, __LINE__,
+            "Building: %s, PrimaryRoad: %s, houseNumber: %s", __func__, __LINE__,
             injectPosAndAddrReq.country,
             injectPosAndAddrReq.subdivA1,
             injectPosAndAddrReq.subdivA2,
@@ -1367,7 +1367,7 @@ void LocApiV02::injectPositionAndCivicAddress(const Location& location,
             injectPosAndAddrReq.postalCode,
             injectPosAndAddrReq.building,
             injectPosAndAddrReq.primaryRoad,
-            injectPosAndAddrReq.roadSection);
+            injectPosAndAddrReq.houseNumber);
 
     req_union.pInjectLocationCivicAddressReq = &injectPosAndAddrReq;
 
