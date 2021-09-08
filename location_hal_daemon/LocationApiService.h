@@ -154,6 +154,7 @@ public:
 
     // other APIs
     void deleteClientbyName(const std::string name);
+    void deleteEapClientByIds(int id1, int id2);
 
     // protobuf conversion util class
     LocationApiPbMsgConv mPbufMsgConv;
@@ -269,6 +270,15 @@ private:
     inline LocHalDaemonClientHandler* getClient(const char* socketName) {
         std::string clientname(socketName);
         return getClient(clientname);
+    }
+
+    inline const char* getClientNameByIds(int id1, int id2) {
+        for (auto it = mClients.begin(); it != mClients.end(); ++it) {
+            if (it->second->getServiceId() == id1 && it->second->getInstanceId() == id2) {
+                return it->first.c_str();
+            }
+        }
+        return nullptr;
     }
 
     GnssInterface* getGnssInterface();
