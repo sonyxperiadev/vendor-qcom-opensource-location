@@ -124,7 +124,7 @@ void loc_sync_req_init()
       pthread_mutex_init(&slot->sync_req_lock, NULL);
       pthread_condattr_t condAttr;
       pthread_condattr_init(&condAttr);
-      pthread_condattr_setclock(&condAttr, CLOCK_MONOTONIC);
+      pthread_condattr_setclock(&condAttr, CLOCK_REALTIME);
       pthread_cond_init(&slot->ind_arrived_cond, &condAttr);
       pthread_condattr_destroy(&condAttr);
 
@@ -442,7 +442,7 @@ static int loc_sync_wait_for_ind(
       }
 
       /* Calculate absolute expire time */
-      clock_gettime(CLOCK_MONOTONIC, &expire_time);
+      clock_gettime(CLOCK_REALTIME, &expire_time);
       expire_time.tv_sec += timeout_seconds;
 
       /* Take new wait request */
