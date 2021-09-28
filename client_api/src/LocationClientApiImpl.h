@@ -198,6 +198,7 @@ private:
     //Year of HW information, 0 is invalid
     uint16_t                   mYearOfHw;
     bool                       mPositionSessionResponseCbPending;
+    uint64_t                   mSessionStartBootTimestampNs;
 
     // callbacks
     CapabilitiesCb          mCapabilitiesCb;
