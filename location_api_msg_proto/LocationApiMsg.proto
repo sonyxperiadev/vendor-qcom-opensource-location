@@ -46,8 +46,8 @@ enum LocationApiMsgVersion {
     LOCAPI_MSG_VER_MAJOR = 1;
     // Minor - New features / API addition, new message/elemtent addition.
     // Bump the last byte of version i.e. x.2 to x.3
-    // Minor version 8: Add option for using protobuf-lite at runtime
-    LOCAPI_MSG_VER_MINOR = 8;
+    // Minor version 9: Add xtra configure and get XTRA status via LIA
+    LOCAPI_MSG_VER_MINOR = 9;
 }
 
 // ============================================================================
@@ -134,6 +134,7 @@ enum PBELocMsgID {
     PB_E_INTAPI_CONFIG_USER_CONSENT_TERRESTRIAL_POSITIONING_MSG_ID = 211;
     PB_E_INTAPI_CONFIG_OUTPUT_NMEA_TYPES_MSG_ID = 212;
     PB_E_INTAPI_CONFIG_ENGINE_INTEGRITY_RISK_MSG_ID = 213;
+    PB_E_INTAPI_CONFIG_XTRA_PARAMS_MSG_ID = 214;
 
     // integration API config retrieval request/response
     PB_E_INTAPI_GET_ROBUST_LOCATION_CONFIG_REQ_MSG_ID  = 300;
@@ -147,6 +148,12 @@ enum PBELocMsgID {
 
     PB_E_INTAPI_GET_CONSTELLATION_SECONDARY_BAND_CONFIG_REQ_MSG_ID  = 306;
     PB_E_INTAPI_GET_CONSTELLATION_SECONDARY_BAND_CONFIG_RESP_MSG_ID  = 307;
+
+    PB_E_INTAPI_GET_XTRA_STATUS_REQ_MSG_ID  = 308;
+    PB_E_INTAPI_GET_XTRA_STATUS_RESP_MSG_ID  = 309;
+
+    PB_E_INTAPI_REGISTER_XTRA_STATUS_UPDATE_REQ_MSG_ID = 310;
+    PB_E_INTAPI_DEREGISTER_XTRA_STATUS_UPDATE_REQ_MSG_ID = 311;
 }
 
 enum PBClientType {
@@ -540,6 +547,12 @@ message PBLocConfigEngineIntegrityRiskReqMsg {
     uint32 integrityRisk = 2;
 }
 
+// defintion for message with msg id of PB_E_INTAPI_CONFIG_XTRA_PARAMS_MSG_ID
+message PBLocConfigXtraReqMsg {
+    bool enable = 1;
+    PBXtraConfigParams xtraParams = 2;
+}
+
 //******************************************************************************
 // IPC message structure - Location Integration API Get request/response message
 //******************************************************************************
@@ -577,6 +590,23 @@ message PBLocConfigGetMinSvElevationRespMsg {
 message PBLocConfigGetConstltnSecondaryBandConfigRespMsg {
     PBGnssSvTypeConfig mSecondaryBandConfig = 1;
 }
+
+// defintion for message with msg id of PB_E_INTAPI_GET_XTRA_STATUS_REQ_MSG_ID
+// no struct member
+
+// defintion for message with msg id of PB_E_INTAPI_GET_XTRA_STATUS_RESP_MSG_ID
+message PBLocConfigGetXtraStatusRespMsg {
+    PBXtraStatusUpdateType mUpdateType = 1;
+    PBXtraStatus           mXtraStatus = 2;;
+}
+
+// defintion for message with msg id of
+// PB_E_INTAPI_REGISTER_XTRA_STATUS_UPDATE_REQ_MSG_ID
+// no struct member
+
+// defintion for message with msg id of
+// PB_E_INTAPI_DEREGISTER_XTRA_STATUS_UPDATE_REQ_MSG_ID
+// no struct member
 
 //*****************************
 // IPC message structure - ping

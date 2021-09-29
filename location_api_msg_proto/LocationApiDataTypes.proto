@@ -44,8 +44,8 @@ enum LocationApiDataTypesVersion {
     LOCAPI_DATA_TYPES_VER_MAJOR = 1;
     // Minor - New features / API addition, new message/elemtent addition.
     // Bump the last byte of version i.e. x.2 to x.3
-    // Minor version 16: Add elevation and azimuth validity bits for sv info report
-    LOCAPI_DATA_TYPES_VER_MINOR = 16;
+    // Minor version 17: Add xtra configure and status retrieval via LIA
+    LOCAPI_DATA_TYPES_VER_MINOR = 17;
 }
 
 // ============================================================================
@@ -1347,3 +1347,116 @@ message PBDeadReckoningEngineConfig {
     // sensor data-sheet or from actual calibration.
     float gyroScaleFactorUnc = 6;
 }
+
+// Specify the logcat debug level. Currently, only XTRA daemon
+// will support the runtime configure of debug log level.
+enum PBDebugLogLevel {
+    // No debug message will be outputed.
+    PB_DEBUG_LOG_LEVEL_NONE = 0;
+    // Only error level debug messages will get logged.
+    PB_DEBUG_LOG_LEVEL_ERROR = 1;
+    // Only warning/error level debug messages will get logged.
+    PB_DEBUG_LOG_LEVEL_WARNING = 2;
+    // Only info/wanring/error level debug messages will get logged.
+    PB_DEBUG_LOG_LEVEL_INFO = 3;
+    // Only debug/info/wanring/error level debug messages will get logged.
+    PB_DEBUG_LOG_LEVEL_DEBUG = 4;
+    // Verbose/debug/info/wanring/error level debug messages will get logged.
+    PB_DEBUG_LOG_LEVEL_VERBOSE = 5;
+};
+
+// Xtra feature configuration parameters
+message PBXtraConfigParams {
+    // Number of minutes between periodic, consecutive successful
+    // XTRA assistance data downloads. The configured value is in
+    // unit of 1 minute and will be capped at a maximum of 168
+    // hours and minimum of 48 hours. Please note this parameter
+    // does not apply to NTP time download.
+    // 0 value will use modem default XTRA download.
+    uint32 xtraDownloadIntervalMinute = 1;
+    // Connection timeout when connecting backend for both xtra
+    // assistance data download and NTP time downlaod. The
+    // configured value is in in unit of 1 second and should be
+    // capped at a maximum of 300 secs (not indefinite) and minimum
+    // of 3 secs.
+    uint32 xtraDownloadTimeoutSec = 2;
+    // Interval to wait before retrying xtra assistance data
+    // download in case of device error. The configured value is in
+    // unit of 1 minute and should be capped with a maximum of 1
+    // day and a minimum of 3 minutes. Please note that this
+    // parameter does not apply to NTP time download.
+    uint32 xtraDownloadRetryIntervalMinute = 3;
+    // Total number of allowed retry attempts for assistance data
+    // download in case of device error.
+    // The configured value is in unit of 1 retry and max number of
+    // allowed retry is 6 per download interval.
+    // Please note that this parameter does not apply to NTP
+    // time download.
+    uint32 xtraDownloadRetryAttempts = 4;
+    // Path to the certificate authority (CA) repository that need
+    // to be used for XTRA assistance data download. Max of 128
+    // bytes, including null-terminating byte will be supported.
+    // Please note that paraemter does not apply to NTP time
+    // download.
+    string xtraCaPath = 5;
+    // URLs from which XTRA assistance data will be fetched. Three
+    // URLs need to be configured when this API is used. The URLs
+    // shall include the port number to be used for download. Max
+    // of 128 bytes, including null-terminating byte will be
+    // supported. Valid xtra server URLs should start with
+    // "https://". */
+    repeated string xtraServerURLs = 6;
+    // URLs for NTP server to fetch current time.
+    // The URLs shall include the port number to be used for
+    // download. Max of 128 bytes, including null-terminating byte
+    // will be supported. Example of valid ntp server URL is:
+    //  ntp.contiserver.com:123.
+    repeated string ntpServerURLs = 7;
+    // Level of debug log messages that will be logged.
+    PBDebugLogLevel xtraDaemonDebugLogLevel = 8;
+};
+
+enum PBXtraStatusUpdateType {
+    // Not used, PB need first enum to start at 0
+    PB_XTRA_STATUS_UPDATE_UNDEFINED = 0;
+    // XTRA status update due to invoke getXtraStatus().
+    PB_XTRA_STATUS_UPDATE_UPON_QUERY = 1;
+    // XTRA status update due to first invokation of registerXtraStatusUpdate().
+    PB_XTRA_STATUS_UPDATE_UPON_REGISTRATION = 2;
+    // XTRA status update due to xtra feature enablement/disablement and
+    // status change in xtra assistance data status,
+    // e.g.: from unknown to known during device bootup, from VALID to NOT_VALID,
+    // or when XTRA data gets downloaded.
+    PB_XTRA_STATUS_UPDATE_UPON_STATUS_CHANGE = 3;
+};
+
+// Specify the XTRA assistance data status.
+enum PBXtraDataStatus {
+    // If XTRA feature is disabled or if XTRA feature is enabled,
+    // but XTRA daemon has not yet retrieved the assistance data
+    // status from modem on early stage of device bootup, xtra data
+    //  status will be unknown.
+    PB_XTRA_DATA_STATUS_UNKNOWN = 0;
+    // If XTRA feature is enabled, but XTRA data is not present
+    // on the device.
+    PB_XTRA_DATA_STATUS_NOT_AVAIL = 1;
+    // If XTRA feature is enabled, XTRA data has been downloaded
+    //  ever but no longer valid.
+    PB_XTRA_DATA_STATUS_NOT_VALID = 2;
+    // If XTRA feature is enabled, XTRA data has been downloaded
+    // and is currently valid.
+    PB_XTRA_DATA_STATUS_VALID = 3;
+};
+
+message PBXtraStatus {
+    // XTRA assistance data and NTP time download is enabled or disabled.
+    bool featureEnabled = 1;
+    // XTRA assistance data status. If XTRA assistance data download is
+    // not enabled, this field will be set to XTRA_DATA_STATUS_UNKNOWN.
+    PBXtraDataStatus xtraDataStatus = 2;
+    // Number of hours that xtra assistance data will remain valid.
+    // This field will be valid when xtraDataStatus is set to
+    // XTRA_DATA_STATUS_VALID.
+    // For all other XtraDataStatus, this field will be set to 0.
+    uint32 xtraValidForHours = 3;
+};
