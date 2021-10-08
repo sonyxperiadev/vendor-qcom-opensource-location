@@ -161,7 +161,7 @@ LocationApiService::LocationApiService(const configParamToRead & configParamRead
         onGnssConfigCallback(sessionId, config);
     };
 
-    mLocationControlApi = LocationControlAPI::createInstance(mControlCallabcks);
+    mLocationControlApi = LocationControlAPI::getInstance(mControlCallabcks);
     if (nullptr == mLocationControlApi) {
         LOC_LOGd("Failed to create LocationControlAPI");
         return;

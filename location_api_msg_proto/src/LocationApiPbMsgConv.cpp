@@ -4434,7 +4434,7 @@ int LocationApiPbMsgConv::pbConvertToCollectiveResPayload(
         CollectiveResPayload &clctResPayload) const {
     // repeated PBGeofenceResponse resp = 1;
     uint32_t count = pbClctResPayload.resp_size();
-    LocApiPb_LOGd("LocApiPB: pbClctResPayload count:%lu", count);
+    LocApiPb_LOGd("LocApiPB: pbClctResPayload count:%" PRIu32"", count);
     for (int i=0; i < count; i++) {
         GeofenceResponse gfResp;
         gfResp.clientId = pbClctResPayload.resp(i).clientid();
@@ -4527,7 +4527,7 @@ int LocationApiPbMsgConv::pbConvertToLocAPIGfBreachNotification(
 
     // repeated uint32 id = 4;
     uint32_t gfBreachCnt = pbLocApiGfBreachNotif.id_size();
-    LOC_LOGd("LocApiPB: gfBreachCnt: %lu", gfBreachCnt);
+    LOC_LOGd("LocApiPB: gfBreachCnt: %" PRIu32"", gfBreachCnt);
     for (uint32_t i=0; i < gfBreachCnt; i++) {
         locApiGfBreachNotif.id.push_back(pbLocApiGfBreachNotif.id(0));
     }

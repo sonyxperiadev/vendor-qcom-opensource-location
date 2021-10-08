@@ -1254,11 +1254,13 @@ LocationClientApiImpl::LocationClientApiImpl(CapabilitiesCb capabitiescb) :
 LocationClientApiImpl::~LocationClientApiImpl() {
 }
 
-void LocationClientApiImpl::destroy() {
+void LocationClientApiImpl::destroy(locationApiDestroyCompleteCallback destroyCompleteCb) {
 
     struct DestroyReq : public LocMsg {
-        DestroyReq(LocationClientApiImpl* apiImpl) :
-                mApiImpl(apiImpl) {}
+        DestroyReq(LocationClientApiImpl* apiImpl,
+                locationApiDestroyCompleteCallback destroyCompleteCb) :
+                mApiImpl(apiImpl),
+                mDestroyCompleteCb(destroyCompleteCb) {}
         virtual ~DestroyReq() {}
         void proc() const {
             // deregister
@@ -1284,12 +1286,17 @@ void LocationClientApiImpl::destroy() {
                          mApiImpl->mClientIdGenerator, mApiImpl->mClientId);
             }
 #endif //FEATURE_EXTERNAL_AP
+            if (!mDestroyCompleteCb) {
+                (mDestroyCompleteCb) ();
+            }
+
             delete mApiImpl;
         }
         LocationClientApiImpl* mApiImpl;
+        locationApiDestroyCompleteCallback mDestroyCompleteCb;
     };
 
-    mMsgTask.sendMsg(new (nothrow) DestroyReq(this));
+    mMsgTask.sendMsg(new (nothrow) DestroyReq(this, destroyCompleteCb));
 }
 
 /******************************************************************************
@@ -2767,4 +2774,19 @@ void LocationClientApiImpl::gnssNiResponse(uint32_t id, GnssNiResponse response)
 
 void LocationClientApiImpl::updateTrackingOptions(uint32_t id, TrackingOptions& options) {
 }
+
+
+static ILocationAPI* gLocationClientApiImpl = nullptr;
+static mutex gMutexForCreate;
+extern "C" ILocationAPI* getLocationClientApiImpl(CapabilitiesCb capabitiescb)
+{
+    lock_guard<mutex> lock(gMutexForCreate);
+
+    if (nullptr == gLocationClientApiImpl) {
+        gLocationClientApiImpl = new LocationClientApiImpl(capabitiescb);
+    }
+
+    return gLocationClientApiImpl;
+}
+
 } // namespace location_client
