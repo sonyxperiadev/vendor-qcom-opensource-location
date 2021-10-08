@@ -942,6 +942,12 @@ static GnssSv parseGnssSv(const ::GnssSv &halGnssSv) {
     if (::GNSS_SV_OPTIONS_HAS_BASEBAND_CARRIER_TO_NOISE_BIT & halGnssSv.gnssSvOptionsMask) {
         gnssSvOptionsMask |= GNSS_SV_OPTIONS_HAS_BASEBAND_CARRIER_TO_NOISE_BIT;
     }
+    if (::GNSS_SV_OPTIONS_HAS_ELEVATION_BIT & halGnssSv.gnssSvOptionsMask) {
+        gnssSvOptionsMask |= GNSS_SV_OPTIONS_HAS_ELEVATION_BIT;
+    }
+    if (::GNSS_SV_OPTIONS_HAS_AZIMUTH_BIT & halGnssSv.gnssSvOptionsMask) {
+        gnssSvOptionsMask |= GNSS_SV_OPTIONS_HAS_AZIMUTH_BIT;
+    }
     gnssSv.gnssSvOptionsMask = (GnssSvOptionsMask)gnssSvOptionsMask;
 
     gnssSv.carrierFrequencyHz = halGnssSv.carrierFrequencyHz;

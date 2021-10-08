@@ -3564,10 +3564,12 @@ void  LocApiV02 :: reportSv (
 
                 if (sv_info_ptr->validMask & QMI_LOC_SV_INFO_MASK_VALID_ELEVATION_V02) {
                     gnssSv_ref.elevation = sv_info_ptr->elevation;
+                    mask |= GNSS_SV_OPTIONS_HAS_ELEVATION_BIT;
                 }
 
                 if (sv_info_ptr->validMask & QMI_LOC_SV_INFO_MASK_VALID_AZIMUTH_V02) {
                     gnssSv_ref.azimuth = sv_info_ptr->azimuth;
+                    mask |= GNSS_SV_OPTIONS_HAS_AZIMUTH_BIT;
                 }
 
                 if (sv_info_ptr->validMask &
