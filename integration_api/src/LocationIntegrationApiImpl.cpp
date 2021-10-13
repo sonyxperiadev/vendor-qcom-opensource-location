@@ -253,7 +253,7 @@ LocationIntegrationApiImpl::LocationIntegrationApiImpl(LocIntegrationCbs& integr
     shared_ptr<IpcListener> listener(make_shared<IpcListener>(*this, mMsgTask, SockNode::Eap));
     unique_ptr<LocIpcRecver> recver = LocIpc::getLocIpcQrtrRecver(listener,
             sock.getId1(), sock.getId2(),
-            make_shared<HalDaemonQrtrWatcher>(listener, mIpcSender, mPbufMsgConv, *mMsgTask));
+            make_shared<HalDaemonQrtrWatcher>(listener, mIpcSender, mPbufMsgConv, mMsgTask));
 #else
     SockNodeLocal sock(LOCATION_INTEGRATION_API, pid, 0);
     size_t pathNameLength = strlcpy(mSocketName, sock.getNodePathname().c_str(),

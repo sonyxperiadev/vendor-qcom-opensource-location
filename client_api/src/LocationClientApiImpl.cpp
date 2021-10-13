@@ -1235,7 +1235,7 @@ LocationClientApiImpl::LocationClientApiImpl(CapabilitiesCb capabitiescb) :
     shared_ptr<IpcListener> listener(make_shared<IpcListener>(*this, mMsgTask, SockNode::Eap));
     unique_ptr<LocIpcRecver> recver = LocIpc::getLocIpcQrtrRecver(listener,
             sock.getId1(), sock.getId2(),
-            make_shared<HalDaemonQrtrWatcher>(listener, mIpcSender, mPbufMsgConv, *mMsgTask));
+            make_shared<HalDaemonQrtrWatcher>(listener, mIpcSender, mPbufMsgConv, mMsgTask));
 #else
     // get clientId
     lock_guard<mutex> lock(mMutex);
