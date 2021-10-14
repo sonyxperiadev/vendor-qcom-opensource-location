@@ -412,7 +412,7 @@ void LocHalDaemonClientHandler::onResponseCb(LocationError err, uint32_t id) {
     std::lock_guard<std::mutex> lock(LocationApiService::mMutex);
 
     if (nullptr != mIpcSender) {
-        LOC_LOGd("--< onResponseCb err=%u id=%u", err, id);
+        LOC_LOGd("--< onResponseCb err=%u id=%u client %s", err, id, mName.c_str());
 
         ELocMsgID pendingMsgId = E_LOCAPI_UNDEFINED_MSG_ID;
         if (!mPendingMessages.empty()) {
@@ -474,7 +474,7 @@ void LocHalDaemonClientHandler::onResponseCb(LocationError err, uint32_t id) {
 void LocHalDaemonClientHandler::onCollectiveResponseCallback(
         size_t count, LocationError *errs, uint32_t *ids) {
     std::lock_guard<std::mutex> lock(LocationApiService::mMutex);
-    LOC_LOGd("--< onCollectiveResponseCallback");
+    LOC_LOGd("--< onCollectiveResponseCallback, client name %s", mName.c_str());
 
     if (nullptr == mIpcSender) {
         LOC_LOGe("mIpcSender is null");
@@ -569,7 +569,8 @@ LocHalDaemonClientHandler - Location Control API response callback functions
 void LocHalDaemonClientHandler::onControlResponseCb(LocationError err, ELocMsgID msgId) {
     // no need to hold the lock, as lock is already held at the caller
     if (nullptr != mIpcSender) {
-        LOC_LOGi("--< onControlResponseCb err=%u msgId=%u", err, msgId);
+        LOC_LOGi("--< onControlResponseCb err=%u msgId=%u, client name=%s",
+                 err, msgId, mName.c_str());
         string pbStr;
         LocAPIGenericRespMsg msg(SERVICE_NAME, msgId, err, &mService->mPbufMsgConv);
         if (msg.serializeToProtobuf(pbStr)) {
@@ -661,7 +662,7 @@ LocHalDaemonClientHandler - Location API callback functions
 void LocHalDaemonClientHandler::onCapabilitiesCallback(LocationCapabilitiesMask mask) {
 
     std::lock_guard<std::mutex> lock(LocationApiService::mMutex);
-    LOC_LOGd("--< onCapabilitiesCallback=0x%" PRIx64, mask);
+    LOC_LOGd("--< onCapabilitiesCallback=0x%" PRIx64" client name %s", mask, mName.c_str());
 
     if ((nullptr != mIpcSender) && (mask != mCapabilityMask)) {
         // broadcast
@@ -688,7 +689,8 @@ void LocHalDaemonClientHandler::onCapabilitiesCallback(LocationCapabilitiesMask 
 void LocHalDaemonClientHandler::onTrackingCb(Location location) {
 
     std::lock_guard<std::mutex> lock(LocationApiService::mMutex);
-    LOC_LOGd("--< onTrackingCb");
+    LOC_LOGd("--< onTrackingCb, client name %s, ipc valid %d, sub mask 0x%x", mName.c_str(),
+             (nullptr != mIpcSender), mSubscriptionMask);
 
     if ((nullptr != mIpcSender) &&
         (mSubscriptionMask & (E_LOC_CB_TRACKING_BIT | E_LOC_CB_SIMPLE_LOCATION_INFO_BIT))) {
@@ -711,7 +713,7 @@ void LocHalDaemonClientHandler::onTrackingCb(Location location) {
 void LocHalDaemonClientHandler::onBatchingCb(size_t count, Location* location,
         BatchingOptions batchOptions) {
     std::lock_guard<std::mutex> lock(LocationApiService::mMutex);
-    LOC_LOGd("--< onBatchingCb");
+    LOC_LOGd("--< onBatchingCb, client name %s", mName.c_str());
 
     if ((nullptr != mIpcSender) && (mSubscriptionMask & E_LOC_CB_BATCHING_BIT)) {
         if (0 == count) {
@@ -808,7 +810,8 @@ void LocHalDaemonClientHandler::onGeofenceBreachCb(GeofenceBreachNotification gf
 void LocHalDaemonClientHandler::onGnssLocationInfoCb(GnssLocationInfoNotification notification) {
 
     std::lock_guard<std::mutex> lock(LocationApiService::mMutex);
-    LOC_LOGd("--< onGnssLocationInfoCb");
+    LOC_LOGd("--< onGnssLocationInfo, client name %s, ipc valid %d, sub mask 0x%x", mName.c_str(),
+             (nullptr != mIpcSender), mSubscriptionMask);
 
     if ((nullptr != mIpcSender) &&
         (mSubscriptionMask & E_LOC_CB_GNSS_LOCATION_INFO_BIT)) {
@@ -831,10 +834,11 @@ void LocHalDaemonClientHandler::onEngLocationsInfoCb(
         uint32_t count,
         GnssLocationInfoNotification* engLocationsInfoNotification
 ) {
-
     std::lock_guard<std::mutex> lock(LocationApiService::mMutex);
-    LOC_LOGd("--< onEngLocationInfoCb count: %d, locReqEngTypeMask 0x%x",
-             count, mOptions.locReqEngTypeMask);
+    LOC_LOGd("--< onEngLocationInfoCb count: %d, locReqEngTypeMask 0x%x,"
+             "client name %s, ipc valid %d, sub mask 0x%x",
+             count, mOptions.locReqEngTypeMask, mName.c_str(),
+             (nullptr != mIpcSender), mSubscriptionMask);
 
     if ((nullptr != mIpcSender) &&
         (mSubscriptionMask & E_LOC_CB_ENGINE_LOCATIONS_INFO_BIT)) {
@@ -884,7 +888,9 @@ void LocHalDaemonClientHandler::onGnssNiCb(uint32_t id, GnssNiNotification gnssN
 
 void LocHalDaemonClientHandler::onGnssSvCb(GnssSvNotification notification) {
     std::lock_guard<std::mutex> lock(LocationApiService::mMutex);
-    LOC_LOGd("--< onGnssSvCb");
+    LOC_LOGd("--< onGnssSvCb, client name %s, ipc valid %d, sub mask 0x%x",
+             mName.c_str(), (nullptr != mIpcSender), mSubscriptionMask);
+
     if ((nullptr != mIpcSender) &&
             (mSubscriptionMask & E_LOC_CB_GNSS_SV_BIT)) {
         // broadcast
@@ -906,8 +912,12 @@ void LocHalDaemonClientHandler::onGnssSvCb(GnssSvNotification notification) {
 void LocHalDaemonClientHandler::onGnssNmeaCb(GnssNmeaNotification notification) {
 
     std::lock_guard<std::mutex> lock(LocationApiService::mMutex);
+
+    LOC_LOGd("--< onGnssNmeaCb, client name %s, ipc valid %d, sub mask 0x%x",
+             mName.c_str(), (nullptr != mIpcSender), mSubscriptionMask);
+
     if ((nullptr != mIpcSender) && (mSubscriptionMask & E_LOC_CB_GNSS_NMEA_BIT)) {
-        LOC_LOGd("--< onGnssNmeaCb[%s] t=%" PRIu64" l=%zu nmea=%s",
+        LOC_LOGv("--< onGnssNmeaCb[%s] t=%" PRIu64" l=%zu nmea=%s",
                 mName.c_str(),
                 notification.timestamp,
                 notification.length,
@@ -935,7 +945,8 @@ void LocHalDaemonClientHandler::onGnssNmeaCb(GnssNmeaNotification notification) 
 void LocHalDaemonClientHandler::onGnssDataCb(GnssDataNotification notification) {
 
     std::lock_guard<std::mutex> lock(LocationApiService::mMutex);
-    LOC_LOGd("--< onGnssDataCb");
+    LOC_LOGd("--< onGnssDataCb, client name %s, ipc valid %d, sub mask 0x%x",
+             mName.c_str(), (nullptr != mIpcSender), mSubscriptionMask);
 
     if ((nullptr != mIpcSender) &&
             (mSubscriptionMask & E_LOC_CB_GNSS_DATA_BIT)) {
@@ -968,7 +979,9 @@ void LocHalDaemonClientHandler::onGnssDataCb(GnssDataNotification notification) 
 
 void LocHalDaemonClientHandler::onGnssMeasurementsCb(GnssMeasurementsNotification notification) {
     std::lock_guard<std::mutex> lock(LocationApiService::mMutex);
-    LOC_LOGd("--< onGnssMeasurementsCb");
+    LOC_LOGd("--< onGnssMeasurementsCb, client name %s, ipc valid %d, sub mask 0x%x",
+             mName.c_str(), (nullptr != mIpcSender), mSubscriptionMask);
+
     if ((nullptr != mIpcSender) &&
             (mSubscriptionMask & (E_LOC_CB_GNSS_MEAS_BIT | E_LOC_CB_GNSS_NHZ_MEAS_BIT))) {
         string pbStr;
@@ -990,7 +1003,8 @@ void LocHalDaemonClientHandler::onGnssMeasurementsCb(GnssMeasurementsNotificatio
 void LocHalDaemonClientHandler::onLocationSystemInfoCb(LocationSystemInfo notification) {
 
     std::lock_guard<std::mutex> lock(LocationApiService::mMutex);
-    LOC_LOGd("--< onLocationSystemInfoCb");
+    LOC_LOGd("--< onLocationSystemInfoCb, client name %s, ipc valid %d, sub mask 0x%x",
+             mName.c_str(), (nullptr != mIpcSender), mSubscriptionMask);
 
     if ((nullptr != mIpcSender) &&
             (mSubscriptionMask & E_LOC_CB_SYSTEM_INFO_BIT)) {
@@ -1013,7 +1027,7 @@ void LocHalDaemonClientHandler::onLocationSystemInfoCb(LocationSystemInfo notifi
 void LocHalDaemonClientHandler::onLocationApiDestroyCompleteCb() {
     std::lock_guard<std::mutex> lock(LocationApiService::mMutex);
 
-    LOC_LOGe("delete LocHalDaemonClientHandler");
+    LOC_LOGe("delete LocHalDaemonClientHandler, client name %s", mName.c_str());
     delete this;
     // PLEASE NOTE: no more code after this, including print for class variable
 }
@@ -1026,6 +1040,8 @@ LocHalDaemonClientHandler - Engine info related functionality
 // as well
 void LocHalDaemonClientHandler::onGnssEnergyConsumedInfoAvailable(
    LocAPIGnssEnergyConsumedIndMsg &msg) {
+
+   std::lock_guard<std::mutex> lock(LocationApiService::mMutex);
    if ((nullptr != mIpcSender) &&
             (mEngineInfoRequestMask & E_ENGINE_INFO_CB_GNSS_ENERGY_CONSUMED_BIT)) {
         string pbStr;
