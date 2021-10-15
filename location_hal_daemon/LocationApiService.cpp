@@ -123,6 +123,25 @@ public:
 };
 
 /******************************************************************************
+LocIpcQrtrWatcher override
+******************************************************************************/
+class HalDaemonQrtrClientWatcher : public LocIpcQrtrWatcher {
+    LocationApiService* mService;
+public:
+    inline HalDaemonQrtrClientWatcher(LocationApiService* service) :
+            LocIpcQrtrWatcher({LOCATION_CLIENT_API_QSOCKET_CLIENT_SERVICE_ID}),
+            mService(service) {
+    }
+    inline virtual void onServiceStatusChange(int serviceId, int instanceId,
+            LocIpcQrtrWatcher::ServiceStatus status, const LocIpcSender& refSender) {
+        if (LocIpcQrtrWatcher::ServiceStatus::DOWN == status) {
+             LOC_LOGi(">-- client deleted by qrtr: (%d, %d)", serviceId, instanceId);
+             mService->deleteEapClientByIds(serviceId, instanceId);
+        }
+    }
+};
+
+/******************************************************************************
 LocationApiService - constructors
 ******************************************************************************/
 LocationApiService::LocationApiService(const configParamToRead & configParamRead) :
@@ -223,9 +242,11 @@ LocationApiService::LocationApiService(const configParamToRead & configParamRead
     // blocking: set to false
     mIpc.startNonBlockingListening(recver);
 
-    mBlockingRecver = LocIpc::getLocIpcQrtrRecver(make_shared<LocHaldIpcListener>(*this),
+    mBlockingRecver = LocIpc::getLocIpcQrtrRecver(
+            make_shared<LocHaldIpcListener>(*this),
             LOCATION_CLIENT_API_QSOCKET_HALDAEMON_SERVICE_ID,
-            LOCATION_CLIENT_API_QSOCKET_HALDAEMON_INSTANCE_ID);
+            LOCATION_CLIENT_API_QSOCKET_HALDAEMON_INSTANCE_ID,
+            make_shared<HalDaemonQrtrClientWatcher>(this));
     mIpc.startBlockingListening(*mBlockingRecver);
 }
 
@@ -687,6 +708,19 @@ void LocationApiService::deleteClientbyName(const std::string clientname) {
     mTerrestrialFixReqs.erase(clientname);
     pClient->cleanup();
 }
+
+void LocationApiService::deleteEapClientByIds(int serviceId, int instanceId) {
+
+    std::lock_guard<std::mutex> lock(mMutex);
+
+    const char* clientName = getClientNameByIds(serviceId, instanceId);
+    if (clientName) {
+        LOC_LOGi(">-- service id: %d, instance id: %d, client name: %s",
+                 serviceId, instanceId, clientName);
+        deleteClientbyName(std::string(clientName));
+    }
+}
+
 /******************************************************************************
 LocationApiService - implementation - tracking
 ******************************************************************************/

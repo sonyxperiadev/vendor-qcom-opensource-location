@@ -84,12 +84,9 @@ public:
     SockNode(SockNode&& node) :
             SockNode(node.mId1, node.mId2, move(node.mNodePathnamePrefix)) {
     }
-    static SockNode create(const string fullPathName) {
-        return create(fullPathName.c_str(), fullPathName.size());
-    }
-    static SockNode create(const char* fullPathName, int32_t length = -1) {
+    static int getId1Id2(const char* fullPathName, int32_t length, int32_t& id1, int32_t& id2) {
         uint32_t count = 0;
-        int32_t indx = 0, id1 = -1, id2 = -1;
+        int32_t indx = 0;
 
         if (nullptr == fullPathName) {
             fullPathName = "";
@@ -108,9 +105,20 @@ public:
         } else {
             indx = 0;
         }
+        return indx;
+    }
+
+    static SockNode create(const string fullPathName) {
+        return create(fullPathName.c_str(), fullPathName.size());
+    }
+
+    static SockNode create(const char* fullPathName, int32_t length = -1) {
+        int32_t indx = 0, id1 = -1, id2 = -1;
+        indx = getId1Id2(fullPathName, length, id1, id2);
 
         return SockNode(id1, id2, string(fullPathName, indx));
     }
+
     inline int getId1() const { return mId1; }
     inline int getId2() const { return mId2; }
     inline const string& getNodePathnamePrefix() const { return mNodePathnamePrefix; }
