@@ -44,8 +44,8 @@ enum LocationApiDataTypesVersion {
     LOCAPI_DATA_TYPES_VER_MAJOR = 1;
     // Minor - New features / API addition, new message/elemtent addition.
     // Bump the last byte of version i.e. x.2 to x.3
-    // Minor version 14: Add option for using protobuf-lite at runtime
-    LOCAPI_DATA_TYPES_VER_MINOR = 14;
+    // Minor version 15: Add elapsed real time in PVT report
+    LOCAPI_DATA_TYPES_VER_MINOR = 15;
 }
 
 // ============================================================================
@@ -478,25 +478,27 @@ enum PBLocApiGnssAidingDataSvMask {
 
 // Flags to indicate which values are valid in a Location
 enum PBLocationFlagsMask {
-    PB_LOCATION_FLAGS_INVALID             = 0;
+    PB_LOCATION_FLAGS_INVALID                = 0;
     // location has valid latitude and longitude
-    PB_LOCATION_HAS_LAT_LONG_BIT          = 1;
+    PB_LOCATION_HAS_LAT_LONG_BIT             = 0x0001;
     // location has valid altitude
-    PB_LOCATION_HAS_ALTITUDE_BIT          = 2;
+    PB_LOCATION_HAS_ALTITUDE_BIT             = 0x0002;
     // location has valid speed
-    PB_LOCATION_HAS_SPEED_BIT             = 4;
+    PB_LOCATION_HAS_SPEED_BIT                = 0x0004;
     // location has valid bearing
-    PB_LOCATION_HAS_BEARING_BIT           = 8;
+    PB_LOCATION_HAS_BEARING_BIT              = 0x0008;
     // location has valid accuracy
-    PB_LOCATION_HAS_ACCURACY_BIT          = 16;
+    PB_LOCATION_HAS_ACCURACY_BIT             = 0x0010;
     // location has valid vertical accuracy
-    PB_LOCATION_HAS_VERTICAL_ACCURACY_BIT = 32;
+    PB_LOCATION_HAS_VERTICAL_ACCURACY_BIT    = 0x0020;
     // location has valid speed accuracy
-    PB_LOCATION_HAS_SPEED_ACCURACY_BIT    = 64;
+    PB_LOCATION_HAS_SPEED_ACCURACY_BIT       = 0x0040;
     // location has valid bearing accuracy
-    PB_LOCATION_HAS_BEARING_ACCURACY_BIT  = 128;
+    PB_LOCATION_HAS_BEARING_ACCURACY_BIT     = 0x0080;
     // location has valid valid Location::timestamp
-    PB_LOCATION_HAS_TIMESTAMP_BIT         = 256;
+    PB_LOCATION_HAS_TIMESTAMP_BIT            = 0x0100;
+    // location has valid valid elapsedRealTime
+    PB_LOCATION_HAS_ELAPSED_REAL_TIME_BIT    = 0x0200;
 }
 
 enum PBLocationTechnologyMask {
@@ -725,6 +727,10 @@ message PBLocation {
     float bearingAccuracy = 11;
     /** Sets of technology that contributed to the fix. bitwise OR of PBLocationTechnologyMask    */
     uint32 techMask = 12;
+    /** boot timestamp corresponding to GPS timestamp, in ns */
+    uint64 elapsedRealTime = 13;
+    /** boot timestamp uncertainty corresponding to GPS timestamp, in ns */
+    uint64 elapsedRealTimeUnc = 14;
 }
 
 message PBLocationOptions {
