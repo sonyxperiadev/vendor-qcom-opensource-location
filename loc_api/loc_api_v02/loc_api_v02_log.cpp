@@ -1,4 +1,4 @@
-/* Copyright (c) 2011-2015, 2018-2020 The Linux Foundation. All rights reserved.
+/* Copyright (c) 2011-2015, 2018-2021 The Linux Foundation. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -194,6 +194,7 @@ DECLARE_TBL(loc_v02_event_name) =
     NAME_VAL(QMI_LOC_SET_CONSTRAINED_TUNC_MODE_REQ_V02),
     NAME_VAL(QMI_LOC_ENABLE_POSITION_ASSISTED_CLOCK_EST_REQ_V02),
     NAME_VAL(QMI_LOC_QUERY_GNSS_ENERGY_CONSUMED_REQ_V02),
+    NAME_VAL(QMI_LOC_EVENT_REPORT_IND_V02),
     NAME_VAL(QMI_LOC_EVENT_GPS_EPHEMERIS_REPORT_IND_V02),
     NAME_VAL(QMI_LOC_EVENT_GLONASS_EPHEMERIS_REPORT_IND_V02),
     NAME_VAL(QMI_LOC_EVENT_BDS_EPHEMERIS_REPORT_IND_V02),
@@ -230,6 +231,7 @@ DECLARE_TBL(loc_v02_event_name) =
     NAME_VAL(QMI_LOC_SET_MULTIBAND_CONFIG_REQ_V02),
     NAME_VAL(QMI_LOC_GET_MULTIBAND_CONFIG_REQ_V02),
     NAME_VAL(QMI_LOC_LATENCY_INFORMATION_IND_V02),
+    NAME_VAL(QMI_LOC_EVENT_PLATFORM_POWER_STATE_CHANGED_IND_V02),
 };
 
 const char* loc_get_v02_event_name(uint32_t event)

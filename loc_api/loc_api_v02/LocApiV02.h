@@ -170,6 +170,7 @@ private:
   int  mMsInWeek;
   bool mAgcIsPresent;
   timeBiases mTimeBiases;
+  qmiLocPlatformPowerStateEnumT_v02 mPlatformPowerState;
 
   size_t mBatchSize, mDesiredBatchSize;
   size_t mTripBatchSize, mDesiredTripBatchSize;
@@ -183,7 +184,7 @@ private:
   ElapsedRealtimeEstimator mMeasElapsedRealTimeCal;
 
   /* Convert event mask from loc eng to loc_api_v02 format */
-  static locClientEventMaskType convertMask(LOC_API_ADAPTER_EVENT_MASK_T mask);
+  static locClientEventMaskType convertLocClientEventMask(LOC_API_ADAPTER_EVENT_MASK_T mask);
 
   /* Convert GPS LOCK from LocationAPI format to QMI format */
   static qmiLocLockEnumT_v02 convertGpsLockFromAPItoQMI(GnssConfigGpsLock lock);
@@ -335,9 +336,9 @@ private:
   void requestOdcpi(
     const qmiLocEventWifiReqIndMsgT_v02& odcpiReq);
 
-  void registerEventMask(LOC_API_ADAPTER_EVENT_MASK_T adapterMask);
+  void registerEventMask();
   bool sendRequestForAidingData(locClientEventMaskType qmiMask);
-  locClientEventMaskType adjustMaskIfNoSessionOrEngineOff(locClientEventMaskType qmiMask);
+  locClientEventMaskType adjustLocClientEventMask(locClientEventMaskType qmiMask);
   bool cacheGnssMeasurementSupport();
   void registerMasterClient();
   int getGpsLock(uint8_t subType);
@@ -372,6 +373,9 @@ private:
   void geofenceStatusEvent(const qmiLocEventGeofenceGenAlertIndMsgT_v02* alertInfo);
   void geofenceDwellEvent(const qmiLocEventGeofenceBatchedDwellIndMsgT_v02 *dwellEvent);
   void reportLatencyInfo(const qmiLocLatencyInformationIndMsgT_v02* pLocLatencyInfo);
+
+  void reportPowerStateChangeInfo(
+        const qmiLocPlatformPowerStateChangedIndMsgT_v02 *pPowerStateChangedInfo);
 
 protected:
   virtual enum loc_api_adapter_err
