@@ -76,6 +76,7 @@ typedef struct
     uint16_t gnssSvId;
     qmiLocMeasFieldsValidMaskT_v02 validMask;
     uint8_t cycleSlipCount;
+    uint8_t nHzMeasurement;
 } adrData;
 
 typedef uint64_t GpsSvMeasHeaderFlags;
