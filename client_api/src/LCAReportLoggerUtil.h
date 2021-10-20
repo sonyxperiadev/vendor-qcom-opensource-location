@@ -1,4 +1,4 @@
-/* Copyright (c) 2020, The Linux Foundation. All rights reserved.
+/* Copyright (c) 2020-2021, The Linux Foundation. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -39,13 +39,15 @@ namespace location_client {
 class LCAReportLoggerUtil {
 public:
     typedef void (*LogGnssLocation)(const GnssLocation& gnssLocation,
-            const LocationCapabilitiesMask& capMask);
+                                    const LocationCapabilitiesMask& capMask,
+                                    uint64_t sessionStartBootTimestampNs);
     typedef void (*LogGnssSv)(const std::vector<GnssSv>& gnssSvsVector);
     typedef void (*LogGnssNmea)(uint64_t timestamp, uint32_t length, const char* nmea);
     typedef void (*LogGnssMeas)(const GnssMeasurements& gnssMeasurements);
 
     LCAReportLoggerUtil();
-    void log(const GnssLocation& gnssLocation, const LocationCapabilitiesMask& capMask);
+    void log(const GnssLocation& gnssLocation, const LocationCapabilitiesMask& capMask,
+             uint64_t sessionStartBootTimestampNs);
     void log(const std::vector<GnssSv>& gnssSvsVector);
     void log(uint64_t timestamp, uint32_t length, const char* nmea);
     void log(const GnssMeasurements& gnssMeasurements);
