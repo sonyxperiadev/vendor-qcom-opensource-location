@@ -6761,6 +6761,7 @@ int LocApiV02 :: convertGnssClock (GnssMeasurementsClock& clock,
 
         // timeNs & timeUncertaintyNs
         clock.timeNs = (int64_t)gnss_measurement_info.systemTimeExt.refFCount * 1e6;
+        flags |= GNSS_MEASUREMENTS_CLOCK_FLAGS_TIME_BIT;
         clock.hwClockDiscontinuityCount = localDiscCount;
         clock.timeUncertaintyNs = 0.0;
 
