@@ -5711,8 +5711,8 @@ typedef struct {
       - eQMI_LOC_POSITION_SRC_GNSS_TERRESTRIAL_HYBRID (5) --  Position source is GNSS Terrestrial Hybrid \n
       - eQMI_LOC_POSITION_SRC_OTHER (6) --  Other sources \n
       - eQMI_LOC_POSITION_SRC_DRE (7) --  Position source is the dead reckoning engine \n
-      - eQMI_LOC_POSITION_SRC_FLP (8) --  Position source is Fused Location Provider
-      - eQMI_LOC_POSITION_SRC_NLP (9) --  Position source is Network Location Provider
+      - eQMI_LOC_POSITION_SRC_FLP (8) --  Position source is Fused Location Provider \n
+      - eQMI_LOC_POSITION_SRC_NLP (9) --  Position source is Network Location Provider \n
       - eQMI_LOC_POSITION_SRC_FLP_ALE (10) --  Position source is derived from Source MPSS  \n
  If altitude is specified and the altitude source is not specified, the engine
  assumes that the altitude was obtained using the specified position source. \n
