@@ -1844,27 +1844,35 @@ void LocationClientApiImpl::addGeofences(const ClientCallbacks& cbs,
 
             GeofenceOption* gfOptions = (GeofenceOption*)malloc(sizeof(GeofenceOption) * count);
             GeofenceInfo* gfInfos = (GeofenceInfo*)malloc(sizeof(GeofenceInfo) * count);
-            for (int i = 0; i < count; ++i) {
-                gfOptions[i].breachTypeMask = mGeofences[i].getBreachType();
-                gfOptions[i].responsiveness = mGeofences[i].getResponsiveness();
-                gfOptions[i].dwellTime = mGeofences[i].getDwellTime();
-                gfOptions[i].size = sizeof(gfOptions[i]);
+            if ((gfOptions != nullptr) && (gfInfos != nullptr)) {
+                for (int i = 0; i < count; ++i) {
+                    gfOptions[i].breachTypeMask = mGeofences[i].getBreachType();
+                    gfOptions[i].responsiveness = mGeofences[i].getResponsiveness();
+                    gfOptions[i].dwellTime = mGeofences[i].getDwellTime();
+                    gfOptions[i].size = sizeof(gfOptions[i]);
 
-                gfInfos[i].latitude = mGeofences[i].getLatitude();
-                gfInfos[i].longitude = mGeofences[i].getLongitude();
-                gfInfos[i].radius = mGeofences[i].getRadius();
-                gfInfos[i].size = sizeof(gfInfos[i]);
+                    gfInfos[i].latitude = mGeofences[i].getLatitude();
+                    gfInfos[i].longitude = mGeofences[i].getLongitude();
+                    gfInfos[i].radius = mGeofences[i].getRadius();
+                    gfInfos[i].size = sizeof(gfInfos[i]);
 
-                std::shared_ptr<GeofenceImpl> gfImpl(new GeofenceImpl(&mGeofences[i]));
-                gfImpl->bindGeofence(&mGeofences[i]);
-                mApiImpl->mLastAddedClientIds.push_back(gfImpl->getClientId());
-                mApiImpl->addGeofenceMap(gfImpl->getClientId(), mGeofences[i]);
-                LOC_LOGd("Geofence LastAddedClientId: %d", gfImpl->getClientId());
+                    std::shared_ptr<GeofenceImpl> gfImpl(new GeofenceImpl(&mGeofences[i]));
+                    gfImpl->bindGeofence(&mGeofences[i]);
+                    mApiImpl->mLastAddedClientIds.push_back(gfImpl->getClientId());
+                    mApiImpl->addGeofenceMap(gfImpl->getClientId(), mGeofences[i]);
+                    LOC_LOGd("Geofence LastAddedClientId: %d", gfImpl->getClientId());
+                }
+                mApiImpl->addGeofences(count, reinterpret_cast<GeofenceOption*>(gfOptions),
+                                       reinterpret_cast<GeofenceInfo*>(gfInfos));
+            } else {
+                mApiImpl->invokePositionSessionResponseCb(LOCATION_RESPONSE_UNKOWN_FAILURE);
             }
-            mApiImpl->addGeofences(count, reinterpret_cast<GeofenceOption*>(gfOptions),
-                                   reinterpret_cast<GeofenceInfo*>(gfInfos));
-            free(gfOptions);
-            free(gfInfos);
+            if (gfOptions) {
+                free(gfOptions);
+            }
+            if (gfInfos) {
+                free(gfInfos);
+            }
         }
         LocationClientApiImpl *mApiImpl;
         mutable ClientCallbacks   mCbs;
