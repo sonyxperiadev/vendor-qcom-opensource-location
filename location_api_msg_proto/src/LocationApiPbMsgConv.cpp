@@ -1829,6 +1829,12 @@ uint32_t LocationApiPbMsgConv::getPBMaskForGnssSvOptionsMask(const uint32_t &gns
     if (gnssSvOptMask & GNSS_SV_OPTIONS_HAS_BASEBAND_CARRIER_TO_NOISE_BIT) {
         pbGnssSvOptMask |= PB_GNSS_SV_OPTIONS_HAS_BASEBAND_CARRIER_TO_NOISE_BIT;
     }
+    if (gnssSvOptMask & GNSS_SV_OPTIONS_HAS_ELEVATION_BIT) {
+        pbGnssSvOptMask |= PB_GNSS_SV_OPTIONS_HAS_ELEVATION_BIT;
+    }
+    if (gnssSvOptMask & GNSS_SV_OPTIONS_HAS_AZIMUTH_BIT) {
+        pbGnssSvOptMask |= PB_GNSS_SV_OPTIONS_HAS_AZIMUTH_BIT;
+    }
     LocApiPb_LOGv("LocApiPB: gnssSvOptMask:%x, pbGnssSvOptMask:%x", gnssSvOptMask,
             pbGnssSvOptMask);
     return pbGnssSvOptMask;
@@ -2329,6 +2335,12 @@ uint32_t LocationApiPbMsgConv::getGnssSvOptionsMaskFromPB(
     }
     if (pbGnssSvOptMask & PB_GNSS_SV_OPTIONS_HAS_BASEBAND_CARRIER_TO_NOISE_BIT) {
         gnssSvOptMask |= GNSS_SV_OPTIONS_HAS_BASEBAND_CARRIER_TO_NOISE_BIT;
+    }
+    if (pbGnssSvOptMask & PB_GNSS_SV_OPTIONS_HAS_ELEVATION_BIT) {
+        gnssSvOptMask |= GNSS_SV_OPTIONS_HAS_ELEVATION_BIT;
+    }
+    if (pbGnssSvOptMask & PB_GNSS_SV_OPTIONS_HAS_AZIMUTH_BIT) {
+        gnssSvOptMask |= GNSS_SV_OPTIONS_HAS_AZIMUTH_BIT;
     }
     LocApiPb_LOGv("LocApiPB: pbGnssSvOptMask:%x, gnssSvOptMask:%x", pbGnssSvOptMask,
             gnssSvOptMask);
