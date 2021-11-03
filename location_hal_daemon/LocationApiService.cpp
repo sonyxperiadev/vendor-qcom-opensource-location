@@ -230,7 +230,6 @@ LocationApiService::LocationApiService(const configParamToRead & configParamRead
         locationOption.mode = mPositionMode;
 
         pClient->startTracking(locationOption);
-        pClient->mTracking = true;
         loc_boot_kpi_marker("L - Auto Session Start");
         pClient->mPendingMessages.push(E_LOCAPI_START_TRACKING_MSG_ID);
     }
@@ -752,14 +751,7 @@ void LocationApiService::startTracking(LocAPIStartTrackingReqMsg *pMsg) {
 
     if (!pClient->startTracking(locationOption)) {
         LOC_LOGe("Failed to start session");
-        return;
     }
-    // success
-    pClient->mTracking = true;
-    pClient->mPendingMessages.push(E_LOCAPI_START_TRACKING_MSG_ID);
-
-    LOC_LOGi(">-- start started session");
-    return;
 }
 
 void LocationApiService::stopTracking(LocAPIStopTrackingReqMsg *pMsg) {
@@ -771,39 +763,30 @@ void LocationApiService::stopTracking(LocAPIStopTrackingReqMsg *pMsg) {
         return;
     }
 
-    pClient->mTracking = false;
     pClient->unsubscribeLocationSessionCb();
     pClient->stopTracking();
-    pClient->mPendingMessages.push(E_LOCAPI_STOP_TRACKING_MSG_ID);
     LOC_LOGi(">-- stopping session");
 }
 
 // no need to hold the lock as lock has been held on calling functions
 void LocationApiService::suspendAllTrackingSessions() {
+    LOC_LOGi("--> enter");
     for (auto client : mClients) {
         // stop session if running
-        if (client.second && client.second->mTracking) {
-            client.second->stopTracking();
-            client.second->mPendingMessages.push(E_LOCAPI_STOP_TRACKING_MSG_ID);
-            LOC_LOGi("--> suspended");
+        if (client.second) {
+            client.second->pauseTracking();
         }
     }
 }
 
 // no need to hold the lock as lock has been held on calling functions
 void LocationApiService::resumeAllTrackingSessions() {
+    LOC_LOGi("--> enter");
     for (auto client : mClients) {
         // start session if not running
-        if (client.second && client.second->mTracking) {
-
+        if (client.second) {
             // resume session with preserved options
-            if (!client.second->startTracking()) {
-                LOC_LOGe("Failed to start session");
-                return;
-            }
-            // success
-            client.second->mPendingMessages.push(E_LOCAPI_START_TRACKING_MSG_ID);
-            LOC_LOGi("--> resumed");
+            client.second->resumeTracking();
         }
     }
 }

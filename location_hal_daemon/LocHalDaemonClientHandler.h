@@ -101,9 +101,10 @@ public:
     // when client stops the location session, then all callbacks
     // related to location session need to be unsubscribed
     void unsubscribeLocationSessionCb();
-    uint32_t startTracking();
     uint32_t startTracking(LocationOptions & locOptions);
     void stopTracking();
+    uint32_t resumeTracking(); // resume tracking due to power resume
+    void pauseTracking();      // stop tracking due to power suspend
     void updateTrackingOptions(LocationOptions & locOptions);
     void onGnssEnergyConsumedInfoAvailable(LocAPIGnssEnergyConsumedIndMsg &msg);
     void onControlResponseCb(LocationError err, ELocMsgID msgId);
@@ -135,7 +136,6 @@ public:
 
     void pingTest();
 
-    bool mTracking;
     bool mBatching;
     BatchingMode mBatchingMode;
     std::queue<ELocMsgID> mPendingMessages;
@@ -198,6 +198,7 @@ private:
     LocationCallbacks mCallbacks;
     TrackingOptions mOptions;
     BatchingOptions mBatchOptions;
+    bool mTracking; // flag indicates whether client has started tracking session or not
 
     // bitmask to hold this client's subscription
     uint32_t mSubscriptionMask;
