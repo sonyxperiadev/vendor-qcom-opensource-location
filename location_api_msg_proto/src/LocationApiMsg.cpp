@@ -1,4 +1,4 @@
-/* Copyright (c) 2020 The Linux Foundation. All rights reserved.
+/* Copyright (c) 2020-2021 The Linux Foundation. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -2163,6 +2163,60 @@ LocConfigOutputNmeaTypesReqMsg::
 
     mEnabledNmeaTypes = (GnssNmeaTypesMask)
             pLocApiPbMsgConv->getNmeaTypesMaskFromPB(pbMsg.nmeatypesmask());
+}
+
+// Convert LocConfigEngineIntegrityRiskReqMsg ->
+// PBLocConfigEngineIntegrityRiskReqMsg
+int LocConfigEngineIntegrityRiskReqMsg::serializeToProtobuf(string& protoStr) {
+    PBLocAPIMsgHeader pLocApiMsgHdr;
+    PBLocConfigEngineIntegrityRiskReqMsg pbLocConfMsg;
+
+    if (nullptr == pLocApiPbMsgConv) {
+        LOC_LOGe("pLocApiPbMsgConv is null!");
+        return 0;
+    }
+    // string      mSocketName = 1;
+    pLocApiMsgHdr.set_msocketname(mSocketName);
+    // PBELocMsgID  msgId = 2;
+    pLocApiMsgHdr.set_msgid(pLocApiPbMsgConv->getPBEnumForELocMsgID(msgId));
+    // uint32   msgVersion = 3;
+    pLocApiMsgHdr.set_msgversion(msgVersion);
+
+    // PBLocApiPositioningEngineMask engType = 1;
+    pbLocConfMsg.set_engtype((::PBLocApiPositioningEngineMask)
+            pLocApiPbMsgConv->getPBMaskForPositioningEngineMask(mEngType));
+    // uint32_t integrityrisk = 2;
+    pbLocConfMsg.set_integrityrisk(mIntegrityRisk);
+
+    string pbStr;
+    if (!pbLocConfMsg.SerializeToString(&pbStr)) {
+        LOC_LOGe("SerializeToString on PBLocConfigEngineIntegrityRiskReqMsg failed!");
+        return 0;
+    }
+    // bytes       payload = 4;
+    pLocApiMsgHdr.set_payload(pbStr);
+
+    // uint32   payloadSize = 5;
+    pLocApiMsgHdr.set_payloadsize(sizeof(LocConfigEngineIntegrityRiskReqMsg));
+
+    if (!pLocApiMsgHdr.SerializeToString(&protoStr)) {
+        LOC_LOGe("SerializeToString on pLocApiMsgHdr failed!");
+        return 0;
+    }
+    return protoStr.size();
+}
+
+// Decode PBLocConfigEngineIntegrityRiskReqMsg -> LocConfigEngineIntegrityRiskReqMsg
+LocConfigEngineIntegrityRiskReqMsg::LocConfigEngineIntegrityRiskReqMsg(
+        const char* name,
+        const PBLocConfigEngineIntegrityRiskReqMsg &pbConfigEngineIntegrityRiskReqMsg,
+        const LocationApiPbMsgConv *pbMsgConv):
+    LocAPIMsgHeader(name, E_INTAPI_CONFIG_ENGINE_INTEGRITY_RISK_MSG_ID, pbMsgConv) {
+    // >>>> PBLocConfigEngineRunStateReqMsg conversion
+    mEngType = (PositioningEngineMask) pLocApiPbMsgConv->getEnumForPBPositioningEngineMask(
+            pbConfigEngineIntegrityRiskReqMsg.engtype());
+    mIntegrityRisk = pbConfigEngineIntegrityRiskReqMsg.integrityrisk();
+    LOC_LOGd("LocApiPB: eng type %d, integrity risk %d", mEngType, mIntegrityRisk);
 }
 
 // Convert LocConfigGetRobustLocationConfigReqMsg -> PBLocConfigGetRobustLocationConfigReqMsg

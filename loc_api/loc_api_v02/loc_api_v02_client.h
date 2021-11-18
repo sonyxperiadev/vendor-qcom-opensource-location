@@ -1158,6 +1158,11 @@ typedef union
    const qmiLocLatencyInformationIndMsgT_v02 *pLocLatencyInfoIndMsg;
    /** Sent by the engine to inform of latency info
     QMI_LOC_LATENCY_INFORMATION_IND_V02 */
+
+   const qmiLocPlatformPowerStateChangedIndMsgT_v02 *pPowerStateChangedIndMsg;
+   /** Sent by the engine to inform power state change
+    QMI_LOC_EVENT_PLATFORM_POWER_STATE_CHANGED_IND_V02 */
+
 }locClientEventIndUnionType;
 
 

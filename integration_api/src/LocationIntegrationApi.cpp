@@ -1,4 +1,4 @@
-/* Copyright (c) 2019-2020 The Linux Foundation. All rights reserved.
+/* Copyright (c) 2019-2021 The Linux Foundation. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -509,12 +509,9 @@ bool LocationIntegrationApi::getMinSvElevation() {
     }
 }
 
-bool LocationIntegrationApi::configEngineRunState(LocIntegrationEngineType engType,
-                                                  LocIntegrationEngineRunState engState) {
-    if (mApiImpl) {
-        PositioningEngineMask halEngType = (PositioningEngineMask)0;
-        LocEngineRunState halEngState = (LocEngineRunState)0;
-        switch (engType) {
+PositioningEngineMask getHalEngType(LocIntegrationEngineType engType) {
+    PositioningEngineMask halEngType = (PositioningEngineMask)0;
+    switch (engType) {
         case LOC_INT_ENGINE_SPE:
             halEngType = STANDARD_POSITIONING_ENGINE;
             break;
@@ -529,9 +526,20 @@ bool LocationIntegrationApi::configEngineRunState(LocIntegrationEngineType engTy
             break;
         default:
             LOC_LOGe("unknown engine type of %d", engType);
+        break;
+    }
+    return halEngType;
+}
+
+bool LocationIntegrationApi::configEngineRunState(LocIntegrationEngineType engType,
+                                                  LocIntegrationEngineRunState engState) {
+    if (mApiImpl) {
+        PositioningEngineMask halEngType = getHalEngType(engType);
+        if (halEngType == (PositioningEngineMask) 0) {
             return false;
         }
 
+        LocEngineRunState halEngState = (LocEngineRunState)0;
         if (engState == LOC_INT_ENGINE_RUN_STATE_PAUSE) {
             halEngState = LOC_ENGINE_RUN_STATE_PAUSE;
         } else if (engState == LOC_INT_ENGINE_RUN_STATE_RESUME) {
@@ -596,6 +604,20 @@ bool LocationIntegrationApi::configOutputNmeaTypes(NmeaTypesMask enabledNMEAType
             halNmeaTypes |= ::NMEA_TYPE_GIGSV;
         }
         return (mApiImpl->configOutputNmeaTypes((GnssNmeaTypesMask) halNmeaTypes) == 0);
+    } else {
+        LOC_LOGe ("NULL mApiImpl");
+        return false;
+    }
+}
+
+bool LocationIntegrationApi::configEngineIntegrityRisk(
+        LocIntegrationEngineType engType, uint32_t integrityRisk) {
+    if (mApiImpl) {
+        PositioningEngineMask halEngType = getHalEngType(engType);
+        if (halEngType == (PositioningEngineMask) 0) {
+            return false;
+        }
+        return (mApiImpl->configEngineIntegrityRisk(halEngType, integrityRisk) == 0);
     } else {
         LOC_LOGe ("NULL mApiImpl");
         return false;

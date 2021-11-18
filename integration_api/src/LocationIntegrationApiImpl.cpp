@@ -84,6 +84,9 @@ static LocConfigTypeEnum getLocConfigTypeFromMsgId(ELocMsgID  msgId) {
     case E_INTAPI_CONFIG_OUTPUT_NMEA_TYPES_MSG_ID:
         configType = CONFIG_OUTPUT_NMEA_TYPES;
         break;
+    case E_INTAPI_CONFIG_ENGINE_INTEGRITY_RISK_MSG_ID:
+        configType = CONFIG_ENGINE_INTEGRITY_RISK;
+        break;
     case E_INTAPI_GET_ROBUST_LOCATION_CONFIG_REQ_MSG_ID:
     case E_INTAPI_GET_ROBUST_LOCATION_CONFIG_RESP_MSG_ID:
         configType = GET_ROBUST_LOCATION_CONFIG;
@@ -253,7 +256,7 @@ LocationIntegrationApiImpl::LocationIntegrationApiImpl(LocIntegrationCbs& integr
     shared_ptr<IpcListener> listener(make_shared<IpcListener>(*this, mMsgTask, SockNode::Eap));
     unique_ptr<LocIpcRecver> recver = LocIpc::getLocIpcQrtrRecver(listener,
             sock.getId1(), sock.getId2(),
-            make_shared<HalDaemonQrtrWatcher>(listener, mIpcSender, mPbufMsgConv, *mMsgTask));
+            make_shared<HalDaemonQrtrWatcher>(listener, mIpcSender, mPbufMsgConv, mMsgTask));
 #else
     SockNodeLocal sock(LOCATION_INTEGRATION_API, pid, 0);
     size_t pathNameLength = strlcpy(mSocketName, sock.getNodePathname().c_str(),
@@ -402,6 +405,7 @@ void IpcListener::onReceive(const char* data, uint32_t length,
             case E_INTAPI_CONFIG_ENGINE_RUN_STATE_MSG_ID:
             case E_INTAPI_CONFIG_USER_CONSENT_TERRESTRIAL_POSITIONING_MSG_ID:
             case E_INTAPI_CONFIG_OUTPUT_NMEA_TYPES_MSG_ID:
+            case E_INTAPI_CONFIG_ENGINE_INTEGRITY_RISK_MSG_ID:
             case E_INTAPI_GET_ROBUST_LOCATION_CONFIG_REQ_MSG_ID:
             case E_INTAPI_GET_MIN_GPS_WEEK_REQ_MSG_ID:
             case E_INTAPI_GET_MIN_SV_ELEVATION_REQ_MSG_ID:
@@ -1043,6 +1047,46 @@ uint32_t LocationIntegrationApiImpl::configOutputNmeaTypes(
     return 0;
 }
 
+uint32_t LocationIntegrationApiImpl::configEngineIntegrityRisk(
+        PositioningEngineMask engType, uint32_t integrityRisk) {
+
+    struct ConfigEngineIntegrityRiskReq : public LocMsg {
+        ConfigEngineIntegrityRiskReq(LocationIntegrationApiImpl* apiImpl,
+                                     PositioningEngineMask engType,
+                                     uint32_t integrityRisk) :
+                mApiImpl(apiImpl), mEngType(engType), mIntegrityRisk(integrityRisk) {}
+        virtual ~ConfigEngineIntegrityRiskReq() {}
+        void proc() const {
+            LOC_LOGd("eng type %d, integrity risk %u", mEngType, mIntegrityRisk);
+            if (mApiImpl->mEngIntegrityRiskConfigMap.find(mEngType) ==
+                        std::end(mApiImpl->mEngIntegrityRiskConfigMap)) {
+                mApiImpl->mEngIntegrityRiskConfigMap.emplace(mEngType, mIntegrityRisk);
+            } else {
+                // change the state for the eng
+                mApiImpl->mEngIntegrityRiskConfigMap[mEngType] = mIntegrityRisk;
+            }
+
+            string pbStr;
+            LocConfigEngineIntegrityRiskReqMsg msg(mApiImpl->mSocketName,
+                    mEngType, mIntegrityRisk, &mApiImpl->mPbufMsgConv);
+            if (msg.serializeToProtobuf(pbStr)) {
+                mApiImpl->sendConfigMsgToHalDaemon(CONFIG_ENGINE_INTEGRITY_RISK,
+                                            reinterpret_cast<uint8_t*>((uint8_t *)pbStr.c_str()),
+                                            pbStr.size());
+            } else {
+                LOC_LOGe("LocConfigEngineIntegrityRiskReqMsg serializeToProtobuf failed");
+            }
+        }
+
+        LocationIntegrationApiImpl* mApiImpl;
+        PositioningEngineMask mEngType;
+        uint32_t mIntegrityRisk;
+    };
+
+    mMsgTask.sendMsg(new (nothrow) ConfigEngineIntegrityRiskReq(this, engType, integrityRisk));
+    return 0;
+}
+
 void LocationIntegrationApiImpl::sendConfigMsgToHalDaemon(
         LocConfigTypeEnum configType, uint8_t* pMsg,
         size_t msgSize, bool invokeResponseCb) {
@@ -1212,7 +1256,7 @@ void LocationIntegrationApiImpl::processHalReadyMsg() {
         }
     }
 
-    // send down engine state config request
+    // resend engine state config request
     for (auto it = mEngRunStateConfigMap.begin(); it != mEngRunStateConfigMap.end(); ++it) {
         string pbStrLocCfgEngineRunState;
         LocConfigEngineRunStateReqMsg msg(mSocketName, it->first, it->second, &mPbufMsgConv);
@@ -1221,6 +1265,19 @@ void LocationIntegrationApiImpl::processHalReadyMsg() {
                     CONFIG_ENGINE_RUN_STATE,
                     reinterpret_cast<uint8_t*>((uint8_t *)pbStrLocCfgEngineRunState.c_str()),
                     pbStrLocCfgEngineRunState.size());
+        }
+    }
+
+    // resend engine state config request
+    for (auto it = mEngIntegrityRiskConfigMap.begin();
+            it != mEngIntegrityRiskConfigMap.end(); ++it) {
+        string pbStrLocCfgEngineIntegrityRisk;
+        LocConfigEngineIntegrityRiskReqMsg msg(mSocketName, it->first, it->second, &mPbufMsgConv);
+        if (msg.serializeToProtobuf(pbStrLocCfgEngineIntegrityRisk)) {
+            sendConfigMsgToHalDaemon(
+                    CONFIG_ENGINE_INTEGRITY_RISK,
+                    reinterpret_cast<uint8_t*>((uint8_t *)pbStrLocCfgEngineIntegrityRisk.c_str()),
+                    pbStrLocCfgEngineIntegrityRisk.size());
         }
     }
 }
@@ -1382,6 +1439,20 @@ LocationIntegrationApiImpl - Not implemented ILocationControlAPI functions
 uint32_t* LocationIntegrationApiImpl::gnssUpdateConfig(const GnssConfig& config) {
     (void)config;
     return nullptr;
+}
+
+static ILocationControlAPI* gLocationControlApiImpl = nullptr;
+static mutex gMutexForCreate;
+extern "C" ILocationControlAPI* getLocationIntegrationApiImpl()
+{
+    LocIntegrationCbs intCbs = {};
+    lock_guard<mutex> lock(gMutexForCreate);
+
+    if (nullptr == gLocationControlApiImpl) {
+        gLocationControlApiImpl = new LocationIntegrationApiImpl(intCbs);
+    }
+
+    return gLocationControlApiImpl;
 }
 
 } // namespace location_integration

@@ -8,7 +8,7 @@ cc_library_shared {
     shared_libs: [
         "libgps.utils",
         "liblocation_api_msg",
-        "libprotobuf-cpp-full",
+        "libprotobuf-cpp-lite",
         "liblog",
     ],
 
