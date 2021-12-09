@@ -232,7 +232,8 @@ uint32_t LocHalDaemonClientHandler::resumeTracking() {
 }
 
 void LocHalDaemonClientHandler::pauseTracking() {
-    LOC_LOGd("pause session for client %s, mtracking %d, msession id %d");
+    LOC_LOGd("pause session for client %s, mtracking %d, msession id %d",
+            mName.c_str(), mTracking, mSessionId);
     if (mTracking == true) {
         if (mSessionId != 0 && mLocationApi) {
             mLocationApi->stopTracking(mSessionId);
