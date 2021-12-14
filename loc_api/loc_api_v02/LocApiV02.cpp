@@ -1237,42 +1237,14 @@ void LocApiV02::injectPositionAndCivicAddress(const Location& location,
     memset(&injectPosAndAddrReq, 0, sizeof(injectPosAndAddrReq));
     memset(&genReqStatusIndMsg, 0, sizeof(genReqStatusIndMsg));
 
-    if (location.timestamp > 0) {
-        injectPosAndAddrReq.timestampUtc_valid = 1;
-        injectPosAndAddrReq.timestampUtc = location.timestamp;
-    }
-
-    if (LOCATION_HAS_LAT_LONG_BIT & location.flags) {
+    if (addr.hasLatitude) {
         injectPosAndAddrReq.latitude_valid = 1;
+        injectPosAndAddrReq.latitude = addr.latitude;
+    }
+
+    if (addr.hasLongitude) {
         injectPosAndAddrReq.longitude_valid = 1;
-        injectPosAndAddrReq.latitude = location.latitude;
-        injectPosAndAddrReq.longitude = location.longitude;
-    }
-
-    if (LOCATION_HAS_ACCURACY_BIT & location.flags) {
-        injectPosAndAddrReq.horUncCircular_valid = 1;
-        injectPosAndAddrReq.horUncCircular = location.accuracy;
-        injectPosAndAddrReq.horConfidence_valid = 1;
-        injectPosAndAddrReq.horConfidence = 68;
-
-        // We don't wish to advertise accuracy better than 1000 meters to Modem
-        if (injectPosAndAddrReq.horUncCircular < 1000) {
-            injectPosAndAddrReq.horUncCircular = 1000;
-        }
-    }
-
-    if (LOCATION_HAS_ALTITUDE_BIT & location.flags) {
-        injectPosAndAddrReq.altitudeWrtEllipsoid_valid = 1;
-        injectPosAndAddrReq.altitudeWrtEllipsoid = location.altitude;
-        injectPosAndAddrReq.source_valid = 1;
-        injectPosAndAddrReq.source = eQMI_LOC_ALT_SRC_OTHER_V02;
-    }
-
-    if (LOCATION_HAS_VERTICAL_ACCURACY_BIT & location.flags) {
-        injectPosAndAddrReq.vertUnc_valid = 1;
-        injectPosAndAddrReq.vertUnc = location.verticalAccuracy;
-        injectPosAndAddrReq.vertConfidence_valid = 1;
-        injectPosAndAddrReq.vertConfidence = 68;
+        injectPosAndAddrReq.longitude = addr.longitude;
     }
 
     int len;
