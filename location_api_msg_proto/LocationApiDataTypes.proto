@@ -1,4 +1,4 @@
-/* Copyright (c) 2020-2021 The Linux Foundation. All rights reserved.
+/* Copyright (c) 2020-2022 The Linux Foundation. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -44,8 +44,8 @@ enum LocationApiDataTypesVersion {
     LOCAPI_DATA_TYPES_VER_MAJOR = 1;
     // Minor - New features / API addition, new message/elemtent addition.
     // Bump the last byte of version i.e. x.2 to x.3
-    // Minor version 17: Add xtra configure and status retrieval via LIA
-    LOCAPI_DATA_TYPES_VER_MINOR = 17;
+    // Minor version 18: Add integrity download control to xtra configure in LIA API
+    LOCAPI_DATA_TYPES_VER_MINOR = 18;
 }
 
 // ============================================================================
@@ -1414,6 +1414,10 @@ message PBXtraConfigParams {
     repeated string ntpServerURLs = 7;
     // Level of debug log messages that will be logged.
     PBDebugLogLevel xtraDaemonDebugLogLevel = 8;
+    // Enable or disable XTRA integrity download.
+    bool xtraIntegrityDownloadEnable = 9;
+    // XTRA integrity download interval in unit of minutes
+    uint32 xtraIntegrityDownloadIntervalMinute = 10;
 };
 
 enum PBXtraStatusUpdateType {
