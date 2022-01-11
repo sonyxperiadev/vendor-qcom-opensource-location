@@ -1,7 +1,7 @@
 
 cc_library_shared {
 
-    name: "libloc_integration_api.impl",
+    name: "liblocation_integration_api",
     vendor: true,
 
     //# Libs
@@ -13,6 +13,7 @@ cc_library_shared {
     ],
 
     srcs: [
+        "src/LocationIntegrationApi.cpp",
         "src/LocationIntegrationApiImpl.cpp"
     ],
 

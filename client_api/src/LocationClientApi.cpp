@@ -26,6 +26,42 @@
  * IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+ /*
+Changes from Qualcomm Innovation Center are provided under the following license:
+
+Copyright (c) 2022 Qualcomm Innovation Center, Inc. All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted (subject to the limitations in the
+disclaimer below) provided that the following conditions are met:
+
+    * Redistributions of source code must retain the above copyright
+      notice, this list of conditions and the following disclaimer.
+
+    * Redistributions in binary form must reproduce the above
+      copyright notice, this list of conditions and the following
+      disclaimer in the documentation and/or other materials provided
+      with the distribution.
+
+    * Neither the name of Qualcomm Innovation Center, Inc. nor the names of its
+      contributors may be used to endorse or promote products derived
+      from this software without specific prior written permission.
+
+NO EXPRESS OR IMPLIED LICENSES TO ANY PARTY'S PATENT RIGHTS ARE
+GRANTED BY THIS LICENSE. THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT
+HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED
+WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR
+ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE
+GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER
+IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN
+IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
+
 #define LOG_TAG "LocSvc_LocationClientApi"
 
 #include <loc_cfg.h>
@@ -69,7 +105,7 @@ bool LocationClientApi::startPositionSession(
         ResponseCb responseCallback) {
 
     loc_boot_kpi_marker("L - LCA ST-SPS %s %d",
-            program_invocation_short_name, intervalInMs);
+            getprogname(), intervalInMs);
     //Input parameter check
     if (!locationCallback) {
         LOC_LOGe ("NULL locationCallback");
@@ -82,12 +118,12 @@ bool LocationClientApi::startPositionSession(
     }
 
     // callback functions
-    ClientCallbacks cbs = {0};
+    ClientCallbacks cbs = {};
     cbs.responsecb = responseCallback;
     cbs.locationcb = locationCallback;
 
     // callback masks
-    LocationCallbacks callbacksOption = {0};
+    LocationCallbacks callbacksOption = {};
     callbacksOption.responseCb = [](::LocationError err, uint32_t id) {};
     callbacksOption.trackingCb = [](::Location n) {};
 
@@ -108,7 +144,7 @@ bool LocationClientApi::startPositionSession(
         ResponseCb responseCallback) {
 
     loc_boot_kpi_marker("L - LCA EX-SPS %s %d",
-            program_invocation_short_name, intervalInMs);
+            getprogname(), intervalInMs);
 
     if (!mApiImpl) {
         LOC_LOGe ("NULL mApiImpl");
@@ -116,12 +152,12 @@ bool LocationClientApi::startPositionSession(
     }
 
     // callback functions
-    ClientCallbacks cbs = {0};
+    ClientCallbacks cbs = {};
     cbs.responsecb = responseCallback;
     cbs.gnssreportcbs = gnssReportCallbacks;
 
     // callback masks
-    LocationCallbacks callbacksOption = {0};
+    LocationCallbacks callbacksOption = {};
     callbacksOption.responseCb = [](::LocationError err, uint32_t id) {};
     if (gnssReportCallbacks.gnssLocationCallback) {
         callbacksOption.gnssLocationInfoCb = [](::GnssLocationInfoNotification n) {};
@@ -164,19 +200,19 @@ bool LocationClientApi::startPositionSession(
         ResponseCb responseCallback) {
 
     loc_boot_kpi_marker("L - LCA Fused-SPS %s %d",
-            program_invocation_short_name, intervalInMs);
+            getprogname(), intervalInMs);
     if (!mApiImpl) {
         LOC_LOGe ("NULL mApiImpl");
         return false;
     }
 
     // callback functions
-    ClientCallbacks cbs = {0};
+    ClientCallbacks cbs = {};
     cbs.responsecb = responseCallback;
     cbs.engreportcbs = engReportCallbacks;
 
     // callback masks
-    LocationCallbacks callbacksOption = {0};
+    LocationCallbacks callbacksOption = {};
     callbacksOption.responseCb = [](::LocationError err, uint32_t id) {};
 
     if (engReportCallbacks.engLocationsCallback) {
@@ -235,12 +271,12 @@ bool LocationClientApi::startTripBatchingSession(uint32_t minInterval, uint32_t 
         return false;
     }
     // callback functions
-    ClientCallbacks cbs = {0};
+    ClientCallbacks cbs = {};
     cbs.responsecb = responseCallback;
     cbs.batchingcb = batchingCallback;
 
     // callback masks
-    LocationCallbacks callbacksOption = {0};
+    LocationCallbacks callbacksOption = {};
     callbacksOption.responseCb = [](::LocationError err, uint32_t id) {};
     callbacksOption.batchingCb = [](size_t count, ::Location* location,
             BatchingOptions batchingOptions) {};
@@ -275,12 +311,12 @@ bool LocationClientApi::startRoutineBatchingSession(uint32_t minInterval, uint32
         return false;
     }
     // callback functions
-    ClientCallbacks cbs = {0};
+    ClientCallbacks cbs = {};
     cbs.responsecb = responseCallback;
     cbs.batchingcb = batchingCallback;
 
     // callback masks
-    LocationCallbacks callbacksOption = {0};
+    LocationCallbacks callbacksOption = {};
     callbacksOption.responseCb = [](::LocationError err, uint32_t id) {};
     callbacksOption.batchingCb = [](size_t count, ::Location* location,
             BatchingOptions batchingOptions) {};
@@ -318,12 +354,12 @@ void LocationClientApi::addGeofences(std::vector<Geofence>& geofences,
         return;
     }
     // callback functions
-    ClientCallbacks cbs = {0};
+    ClientCallbacks cbs = {};
     cbs.collectivecb = responseCallback;
     cbs.gfbreachcb = gfBreachCb;
 
     // callback masks
-    LocationCallbacks callbacksOption = {0};
+    LocationCallbacks callbacksOption = {};
     callbacksOption.responseCb = [](LocationError err, uint32_t id) {};
     callbacksOption.collectiveResponseCb = [](size_t, LocationError*, uint32_t*) {};
     callbacksOption.geofenceBreachCb =
@@ -350,6 +386,11 @@ void LocationClientApi::removeGeofences(std::vector<Geofence>& geofences) {
     size_t count = geofences.size();
     if (count > 0) {
         uint32_t* gfIds = (uint32_t*)malloc(sizeof(uint32_t) * count);
+        if (nullptr == gfIds) {
+            LOC_LOGe("Failed to allocate memory for Geofence Id's");
+            return;
+        }
+
         for (int i=0; i<count; ++i) {
             if (!geofences[i].mGeofenceImpl) {
                 LOC_LOGe ("Geofence not added yet");
@@ -370,7 +411,18 @@ void LocationClientApi::modifyGeofences(std::vector<Geofence>& geofences) {
     size_t count = geofences.size();
     if (count > 0) {
         GeofenceOption* gfOptions = (GeofenceOption*)malloc(sizeof(GeofenceOption) * count);
+        if (nullptr == gfOptions) {
+            LOC_LOGe("Failed to allocate memory for Geofence Options");
+            return;
+        }
+
         uint32_t* gfIds = (uint32_t*)malloc(sizeof(uint32_t) * count);
+        if (nullptr == gfIds) {
+            LOC_LOGe("Failed to allocate memory for Geofence Id's");
+            free(gfOptions);
+            return;
+        }
+
         for (int i=0; i<count; ++i) {
             gfOptions[i].breachTypeMask = geofences[i].getBreachType();
             gfOptions[i].responsiveness = geofences[i].getResponsiveness();
@@ -399,6 +451,11 @@ void LocationClientApi::pauseGeofences(std::vector<Geofence>& geofences) {
     size_t count = geofences.size();
     if (count > 0) {
         uint32_t* gfIds = (uint32_t*)malloc(sizeof(uint32_t) * count);
+        if (nullptr == gfIds) {
+            LOC_LOGe("Failed to allocate memory for Geofence Id's");
+            return;
+        }
+
         for (int i=0; i<count; ++i) {
             if (!geofences[i].mGeofenceImpl) {
                 LOC_LOGe ("Geofence not added yet");
@@ -420,6 +477,11 @@ void LocationClientApi::resumeGeofences(std::vector<Geofence>& geofences) {
     size_t count = geofences.size();
     if (count > 0) {
         uint32_t* gfIds = (uint32_t*)malloc(sizeof(uint32_t) * count);
+        if (nullptr == gfIds) {
+            LOC_LOGe("Failed to allocate memory for Geofence Id's");
+            return;
+        }
+
         for (int i=0; i<count; ++i) {
             if (!geofences[i].mGeofenceImpl) {
                 LOC_LOGe ("Geofence not added yet");
@@ -505,7 +567,8 @@ static string maskToVals(uint64_t mask, int64_t baseNum) {
     string out;
     while (mask > 0) {
         baseNum += log2(loc_get_least_bit(mask));
-        out += baseNum + " ";
+        out += baseNum;
+        out += " ";
     }
     return out;
 }
@@ -965,7 +1028,7 @@ string GnssSystemTime::toString() const {
     case GNSS_LOC_SV_SYSTEM_NAVIC:
         return u.navicSystemTime.toString();
     default:
-        return "Unknown System ID: " + gnssSystemTimeSrc;
+        return "Unknown System ID: " + to_string(gnssSystemTimeSrc);
     }
 }
 

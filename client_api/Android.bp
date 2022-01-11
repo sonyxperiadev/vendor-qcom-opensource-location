@@ -1,7 +1,7 @@
 
 cc_library_shared {
 
-    name: "liblocation_client_api.impl",
+    name: "liblocation_client_api",
     vendor: true,
 
     //# Libs
@@ -13,6 +13,7 @@ cc_library_shared {
     ],
 
     srcs: [
+        "src/LocationClientApi.cpp",
         "src/LocationClientApiImpl.cpp",
         "src/LCAReportLoggerUtil.cpp",
     ],
