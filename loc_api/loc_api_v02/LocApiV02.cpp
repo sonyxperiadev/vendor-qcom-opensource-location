@@ -1,4 +1,4 @@
-/* Copyright (c) 2011-2021, The Linux Foundation. All rights reserved.
+/* Copyright (c) 2011-2022, The Linux Foundation. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -2739,7 +2739,6 @@ void LocApiV02 :: reportPosition (
   bool unpropagatedPosition)
 {
     UlpLocation location;
-    LocPosTechMask tech_Mask = LOC_POS_TECH_MASK_DEFAULT;
     LOC_LOGD("Reporting position from V2 Adapter\n");
 
     mHlosQtimer2 = getQTimerTickCount();
@@ -2906,9 +2905,9 @@ void LocApiV02 :: reportPosition (
         }
 
         // Technology Mask
-        tech_Mask |= location_report_ptr->technologyMask;
         locationExtended.flags |= GPS_LOCATION_EXTENDED_HAS_POS_TECH_MASK;
         locationExtended.tech_mask = convertPosTechMask(location_report_ptr->technologyMask);
+        location.tech_mask = locationExtended.tech_mask;
 
         //Mark the location source as from GNSS
         location.gpsLocation.flags |= LOC_GPS_LOCATION_HAS_SOURCE_INFO;
@@ -3083,7 +3082,7 @@ void LocApiV02 :: reportPosition (
                                                    (eQMI_LOC_SESS_STATUS_IN_PROGRESS_V02 ==
                                                    location_report_ptr->sessionStatus ?
                                                    LOC_SESS_INTERMEDIATE : LOC_SESS_SUCCESS),
-                                                   tech_Mask);
+                                                   locationExtended.tech_mask);
             if (unpropagatedPosition || reported) {
                 for (idx = 0; idx < gnssSvUsedList_len; idx++)
                 {
@@ -3442,7 +3441,7 @@ void LocApiV02 :: reportPosition (
                                    (location_report_ptr->sessionStatus ==
                                     eQMI_LOC_SESS_STATUS_IN_PROGRESS_V02 ?
                                     LOC_SESS_INTERMEDIATE : LOC_SESS_SUCCESS),
-                                   tech_Mask, &dataNotify, msInWeek);
+                                   locationExtended.tech_mask, &dataNotify, msInWeek);
     }
     else
     {
