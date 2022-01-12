@@ -25,6 +25,41 @@
  * OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN
  * IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+/*
+Changes from Qualcomm Innovation Center are provided under the following license:
+
+Copyright (c) 2022 Qualcomm Innovation Center, Inc. All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted (subject to the limitations in the
+disclaimer below) provided that the following conditions are met:
+
+    * Redistributions of source code must retain the above copyright
+      notice, this list of conditions and the following disclaimer.
+
+    * Redistributions in binary form must reproduce the above
+      copyright notice, this list of conditions and the following
+      disclaimer in the documentation and/or other materials provided
+      with the distribution.
+
+    * Neither the name of Qualcomm Innovation Center, Inc. nor the names of its
+      contributors may be used to endorse or promote products derived
+      from this software without specific prior written permission.
+
+NO EXPRESS OR IMPLIED LICENSES TO ANY PARTY'S PATENT RIGHTS ARE
+GRANTED BY THIS LICENSE. THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT
+HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED
+WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR
+ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE
+GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER
+IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN
+IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
 
 #ifndef LOCATION_INTEGRATION_API_H
 #define LOCATION_INTEGRATION_API_H
@@ -71,26 +106,26 @@ enum LocConfigTypeEnum{
     CONFIG_BODY_TO_SENSOR_MOUNT_PARAMS = 8,
     /** Config various parameters for dead reckoning position
      *  engine. <br/> */
-    CONFIG_DEAD_RECKONING_ENGINE = 8,
+    CONFIG_DEAD_RECKONING_ENGINE = 9,
     /** Config minimum SV elevation angle setting used by the GNSS
      *  standard position engine (SPE).
      *  <br/> */
-    CONFIG_MIN_SV_ELEVATION = 9,
+    CONFIG_MIN_SV_ELEVATION = 10,
     /** Config the secondary band for configurations used by the GNSS
      *  standard position engine (SPE).
      *  <br/> */
-    CONFIG_CONSTELLATION_SECONDARY_BAND = 10,
+    CONFIG_CONSTELLATION_SECONDARY_BAND = 11,
     /** Config the run state, e.g.: pause/resume, of the position
      * engine <br/> */
-    CONFIG_ENGINE_RUN_STATE = 11,
+    CONFIG_ENGINE_RUN_STATE = 12,
     /** Config user consent to use GTP terrestrial positioning
      *  service. <br/> */
-    CONFIG_USER_CONSENT_TERRESTRIAL_POSITIONING = 12,
+    CONFIG_USER_CONSENT_TERRESTRIAL_POSITIONING = 13,
     /** Config the output nmea sentence types. <br/> */
-    CONFIG_OUTPUT_NMEA_TYPES = 13,
+    CONFIG_OUTPUT_NMEA_TYPES = 14,
     /** Config the integrity risk level of the position engine.
      *  <br/> */
-    CONFIG_ENGINE_INTEGRITY_RISK = 14,
+    CONFIG_ENGINE_INTEGRITY_RISK = 15,
 
     /** Get configuration regarding robust location setting used by
      *  the GNSS standard position engine (SPE).  <br/> */
