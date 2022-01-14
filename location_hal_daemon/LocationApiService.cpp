@@ -326,8 +326,8 @@ void LocationApiService::processClientMsg(const char* data, uint32_t length) {
     uint32_t payloadSize = pbLocApiMsg.payloadsize();
     // pbLocApiMsg.payload() contains the payload data.
 
-    LOC_LOGi(">-- onReceive Rcvd msg id: %d, remote client: %s, payload size: %d", eLocMsgid,
-            sockName.c_str(), payloadSize);
+    LOC_LOGi(">-- onReceive Rcvd msg id: %d %s, remote client: %s, payload size: %d",
+            eLocMsgid, LocApiMsgString(eLocMsgid), sockName.c_str(), payloadSize);
     LocAPIMsgHeader locApiMsg(sockName.c_str(), eLocMsgid);
 
     // throw away msg that does not come from location hal daemon client, e.g. LCA/LIA
@@ -707,6 +707,11 @@ void LocationApiService::processClientMsg(const char* data, uint32_t length) {
             break;
         }
 
+        case E_LOCAPI_GET_DEBUG_REQ_MSG_ID: {
+            getDebugReport((const LocAPIGetDebugReqMsg*)&locApiMsg);
+            break;
+        }
+
         default: {
             LOC_LOGe("Unknown message with id: %d ", eLocMsgid);
             break;
@@ -937,6 +942,18 @@ void LocationApiService::getConstellationSecondaryBandConfig(
     // if sessionId is 0, e.g.: error callback will be delivered
     // by addConfigRequestToMap
     addConfigRequestToMap(sessionId, pReqMsg);
+}
+
+void LocationApiService::getDebugReport(
+        const LocAPIGetDebugReqMsg* pReqMsg) {
+
+    LOC_LOGi(">--getDebugReport from %s", pReqMsg->mSocketName);
+    LocHalDaemonClientHandler* pClient = getClient(pReqMsg->mSocketName);
+    if (pClient) {
+        pClient->getDebugReport();
+    } else {
+        LOC_LOGe(">-- invalid client=%s", pReqMsg->mSocketName);
+    }
 }
 
 /******************************************************************************

@@ -83,8 +83,9 @@ IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     #include <unordered_set>
     #include <unordered_map>
 #endif
+#include <condition_variable>
+#include <chrono>
 
-using namespace std;
 using namespace loc_util;
 
 namespace location_client
@@ -117,9 +118,27 @@ public:
     inline uint32_t getClientId() { return mId; }
 };
 
+// utility for wait / notify
+class Waitable {
+    std::mutex mMutex;
+    std::condition_variable mCond;
+public:
+    Waitable() = default;
+    ~Waitable() = default;
+
+    void wait(uint32_t ms) {
+        std::unique_lock<std::mutex> lock(mMutex);
+        mCond.wait_for(lock, std::chrono::milliseconds(ms));
+    }
+
+    void notify() {
+        mCond.notify_one();
+    }
+};
+
 class IpcListener;
 
-class LocationClientApiImpl : public ILocationAPI {
+class LocationClientApiImpl : public ILocationAPI, public Waitable {
     friend IpcListener;
 public:
     LocationClientApiImpl(capabilitiesCallback capabitiescb);
@@ -158,6 +177,8 @@ public:
 
     //GNSS
     virtual void gnssNiResponse(uint32_t id, GnssNiResponse response) override;
+
+    virtual void getDebugReport(GnssDebugReport& reports) override;
 
     // other interface
     void startPositionSession(const LocationCallbacks& callbacksOption,
@@ -248,6 +269,7 @@ private:
 
     void invokePositionSessionResponseCb(LocationError errCode);
     void diagLogGnssLocation(const GnssLocation &gnssLocation);
+    void processGetDebugRespCb(const LocAPIGetDebugRespMsg* pRespMsg);
 
     // protobuf conversion util class
     LocationApiPbMsgConv mPbufMsgConv;
@@ -275,6 +297,7 @@ private:
     uint16_t                   mYearOfHw;
     bool                       mPositionSessionResponseCbPending;
     uint64_t                   mSessionStartBootTimestampNs;
+    GnssDebugReport*           mpDebugReport;
 
     // callbacks
     LocationCallbacks       mLocationCbs;
@@ -303,6 +326,7 @@ private:
     std::unordered_map<uint32_t, Geofence> mGeofenceMap;
 
     LCAReportLoggerUtil        mLogger;
+
 };
 
 } // namespace location_client

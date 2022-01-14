@@ -141,6 +141,9 @@ public:
     // LocationSystemInfo to PBLocationSystemInfo
     int convertLocSysInfoToPB(const LocationSystemInfo &locSysInfo,
             PBLocationSystemInfo *pbLocSysInfo) const;
+    // GnssDebugReport to PBGnssDebugReport
+    int convertGnssDebugReportToPB(const GnssDebugReport& gnssDebugReport,
+            PBGnssDebugReport* pbGnssDebugReport) const;
 
     // Memory cleanup - Free up memory after PB conversion and serializing data
     inline void freeUpPBLocAPIStartTrackingReqMsg(PBLocAPIStartTrackingReqMsg &pbLocApiStartTrack)
@@ -440,6 +443,12 @@ public:
         pbLocCfgGetConstlSecBandRespMsg.clear_msecondarybandconfig();
     }
 
+    inline void freeupPBLocAPIGetDebugRespMsg(
+            PBLocAPIGetDebugRespMsg& pbLocAPIGetDebugRespMsg) const {
+        // PBGnssDebugReport mDebugReport = 1;
+        pbLocAPIGetDebugRespMsg.clear_mdebugreport();
+    }
+
     inline void freeUpPBLocAPIPingTestReqMsg(PBLocAPIPingTestReqMsg &pbLocApiPingTest) const {
         // repeated uint32 data = 2;
         pbLocApiPingTest.clear_data();
@@ -510,6 +519,9 @@ public:
     // PBGnssConfigRobustLocation to GnssConfigRobustLocation
     int pbConvertToGnssConfigRobustLocation(const PBGnssConfigRobustLocation &pbGnssCfgRobLoc,
             GnssConfigRobustLocation &gnssCfgRobLoc) const;
+    // PBGnssDebugReport to GnssDebugReport
+    int pbConvertToGnssDebugReport(const PBGnssDebugReport &pbGnssDebugReport,
+            GnssDebugReport &gnssDebugReport) const;
 
     // MASK CONVERSION
     // ***************
@@ -613,6 +625,15 @@ private:
     // BodyToSensorMountParams to PBLIABodyToSensorMountParams
     int convertBodyToSensorMountParamsToPB(const BodyToSensorMountParams &bodyToSensorMntParams,
             PBLIABodyToSensorMountParams *pbBodyToSensorMntParams) const;
+    int convertGnssDebugLocationToPB(const GnssDebugLocation& debugLocation,
+            PBGnssDebugLocation* pbDebugLocation) const;
+    int convertTimespecToPB(const timespec& utcReported,
+            PBTimespec* pbUtcReported) const;
+    int convertGnssDebugTimeToPB(const GnssDebugTime& gnssDebugTime,
+            PBGnssDebugTime* pbGnssDebugTime) const;
+    int convertGnssDebugSatelliteInfoToPB(
+            const GnssDebugSatelliteInfo& satelliteInfo,
+            PBGnssDebugSatelliteInfo* pbSatelliteInfo) const;
 
     // **** helper function for mask conversion to protobuf masks
     // LeverArmTypeMask to PBLIALeverArmTypeMask
@@ -689,6 +710,13 @@ private:
             const Gnss_LocSvSystemEnumType &gnssLocSvSysEnumType) const;
     // PBLocationSessionStatus from/to loc_sess_status
     PBLocationSessionStatus getPBEnumForLocSessionStatus(const loc_sess_status &status) const;
+    PBGnssEphemerisType getPBEnumForGnssEphemerisType(
+            const GnssEphemerisType& ephemerisType) const;
+    PBGnssEphemerisSource getPBEnumForGnssEphemerisSource(
+            const GnssEphemerisSource& ephemerisSource) const;
+    PBGnssEphemerisHealth getPBEnumForGnssEphemerisHealth(
+            const GnssEphemerisHealth& ephemerisHealth) const;
+
 
     // ** Special enum conversion
     // GnssSvType to PBLocApiGnss_LocSvSystemEnumType
@@ -767,6 +795,12 @@ private:
     LocOutputEngineType getEnumForPBLocOutputEngineType(
             const PBLocApiOutputEngineType &pbLocOpEngType) const;
     loc_sess_status getLocSessionStatusFromPB(const PBLocationSessionStatus &pbStatus) const;
+    GnssEphemerisType getEnumForPBGnssEphemerisType(
+            const PBGnssEphemerisType& pbGnssEphemerisType) const;
+    GnssEphemerisSource getEnumForPBGnssEphemerisSource(
+            const PBGnssEphemerisSource& pbGnssEphemerisSource) const;
+    GnssEphemerisHealth getEnumForPBGnssEphemerisHealth(
+            const PBGnssEphemerisHealth& pbGnssEphemerisHealth) const;
 
     // ** Special enum conversion
     // PBLocApiGnss_LocSvSystemEnumType to GnssSvType
@@ -826,6 +860,16 @@ private:
     int pbConvertToBodyToSensorMountParams(
             const PBLIABodyToSensorMountParams &pbBody2SensorMntParam,
             BodyToSensorMountParams &body2SensorMntParam) const;
+    // Helper function of GnssDebugReport
+    int pbConvertToGnssTimespec(const PBTimespec& pbTimespec,
+            timespec& timespec) const;
+    int pbConvertToGnssDebugTime(const PBGnssDebugTime &pbDebugTime,
+            GnssDebugTime debugTime) const;
+    int pbConvertToGnssDebugLocation(const PBGnssDebugLocation& pbDebugLocation,
+            GnssDebugLocation& debugLocation) const;
+    int pbConvertToGnssDebugSatelliteInfo(
+            const PBGnssDebugSatelliteInfo &pbSatelliteInfo,
+            GnssDebugSatelliteInfo &satelliteInfo) const;
 };
 
 #endif /* LOCATION_API_PBMSGCONV_H */
