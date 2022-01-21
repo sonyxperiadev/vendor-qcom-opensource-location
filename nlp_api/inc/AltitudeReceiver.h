@@ -1,4 +1,4 @@
-/* Copyright (c) 2020-2021, The Linux Foundation. All rights reserved.
+/* Copyright (c) 2021 The Linux Foundation. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -25,40 +25,42 @@
  * OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN
  * IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-#ifndef LOCATION_CLIENT_API_DIAG_BASE
-#define LOCATION_CLIENT_API_DIAG_BASE
 
-#include "LocLoggerBase.h"
-#include "LocationClientApi.h"
-#include <loc_misc_utils.h>
+#ifndef ALT_REC_H
+#define ALT_REC_H
 
-using namespace loc_util;
+#include <DBCommon.h>
 
-namespace location_client {
+/******************************************************************************
+AltitudeReceiver
+******************************************************************************/
 
-class LCAReportLoggerUtil {
-public:
-    typedef void (*LogGnssLocation)(const GnssLocation& gnssLocation,
-                                    const LocationCapabilitiesMask& capMask,
-                                    uint64_t sessionStartBootTimestampNs);
-    typedef void (*LogGnssSv)(const std::vector<GnssSv>& gnssSvsVector);
-    typedef void (*LogGnssNmea)(uint64_t timestamp, uint32_t length, const char* nmea);
-    typedef void (*LogGnssMeas)(const GnssMeasurements& gnssMeasurements);
+typedef struct {
+    NlpLocation loc;
+    uint64_t elapsedRealTimeInMs;
+} LocationExt;
 
-    LCAReportLoggerUtil();
-    void log(const GnssLocation& gnssLocation, const LocationCapabilitiesMask& capMask,
-             uint64_t sessionStartBootTimestampNs);
-    void log(const std::vector<GnssSv>& gnssSvsVector);
-    void log(uint64_t timestamp, uint32_t length, const char* nmea);
-    void log(const GnssMeasurements& gnssMeasurements);
-private:
-    LogGnssLocation mLogLocation;
-    LogGnssSv mLogSv;
-    LogGnssNmea mLogNmea;
-    LogGnssMeas mLogMeas;
-};
+/** @brief
+    All the memory pointers received will be never freed internally.
+    Caller shall manage the memory before and after calling these functions.
+    If altitude is valid, ALTITUDE_BIT must set in loc.locationFlagsMask.
+    elapsedRealTimeInMs must be set correctly using boottime of system.
+*/
+typedef struct {
+    void (*pushAltitude)(const LocationExt* location);
+} AltitudeReceiver;
 
+/******************************************************************************
+ResponseListener
+******************************************************************************/
 
-}
+/** @brief
+    All the memory pointers returned in these callbacks will be freed after call returns.
+    Implementation of these callbacks shall copy the needed data before returning.
+*/
+typedef struct {
+    void (*onAltitudeLookupRequest)(const LocationExt* location, bool is_emergency,
+            const void* clientData);
+} AltitudeReceiverResponseListener;
 
 #endif

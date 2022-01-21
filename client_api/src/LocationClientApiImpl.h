@@ -33,7 +33,6 @@
 
 #include <loc_pla.h>
 #include <LocIpc.h>
-#include <LocationDataTypes.h>
 #include <ILocationAPI.h>
 #include <LocationClientApi.h>
 #include <MsgTask.h>
@@ -103,7 +102,7 @@ class LocationClientApiImpl : public ILocationAPI {
     friend IpcListener;
 public:
     LocationClientApiImpl(CapabilitiesCb capabitiescb);
-    void destroy();
+    virtual void destroy(locationApiDestroyCompleteCallback destroyCompleteCb=nullptr) override;
 
     // Tracking
     virtual void updateCallbacks(LocationCallbacks&) override;
@@ -140,39 +139,54 @@ public:
     virtual void gnssNiResponse(uint32_t id, GnssNiResponse response) override;
 
     // other interface
+    void startPositionSession(const ClientCallbacks& cbs,
+                              ReportCbEnumType reportCbType,
+                              const LocationCallbacks& callbacksOption,
+                              const TrackingOptions& trackingOptions);
+
+    void startBatchingSession(const ClientCallbacks& cbs,
+                              ReportCbEnumType reportCbType,
+                              const LocationCallbacks& callbacksOption,
+                              const BatchingOptions& batchOptions);
+
     void updateNetworkAvailability(bool available);
-    void updateCallbackFunctions(const ClientCallbacks&,
-                                 ReportCbEnumType reportCbType = REPORT_CB_TYPE_NONE);
     void getGnssEnergyConsumed(GnssEnergyConsumedCb gnssEnergyConsumedCallback,
                                ResponseCb responseCallback);
     void updateLocationSystemInfoListener(LocationSystemInfoCb locSystemInfoCallback,
                                           ResponseCb responseCallback);
-    void diagLogGnssLocation(const GnssLocation &gnssLocation);
-    inline LocationCapabilitiesMask getCapabilities() {return mCapsMask;}
 
-    bool checkGeofenceMap(size_t count, uint32_t* ids);
-    void addGeofenceMap(uint32_t id, Geofence& geofence);
-    void eraseGeofenceMap(size_t count, uint32_t* ids);
+    void addGeofences(const ClientCallbacks& cbs,
+                      ReportCbEnumType reportCbType,
+                      const LocationCallbacks& callbacksOption,
+                      const std::vector<Geofence>& geofences);
 
-    std::vector<uint32_t>               mLastAddedClientIds;
-    std::unordered_map<uint32_t, Geofence> mGeofenceMap; //clientId --> Geofence object
-    // convenient methods
-    inline bool sendMessage(const uint8_t* data, uint32_t length) const {
-        return (mIpcSender != nullptr) && LocIpc::send(*mIpcSender, data, length);
-    }
-
-    void pingTest(PingTestCb pingTestCallback);
     inline uint16_t getYearOfHw() {return mYearOfHw;}
-    void invokePositionSessionResponseCb(LocationResponse responseCode);
 
     void getSingleTerrestrialPos(uint32_t timeoutMsec, TerrestrialTechMask techMask,
                                  float horQoS, LocationCb terrestrialPositionCallback,
                                  ResponseCb responseCallback);
 
+    void pingTest(PingTestCb pingTestCallback);
+
 private:
     ~LocationClientApiImpl();
+
+    inline LocationCapabilitiesMask getCapabilities() {return mCapsMask;}
     void capabilitesCallback(ELocMsgID  msgId, const void* msgData);
-    void updateTrackingOptionsSync(LocationClientApiImpl* pImpl, TrackingOptions& option);
+    void updateCallbackFunctions(const ClientCallbacks&,
+                                 ReportCbEnumType reportCbType = REPORT_CB_TYPE_NONE);
+    void updateTrackingOptionsSync(TrackingOptions& option);
+    bool checkGeofenceMap(size_t count, uint32_t* ids);
+    void addGeofenceMap(uint32_t id, Geofence& geofence);
+    void eraseGeofenceMap(size_t count, uint32_t* ids);
+
+    // convenient methods
+    inline bool sendMessage(const uint8_t* data, uint32_t length) const {
+        return (mIpcSender != nullptr) && LocIpc::send(*mIpcSender, data, length);
+    }
+
+    void invokePositionSessionResponseCb(LocationResponse responseCode);
+    void diagLogGnssLocation(const GnssLocation &gnssLocation);
 
     // protobuf conversion util class
     LocationApiPbMsgConv mPbufMsgConv;
@@ -199,6 +213,7 @@ private:
     //Year of HW information, 0 is invalid
     uint16_t                   mYearOfHw;
     bool                       mPositionSessionResponseCbPending;
+    uint64_t                   mSessionStartBootTimestampNs;
 
     // callbacks
     CapabilitiesCb          mCapabilitiesCb;
@@ -234,6 +249,10 @@ private:
 
     LocIpc                     mIpc;
     shared_ptr<LocIpcSender>   mIpcSender;
+
+    std::vector<uint32_t>      mLastAddedClientIds;
+    // clientId --> Geofence object
+    std::unordered_map<uint32_t, Geofence> mGeofenceMap;
 
     LCAReportLoggerUtil        mLogger;
 };

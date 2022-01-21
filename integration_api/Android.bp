@@ -1,18 +1,19 @@
 
 cc_library_shared {
 
-    name: "libloc_integration_api.impl",
+    name: "liblocation_integration_api",
     vendor: true,
 
     //# Libs
     shared_libs: [
         "libgps.utils",
         "liblocation_api_msg",
-        "libprotobuf-cpp-full",
+        "libprotobuf-cpp-lite",
         "liblog",
     ],
 
     srcs: [
+        "src/LocationIntegrationApi.cpp",
         "src/LocationIntegrationApiImpl.cpp"
     ],
 
