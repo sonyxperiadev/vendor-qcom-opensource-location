@@ -580,6 +580,7 @@ LocApiV02 :: open(LOC_API_ADAPTER_EVENT_MASK_T mask)
                                        featureMap);
            LocApiBase::reportQwesCapabilities(featureMap);
         }
+        getEngineLockStateSync();
     }
   }
 
@@ -2724,6 +2725,18 @@ qmiLocLockEnumT_v02 LocApiV02 ::convertGpsLockFromAPItoQMI(GnssConfigGpsLock loc
         } else {
             return eQMI_LOC_LOCK_NONE_V02;
         }
+    }
+}
+
+EngineLockState LocApiV02::convertEngineLockState(qmiLocEngineLockStateEnumT_v02 LockState)
+{
+    switch (LockState) {
+      case eQMI_LOC_ENGINE_LOCK_STATE_ENABLED_V02:
+        return ENGINE_LOCK_STATE_ENABLED;
+      case eQMI_LOC_ENGINE_LOCK_STATE_DISABLED_V02:
+        return ENGINE_LOCK_STATE_DISABLED;
+      default:
+        return ENGINE_LOCK_STATE_INVALID;
     }
 }
 
@@ -7280,6 +7293,12 @@ void LocApiV02 :: eventCb(locClientHandleType /*clientHandle*/,
     case QMI_LOC_EVENT_PLATFORM_POWER_STATE_CHANGED_IND_V02:
       reportPowerStateChangeInfo(eventPayload.pPowerStateChangedIndMsg);
       break;
+
+    case QMI_LOC_EVENT_ENGINE_LOCK_STATE_IND_V02:
+        LOC_LOGd("Got QMI_LOC_EVENT_ENGINE_STATE_IND_V02");
+        reportEngineLockStatus(eventPayload.pEngineLockStateIndMsg->engineLockState);
+        break;
+
   }
 }
 
@@ -7389,6 +7408,46 @@ void LocApiV02::requestForAidingData(GnssAidingDataSvMask svDataMask)
 
         sendRequestForAidingData(qmiMask);
     }));
+}
+
+void LocApiV02 :: getEngineLockStateSync() {
+
+    qmiLocGetEngineLockReqMsgT_v02 getEngineLockReq;
+    qmiLocGetEngineLockIndMsgT_v02 getEngineLockInd;
+    locClientStatusEnumType status;
+    locClientReqUnionType req_union;
+    qmiLocEngineLockStateEnumT_v02 ret = QMILOCENGINELOCKSTATEENUMT_MIN_ENUM_VAL_V02;
+    LocationError err = LOCATION_ERROR_SUCCESS;
+
+    memset(&getEngineLockInd, 0, sizeof(getEngineLockInd));
+
+    /*Passing req_union as a parameter even though this request has no payload
+    since NULL or 0 gives an error during compilation*/
+    getEngineLockReq.subType_valid = true;
+    getEngineLockReq.subType = eQMI_LOC_LOCK_ALL_SUB_V02;
+    req_union.pGetEngineLockReq = &getEngineLockReq;
+
+    status = locSyncSendReq(QMI_LOC_GET_ENGINE_LOCK_REQ_V02,
+                            req_union, LOC_ENGINE_SYNC_REQUEST_TIMEOUT,
+                            QMI_LOC_GET_ENGINE_LOCK_IND_V02,
+                            &getEngineLockInd);
+
+    if (status != eLOC_CLIENT_SUCCESS || getEngineLockInd.status != eQMI_LOC_SUCCESS_V02) {
+        LOC_LOGE("%s:%d]: Set engine lock failed. status: %s, ind status:%s\n",
+                 __func__, __LINE__,
+                 loc_get_v02_client_status_name(status),
+                 loc_get_v02_qmi_status_name(getEngineLockInd.status));
+        ret = QMILOCENGINELOCKSTATEENUMT_MIN_ENUM_VAL_V02;
+        err = LOCATION_ERROR_GENERAL_FAILURE;
+    } else {
+        if (getEngineLockInd.engineLockState_valid) {
+            ret = getEngineLockInd.engineLockState;
+        } else {
+            LOC_LOGE("%s:%d]: Engine Lock State not valid\n", __func__, __LINE__);
+            ret = QMILOCENGINELOCKSTATEENUMT_MIN_ENUM_VAL_V02;
+        }
+    }
+    setEngineLockState(convertEngineLockState(ret));
 }
 
 LocationError
@@ -7731,6 +7790,16 @@ void LocApiV02::reportLatencyInfo(const qmiLocLatencyInformationIndMsgT_v02* pLo
              gnssLatencyInfo.hlosQtimer1, gnssLatencyInfo.hlosQtimer2);
 
     LocApiBase::reportLatencyInfo(gnssLatencyInfo);
+}
+
+void LocApiV02::reportEngineLockStatus(const qmiLocEngineLockStateEnumT_v02 engineLockState)
+{
+    LOC_LOGd("Engine Lock State %d", engineLockState);
+    EngineLockState lockState = convertEngineLockState(engineLockState);
+    if (lockState != getEngineLockState() && ENGINE_LOCK_STATE_INVALID != lockState ) {
+        setEngineLockState(lockState);
+        LocApiBase::reportEngineLockStatus(lockState);
+    }
 }
 
 void LocApiV02::configRobustLocation
