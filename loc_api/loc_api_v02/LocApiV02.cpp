@@ -4085,6 +4085,8 @@ void  LocApiV02 :: reportSvPolynomial(const qmiLocEventGnssSvPolyIndMsgT_v02 *gn
             svPolynomial.is_valid |= ULP_GNSS_SV_POLY_BIT_BDS_TGD_B1C;
             svPolynomial.bdsTgdB1c = gnss_sv_poly_ptr->bdsTgdB1c;
         }
+        //Report SV Poly
+        LocApiBase::reportSvPolynomial(svPolynomial);
 
         // need to save svPolynomial in mSvPolynomialMap
         /* For GAL we can get the poly message twice for the same SV,
@@ -4105,8 +4107,6 @@ void  LocApiV02 :: reportSvPolynomial(const qmiLocEventGnssSvPolyIndMsgT_v02 *gn
             }
         }
         mSvPolynomialMap[svPolynomial.gnssSvId] = svPolynomial;
-
-        LocApiBase::reportSvPolynomial(svPolynomial);
 
         LOC_LOGv("[SV_POLY_QMI] SV-Id:%d", svPolynomial.gnssSvId);
     } else {
