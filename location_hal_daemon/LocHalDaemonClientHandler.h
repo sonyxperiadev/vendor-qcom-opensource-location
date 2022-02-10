@@ -166,6 +166,7 @@ public:
     // send terrestrial fix to the requesting LCA client
     void sendTerrestrialFix(LocationError error, const Location& location);
     void getDebugReport();
+    void sendCapabilitiesMsg();
 
     inline shared_ptr<LocIpcSender> getIpcSender () {return mIpcSender;};
     inline int getServiceId() {return mServiceId;}  // for EAP client

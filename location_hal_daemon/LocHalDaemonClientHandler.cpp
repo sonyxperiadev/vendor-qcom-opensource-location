@@ -731,27 +731,13 @@ LocHalDaemonClientHandler - Location API callback functions
 void LocHalDaemonClientHandler::onCapabilitiesCallback(LocationCapabilitiesMask mask) {
 
     std::lock_guard<std::recursive_mutex> lock(LocationApiService::mMutex);
-    LOC_LOGd("--< onCapabilitiesCallback=0x%" PRIx64" client name %s", mask, mName.c_str());
+    LOC_LOGi("--< onCapabilitiesCallback client name %s, "
+             "new mask=0x%" PRIx64", old capability is 0x%" PRIx64"",
+             mName.c_str(), mask, mCapabilityMask);
 
-    if ((nullptr != mIpcSender) && (mask != mCapabilityMask)) {
-        // broadcast
-        string pbStr;
-        LocAPICapabilitiesIndMsg msg(SERVICE_NAME, mask, &mService->mPbufMsgConv);
-        LOC_LOGd("mask old=0x%" PRIx64" new=0x%" PRIx64, mCapabilityMask, mask);
+    if (mask != mCapabilityMask) {
         mCapabilityMask = mask;
-        if (msg.serializeToProtobuf(pbStr)) {
-            bool rc = sendMessage(pbStr.c_str(), pbStr.size(), msg.msgId);
-            // purge this client if failed
-            if (!rc) {
-                LOC_LOGe("failed rc=%d purging client=%s", rc, mName.c_str());
-                mService->deleteClientbyName(mName);
-            }
-        } else {
-            LOC_LOGe("LocAPICapabilitiesIndMsg serializeToProtobuf failed");
-        }
-    } else {
-        LOC_LOGe("mIpcSender is NULL or masks are same old=0x%" PRIx64" new=0x%" PRIx64,
-                mCapabilityMask, mask);
+        sendCapabilitiesMsg();
     }
 }
 
@@ -1169,6 +1155,27 @@ void LocHalDaemonClientHandler::onGnssEnergyConsumedInfoAvailable(
         } else {
             LOC_LOGe("LocAPIGnssEnergyConsumedIndMsg serializeToProtobuf failed");
         }
+    }
+}
+
+void LocHalDaemonClientHandler::sendCapabilitiesMsg() {
+    LOC_LOGd("--< sendCapabilitiesMsg=0x%" PRIx64, mCapabilityMask);
+
+    if ((nullptr != mIpcSender) && (0 != mCapabilityMask)) {
+        string pbStr;
+        LocAPICapabilitiesIndMsg msg(SERVICE_NAME, mCapabilityMask, &mService->mPbufMsgConv);
+        if (msg.serializeToProtobuf(pbStr)) {
+            bool rc = sendMessage(pbStr.c_str(), pbStr.size(), msg.msgId);
+            // purge this client if failed
+            if (!rc) {
+                LOC_LOGe("failed rc=%d purging client=%s", rc, mName.c_str());
+                mService->deleteClientbyName(mName);
+            }
+        } else {
+            LOC_LOGe("LocAPICapabilitiesIndMsg serializeToProtobuf failed");
+        }
+    } else {
+        LOC_LOGe("mIpcSender is NULL or mCapabilityMask is %d", mCapabilityMask);
     }
 }
 
