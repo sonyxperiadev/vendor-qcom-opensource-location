@@ -26,7 +26,6 @@
  * OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN
  * IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
 /*
 Changes from Qualcomm Innovation Center are provided under the following license:
 
@@ -81,8 +80,8 @@ enum LocationApiDataTypesVersion {
     LOCAPI_DATA_TYPES_VER_MAJOR = 1;
     // Minor - New features / API addition, new message/elemtent addition.
     // Bump the last byte of version i.e. x.2 to x.3
-    // Minor version 18: Add integrity download control to xtra configure in LIA API
-    LOCAPI_DATA_TYPES_VER_MINOR = 18;
+    // Minor version 19: 1. Add DebugReport for LCA 2. Add fix quality level to PBLocations
+    LOCAPI_DATA_TYPES_VER_MINOR = 19;
 }
 
 // ============================================================================
@@ -93,6 +92,12 @@ enum PBGnssSuplMode {
     PB_GNSS_SUPL_MODE_STANDALONE = 0;
     PB_GNSS_SUPL_MODE_MSB = 1;
     PB_GNSS_SUPL_MODE_MSA = 2;
+}
+
+enum PBFixQualityLevel {
+    PB_QUALITY_HIGH_ACCU_FIX_ONLY = 0;
+    PB_QUALITY_ANY_VALID_FIX = 1;
+    PB_QUALITY_ANY_OR_FAILED_FIX = 2;
 }
 
 /** GNSS Signal Type and RF Band */
@@ -785,6 +790,8 @@ message PBLocationOptions {
     //  if engine hub is running, this will be fused fix,
     //  if engine hub is not running, this will be SPE fix
     uint32 locReqEngTypeMask = 4;
+    // Fix Quality Level
+    PBFixQualityLevel qualityLevelAccepted = 5;
 }
 
 message PBAidingData {
@@ -1501,3 +1508,68 @@ message PBXtraStatus {
     // For all other XtraDataStatus, this field will be set to 0.
     uint32 xtraValidForHours = 3;
 };
+
+message PBTimespec {
+    //second
+    uint64 tv_sec = 1;
+    //nanosecond
+    uint64 tv_nsec = 2;
+}
+
+message PBGnssDebugLocation {
+    // If not valid, fields 2 to 6 will be set to 0
+    bool valid = 1;
+    PBLocation location = 2;
+    double verticalAccuracyMeters = 3;
+    double speedAccuracyMetersPerSecond = 4;
+    double bearingAccuracyDegrees = 5;
+    PBTimespec utcReported = 6;
+}
+
+message PBGnssDebugTime {
+    // If not valid, fields 2 to 4 will be set to 0
+    bool valid = 1;
+    int64 timeEstimate = 2;
+    float timeUncertaintyNs = 3;
+    float frequencyUncertaintyNsPerSec = 4;
+}
+
+enum PBGnssEphemerisType {
+    PB_GNSS_EPH_TYPE_UNKNOWN = 0;
+    PB_GNSS_EPH_TYPE_EPHEMERIS = 1;
+    PB_GNSS_EPH_TYPE_ALMANAC = 2;
+}
+
+enum PBGnssEphemerisSource {
+    PB_GNSS_EPH_SOURCE_UNKNOWN = 0;
+    PB_GNSS_EPH_SOURCE_DEMODULATED = 1;
+    PB_GNSS_EPH_SOURCE_SUPL_PROVIDED = 2;
+    PB_GNSS_EPH_SOURCE_OTHER_SERVER_PROVIDED = 3;
+    PB_GNSS_EPH_SOURCE_LOCAL = 4;
+}
+
+enum PBGnssEphemerisHealth {
+    PB_GNSS_EPH_HEALTH_UNKNOWN = 0;
+    PB_GNSS_EPH_HEALTH_GOOD = 1;
+    PB_GNSS_EPH_HEALTH_BAD = 2;
+}
+
+message PBGnssDebugSatelliteInfo {
+    // Unique SV Identifier
+    // For SV Range of supported constellation,
+    // please refer to the comment section of svId in GnssSv
+    uint32 svid = 1;
+    PBLocApiGnss_LocSvSystemEnumType constellation = 2;
+    PBGnssEphemerisType ephemerisType = 3;
+    PBGnssEphemerisSource ephemerisSource = 4;
+    PBGnssEphemerisHealth ephemerisHealth = 5;
+    float ephemerisAgeSeconds = 6;
+    bool serverPredictionIsAvailable = 7;
+    float serverPredictionAgeSeconds = 8;
+}
+
+message PBGnssDebugReport {
+    PBGnssDebugLocation location = 1;
+    PBGnssDebugTime time = 2;
+    repeated PBGnssDebugSatelliteInfo satelliteInfo = 3;
+}
