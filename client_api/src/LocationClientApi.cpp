@@ -290,11 +290,12 @@ bool LocationClientApi::startPositionSession(
 
     // options
     LocationOptions locationOption;
-    TrackingOptions trackingOption;
     locationOption.size = sizeof(locationOption);
     locationOption.minInterval = intervalInMs;
     locationOption.minDistance = distanceInMeters;
-    trackingOption.setLocationOptions(locationOption);
+    locationOption.qualityLevelAccepted = QUALITY_ANY_OR_FAILED_FIX;
+
+    TrackingOptions trackingOption(locationOption);
     mApiImpl->startPositionSession(callbacksOption, trackingOption);
     return true;
 }
@@ -317,11 +318,12 @@ bool LocationClientApi::startPositionSession(
 
     // options
     LocationOptions locationOption;
-    TrackingOptions trackingOption;
     locationOption.size = sizeof(locationOption);
     locationOption.minInterval = intervalInMs;
     locationOption.minDistance = 0;
-    trackingOption.setLocationOptions(locationOption);
+    locationOption.qualityLevelAccepted = QUALITY_ANY_OR_FAILED_FIX;
+
+    TrackingOptions trackingOption(locationOption);
     mApiImpl->startPositionSession(cbHandler.getLocationCbs(), trackingOption);
     return true;
 }
@@ -343,13 +345,13 @@ bool LocationClientApi::startPositionSession(
 
     // options
     LocationOptions locationOption;
-    TrackingOptions trackingOption;
     locationOption.size = sizeof(locationOption);
     locationOption.minInterval = intervalInMs;
     locationOption.minDistance = 0;
     locationOption.locReqEngTypeMask =(::LocReqEngineTypeMask)locEngReqMask;
-    trackingOption.setLocationOptions(locationOption);
+    locationOption.qualityLevelAccepted = QUALITY_ANY_OR_FAILED_FIX;
 
+    TrackingOptions trackingOption(locationOption);
     mApiImpl->startPositionSession(cbHandler.getLocationCbs(), trackingOption);
     return true;
 }

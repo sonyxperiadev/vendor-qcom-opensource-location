@@ -25,6 +25,43 @@
  * OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN
  * IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+
+/*
+Changes from Qualcomm Innovation Center are provided under the following license:
+
+Copyright (c) 2022 Qualcomm Innovation Center, Inc. All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted (subject to the limitations in the
+disclaimer below) provided that the following conditions are met:
+
+    * Redistributions of source code must retain the above copyright
+      notice, this list of conditions and the following disclaimer.
+
+    * Redistributions in binary form must reproduce the above
+      copyright notice, this list of conditions and the following
+      disclaimer in the documentation and/or other materials provided
+      with the distribution.
+
+    * Neither the name of Qualcomm Innovation Center, Inc. nor the names of its
+      contributors may be used to endorse or promote products derived
+      from this software without specific prior written permission.
+
+NO EXPRESS OR IMPLIED LICENSES TO ANY PARTY'S PATENT RIGHTS ARE
+GRANTED BY THIS LICENSE. THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT
+HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED
+WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR
+ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE
+GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER
+IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN
+IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
+
 #define LOG_TAG "LocSvc_LocationApiPbMsgConv"
 
 #include <inttypes.h>
@@ -304,6 +341,24 @@ GnssSuplMode LocationApiPbMsgConv::getEnumForPBGnssSuplMode(
     LocApiPb_LOGv("LocApiPB: pbGnssSuplMode:%d, gnssSuplMode:%d", pbGnssSuplMode, gnssSuplMode);
     return gnssSuplMode;
 }
+
+FixQualityLevel LocationApiPbMsgConv::getEnumForPBFixQualityLevel(
+    const PBFixQualityLevel &pbFixQualityLevel) const {
+    FixQualityLevel qualityLevelAccepted = QUALITY_HIGH_ACCU_FIX_ONLY;
+    switch (pbFixQualityLevel) {
+        case PB_QUALITY_ANY_VALID_FIX:
+            qualityLevelAccepted = QUALITY_ANY_VALID_FIX;
+            break;
+        case PB_QUALITY_ANY_OR_FAILED_FIX:
+            qualityLevelAccepted = QUALITY_ANY_OR_FAILED_FIX;
+            break;
+    }
+    LocApiPb_LOGv("LocApiPB: pbFixQualityLevel:%d, qualityLevelAccepted:%d", pbFixQualityLevel,
+            qualityLevelAccepted);
+
+    return qualityLevelAccepted;
+}
+
 
 BatchingStatus LocationApiPbMsgConv::getEnumForPBBatchingStatus(
         const PBBatchingStatus &pbBatchStat) const {
@@ -856,6 +911,21 @@ PBGnssSuplMode LocationApiPbMsgConv::getPBEnumForGnssSuplMode(
     }
     LocApiPb_LOGv("LocApiPB: gnssSuplMode:%d, pbGnssSuplMode:%d", gnssSuplMode, pbGnssSuplMode);
     return pbGnssSuplMode;
+}
+
+PBFixQualityLevel LocationApiPbMsgConv::getPBEnumForFixQualityLevel(
+        const FixQualityLevel &qualityLevel) const {
+    PBFixQualityLevel pbQualityLevel = PB_QUALITY_HIGH_ACCU_FIX_ONLY;
+    switch (qualityLevel) {
+        case QUALITY_ANY_VALID_FIX:
+            pbQualityLevel = PB_QUALITY_ANY_VALID_FIX;
+            break;
+        case QUALITY_ANY_OR_FAILED_FIX:
+            pbQualityLevel = PB_QUALITY_ANY_OR_FAILED_FIX;
+            break;
+    }
+    LocApiPb_LOGv("LocApiPB: qualityLevel:%d, pbQualityLevel:%d", qualityLevel, pbQualityLevel);
+    return pbQualityLevel;
 }
 
 PBBatchingStatus LocationApiPbMsgConv::getPBEnumForBatchingStatus(
@@ -3157,9 +3227,13 @@ int LocationApiPbMsgConv::convertLocationOptionsToPB(const LocationOptions &locO
     // uint32 locReqEngTypeMask = 4; - bitwise OR of PBLocReqEngineTypeMask
     pbLocOpt->set_locreqengtypemask(getPBMaskForLocReqEngineTypeMask(locOpt.locReqEngTypeMask));
 
+    // PBFixQualityLevel = 5;
+    pbLocOpt->set_qualitylevelaccepted(getPBEnumForFixQualityLevel(locOpt.qualityLevelAccepted));
+
     LocApiPb_LOGd("LocApiPB: locOpt - MinInterval: %u, MinDistance:%u, GnssSuplMode:%d, "\
-            "LocReqEngineTypeMask:%x", locOpt.minInterval, locOpt.minDistance, locOpt.mode,
-            locOpt.locReqEngTypeMask);
+            "LocReqEngineTypeMask:%x qualityLevelAccepted:%d",
+            locOpt.minInterval, locOpt.minDistance, locOpt.mode,
+            locOpt.locReqEngTypeMask, locOpt.qualityLevelAccepted);
     return 0;
 }
 
@@ -4917,9 +4991,13 @@ int LocationApiPbMsgConv::pbConvertToLocationOptions(const PBLocationOptions &pb
     locOpt.locReqEngTypeMask = (LocReqEngineTypeMask)getLocReqEngineTypeMaskFromPB(
             pbLocOpt.locreqengtypemask());
 
+    // PBQuailtyLevelAccepted = 5;
+    locOpt.qualityLevelAccepted = getEnumForPBFixQualityLevel(pbLocOpt.qualitylevelaccepted());
+
     LocApiPb_LOGd("LocApiPB: pbLocOpt - MinInterval: %u, MinDistance:%u, GnssSuplMode:%d, "\
-            "LocReqEngineTypeMask:%x", locOpt.minInterval, locOpt.minDistance, locOpt.mode,
-            locOpt.locReqEngTypeMask);
+            "LocReqEngineTypeMask:%x qualityLevelAccepted: %d",
+            locOpt.minInterval, locOpt.minDistance, locOpt.mode,
+            locOpt.locReqEngTypeMask, locOpt.qualityLevelAccepted);
     return 0;
 }
 
