@@ -105,7 +105,9 @@ class TrackingSessCbHandler {
             initializeCommonCbs(pClientApiImpl, rspCb, gnssReportCbs.gnssSvCallback,
                     gnssReportCbs.gnssNmeaCallback, gnssReportCbs.gnssDataCallback,
                     gnssReportCbs.gnssMeasurementsCallback,
-                    gnssReportCbs.gnssNHzMeasurementsCallback, intervalInMs);
+                    gnssReportCbs.gnssNHzMeasurementsCallback,
+                    gnssReportCbs.gnssDcReportCallback,
+                    intervalInMs);
         }
 
         TrackingSessCbHandler(LocationClientApiImpl *pClientApiImpl, ResponseCb rspCb,
@@ -132,27 +134,35 @@ class TrackingSessCbHandler {
             }
 
             initializeCommonCbs(pClientApiImpl, rspCb,
-                    engineReportCbs.gnssSvCallback,
-                    engineReportCbs.gnssNmeaCallback,
-                    engineReportCbs.gnssDataCallback,
-                    engineReportCbs.gnssMeasurementsCallback,
-                    engineReportCbs.gnssNHzMeasurementsCallback, intervalInMs);
+                                engineReportCbs.gnssSvCallback,
+                                engineReportCbs.gnssNmeaCallback,
+                                engineReportCbs.gnssDataCallback,
+                                engineReportCbs.gnssMeasurementsCallback,
+                                engineReportCbs.gnssNHzMeasurementsCallback,
+                                engineReportCbs.gnssDcReportCallback,
+                                intervalInMs);
         }
 
         LocationCallbacks& getLocationCbs() { return mCallbackOptions; }
 
     private:
         LocationCallbacks mCallbackOptions;
-        void initializeCommonCbs(LocationClientApiImpl *pClientApiImpl, ResponseCb rspCb,
-                GnssSvCb gnssSvCallback, GnssNmeaCb gnssNmeaCallback,
-                GnssDataCb gnssDataCallback, GnssMeasurementsCb gnssMeasurementsCallback,
-                GnssMeasurementsCb gnssNHzMeasurementsCallback, uint32_t intervalInMs);
+        void initializeCommonCbs(LocationClientApiImpl *pClientApiImpl,
+                                 ResponseCb rspCb,
+                                 GnssSvCb gnssSvCallback,
+                                 GnssNmeaCb gnssNmeaCallback,
+                                 GnssDataCb gnssDataCallback,
+                                 GnssMeasurementsCb gnssMeasurementsCallback,
+                                 GnssMeasurementsCb gnssNHzMeasurementsCallback,
+                                 GnssDcReportCb gnssDcReportCallback,
+                                 uint32_t intervalInMs);
 };
 
 void TrackingSessCbHandler::initializeCommonCbs(LocationClientApiImpl *pClientApiImpl,
         ResponseCb rspCb, GnssSvCb gnssSvCallback, GnssNmeaCb gnssNmeaCallback,
         GnssDataCb gnssDataCallback, GnssMeasurementsCb gnssMeasurementsCallback,
-        GnssMeasurementsCb gnssNHzMeasurementsCallback, uint32_t intervalInMs) {
+        GnssMeasurementsCb gnssNHzMeasurementsCallback,
+        GnssDcReportCb gnssDcReportCallback, uint32_t intervalInMs) {
     // callback masks
     mCallbackOptions.responseCb = [rspCb](::LocationError err, uint32_t id) {
         LocationResponse response = LocationClientApiImpl::parseLocationError(err);
@@ -216,6 +226,15 @@ void TrackingSessCbHandler::initializeCommonCbs(LocationClientApiImpl *pClientAp
                 pClientApiImpl->getLogger().log(gnssMeasurements);
             };
         }
+    }
+    if (gnssDcReportCallback) {
+        mCallbackOptions.gnssDcReportCb =
+                [pClientApiImpl, gnssDcReportCallback](::GnssDcReportInfo n) {
+            GnssDcReport gnssDcReport =
+                        LocationClientApiImpl::parseDcReport(n);
+            gnssDcReportCallback(gnssDcReport);
+            pClientApiImpl->getLogger().log(gnssDcReport);
+        };
     }
 }
 
@@ -1090,6 +1109,11 @@ DECLARE_TBL(DrSolutionStatusMask) = {
     {DR_SOLUTION_STATUS_VEHICLE_SENSOR_SPEED_INPUT_USED, "VEHICLE_SENSOR_SPEED_INPUT_USED"}
 };
 
+DECLARE_TBL(GnssDcReportType) = {
+    {QZSS_JMA_DISASTER_PREVENTION_INFO, "QZSS_JMA_DISASTER_PREVENTION_INFO"},
+    {QZSS_NON_JMA_DISASTER_PREVENTION_INFO, "QZSS_NON_JMA_DISASTER_PREVENTION_INFO"}
+};
+
 string LocationClientApi::capabilitiesToString(LocationCapabilitiesMask capabMask) {
     string out;
     out.reserve(256);
@@ -1439,6 +1463,31 @@ string LocationSystemInfo::toString() const {
 
     out += FIELDVAL_MASK(systemInfoMask, LocationSystemInfoMask_tbl);
     out += leapSecondSysInfo.toString();
+
+    return out;
+}
+
+string GnssDcReport::toString() const {
+    string out;
+    out.reserve(256);
+
+    out += FIELDVAL_ENUM(dcReportType, GnssDcReportType_tbl);
+    out += FIELDVAL_DEC(numValidBits);
+
+    size_t bufSize = dcReportData.size() * 5 + 1;
+    char *ptr = (char*) malloc(bufSize);
+
+    if (ptr != NULL) {
+        char *ptrCopy = ptr;
+        for (uint8_t byte : dcReportData) {
+            int numbytes = snprintf(ptrCopy, bufSize, "0x%02X ", byte);
+            ptrCopy += numbytes;
+        }
+        *ptrCopy = '\0';
+        out.append(ptr);
+
+        free(ptr);
+    }
 
     return out;
 }

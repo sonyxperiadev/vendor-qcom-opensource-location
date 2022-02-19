@@ -208,6 +208,9 @@ ELocMsgID LocationApiPbMsgConv::getEnumForPBELocMsgID(const PBELocMsgID &pbLocMs
         case PB_E_LOCAPI_GET_SINGLE_TERRESTRIAL_POS_RESP_MSG_ID:
             eLocMsgId = E_LOCAPI_GET_SINGLE_TERRESTRIAL_POS_RESP_MSG_ID;
             break;
+        case PB_E_LOCAPI_DC_REPORT_MSG_ID:
+            eLocMsgId = E_LOCAPI_DC_REPORT_MSG_ID;
+            break;
         case PB_E_LOCAPI_PINGTEST_MSG_ID:
             eLocMsgId = E_LOCAPI_PINGTEST_MSG_ID;
             break;
@@ -670,6 +673,38 @@ GnssSvType LocationApiPbMsgConv::getGnssSvTypeFromPBGnssLocSvSystemEnumType(
     return gnssSvType;
 }
 
+GnssDcReportType LocationApiPbMsgConv::getDcReportTypeFromPB(
+        const PBGnssDcReportType& pbDcReportType) const {
+    GnssDcReportType dcReportType = GNSS_DC_REPORT_TYPE_UNDEFINED;
+    switch (pbDcReportType) {
+    case PB_QZSS_JMA_DISASTER_PREVENTION_INFO:
+        dcReportType = QZSS_JMA_DISASTER_PREVENTION_INFO;
+        break;
+    case PB_QZSS_NON_JMA_DISASTER_PREVENTION_INFO:
+        dcReportType = QZSS_NON_JMA_DISASTER_PREVENTION_INFO;
+        break;
+    default:
+        break;
+    }
+    return dcReportType;
+}
+
+PBGnssDcReportType LocationApiPbMsgConv::getPBEnumForDcReportType(
+        const GnssDcReportType& dcReportType) const {
+    PBGnssDcReportType pbDcReportType = PB_GNSS_DC_REPORT_TYPE_UNDEFINED;
+    switch (dcReportType) {
+    case QZSS_JMA_DISASTER_PREVENTION_INFO:
+        pbDcReportType = PB_QZSS_JMA_DISASTER_PREVENTION_INFO;
+        break;
+    case QZSS_NON_JMA_DISASTER_PREVENTION_INFO:
+        pbDcReportType = PB_QZSS_NON_JMA_DISASTER_PREVENTION_INFO;
+        break;
+    default:
+        break;
+    }
+    return pbDcReportType;
+}
+
 // **** helper function for enum conversion to protobuf enums
 PBELocMsgID LocationApiPbMsgConv::getPBEnumForELocMsgID(const ELocMsgID &eLocMsgId) const {
     PBELocMsgID pbLocMsgId = PB_E_LOCAPI_UNDEFINED_MSG_ID;
@@ -769,6 +804,9 @@ PBELocMsgID LocationApiPbMsgConv::getPBEnumForELocMsgID(const ELocMsgID &eLocMsg
             break;
         case E_LOCAPI_GET_SINGLE_TERRESTRIAL_POS_RESP_MSG_ID:
             pbLocMsgId = PB_E_LOCAPI_GET_SINGLE_TERRESTRIAL_POS_RESP_MSG_ID;
+            break;
+        case E_LOCAPI_DC_REPORT_MSG_ID:
+            pbLocMsgId = PB_E_LOCAPI_DC_REPORT_MSG_ID;
             break;
         case E_LOCAPI_PINGTEST_MSG_ID:
             pbLocMsgId = PB_E_LOCAPI_PINGTEST_MSG_ID;
@@ -1139,6 +1177,9 @@ uint32_t LocationApiPbMsgConv::getPBMaskForLocationCallbacksMask(const uint32_t 
     }
     if (locCbMask & E_LOC_CB_GNSS_NHZ_MEAS_BIT) {
         pbLocCbMask |= PB_E_LOC_CB_GNSS_NHZ_MEAS_BIT;
+    }
+    if (locCbMask & E_LOC_CB_GNSS_DC_REPORT_BIT) {
+        pbLocCbMask |= PB_E_LOC_CB_GNSS_DC_REPORT_BIT;
     }
     LocApiPb_LOGv("LocApiPB: locCbMask:%x, pbLocCbMask:%x", locCbMask, pbLocCbMask);
     return pbLocCbMask;
@@ -2169,6 +2210,9 @@ uint32_t LocationApiPbMsgConv::getLocationCallbacksMaskFromPB(const uint32_t &pb
     }
     if (pbLocCbMask & PB_E_LOC_CB_GNSS_NHZ_MEAS_BIT) {
         locCbMask |= E_LOC_CB_GNSS_NHZ_MEAS_BIT;
+    }
+    if (pbLocCbMask & PB_E_LOC_CB_GNSS_DC_REPORT_BIT) {
+        locCbMask |= E_LOC_CB_GNSS_DC_REPORT_BIT;
     }
     LocApiPb_LOGv("LocApiPB: pbLocCbMask:%x, locCbMask:%x", pbLocCbMask, locCbMask);
     return locCbMask;
@@ -3752,6 +3796,40 @@ int LocationApiPbMsgConv::convertLocSysInfoToPB(const LocationSystemInfo &locSys
     } else {
         LOC_LOGe("mutable_leapsecondsysinfo failed");
         return 1;
+    }
+    return 0;
+}
+
+// Disaster and crisis report
+int LocationApiPbMsgConv::convertGnssDcReportToPB(
+        const GnssDcReportInfo &dcReportInfo,
+        PBGnssDcReportInfo *pbDcReportInfo) const {
+
+    if (nullptr == pbDcReportInfo) {
+        LOC_LOGe("pbDcReportInfo is NULL!, return");
+        return 1;
+    }
+    LOC_LOGv("LocApiPB: dc type %d, num bits %d, num bytes %d",
+             dcReportInfo.dcReportType, dcReportInfo.numValidBits,
+             dcReportInfo.dcReportData.size());
+
+    pbDcReportInfo->set_dcreporttype(getPBEnumForDcReportType(dcReportInfo.dcReportType));
+    pbDcReportInfo->set_numvalidbits(dcReportInfo.numValidBits);
+    // repeated uint32
+    for (uint32_t i = 0; i < dcReportInfo.dcReportData.size(); i++) {
+        pbDcReportInfo->add_dcreportdata((uint32_t)dcReportInfo.dcReportData[i]);
+    }
+    return 0;
+}
+
+
+int LocationApiPbMsgConv::pbConvertToDcReport(
+        const PBGnssDcReportInfo & pbDcReportInfo, GnssDcReportInfo & dcReportInfo) const {
+
+    dcReportInfo.dcReportType = getDcReportTypeFromPB(pbDcReportInfo.dcreporttype());
+    dcReportInfo.numValidBits = pbDcReportInfo.numvalidbits();
+    for (uint32_t i = 0; i < pbDcReportInfo.dcreportdata_size(); i++) {
+        dcReportInfo.dcReportData.push_back((uint8_t) (pbDcReportInfo.dcreportdata(i)));
     }
     return 0;
 }

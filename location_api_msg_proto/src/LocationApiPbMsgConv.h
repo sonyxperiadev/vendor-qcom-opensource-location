@@ -144,6 +144,9 @@ public:
     // GnssDebugReport to PBGnssDebugReport
     int convertGnssDebugReportToPB(const GnssDebugReport& gnssDebugReport,
             PBGnssDebugReport* pbGnssDebugReport) const;
+    // GnssDcReportInfo to PBGnssDcReportInfo
+    int convertGnssDcReportToPB(const GnssDcReportInfo &dcReportInfo,
+            PBGnssDcReportInfo *pbDcReportInfo) const;
 
     // Memory cleanup - Free up memory after PB conversion and serializing data
     inline void freeUpPBLocAPIStartTrackingReqMsg(PBLocAPIStartTrackingReqMsg &pbLocApiStartTrack)
@@ -522,6 +525,8 @@ public:
     // PBGnssDebugReport to GnssDebugReport
     int pbConvertToGnssDebugReport(const PBGnssDebugReport &pbGnssDebugReport,
             GnssDebugReport &gnssDebugReport) const;
+    int pbConvertToDcReport(const PBGnssDcReportInfo & pbDcReportInfo,
+                            GnssDcReportInfo & dcReporInfo) const;
 
     // MASK CONVERSION
     // ***************
@@ -566,6 +571,8 @@ public:
     PBLocationError getPBEnumForLocationError(const LocationError &locErr) const;
     PBELocMsgID getPBEnumForELocMsgID(const ELocMsgID &eLocMsgId) const;
     PBClientType getPBEnumForClientType(const ClientType &clientTyp) const;
+    GnssDcReportType getDcReportTypeFromPB(const PBGnssDcReportType& pbDcReportType) const;
+    PBGnssDcReportType getPBEnumForDcReportType(const GnssDcReportType& dcReportType) const;
 
 private:
     bool mPbDebugLogEnabled;

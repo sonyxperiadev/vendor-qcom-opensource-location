@@ -241,6 +241,7 @@ public:
     static GnssMeasurementsDataFlagsMask parseMeasurementsDataMask(
             ::GnssMeasurementsDataFlagsMask in);
     static GnssEnergyConsumedInfo parseGnssConsumedInfo(::GnssEnergyConsumedInfo);
+    static GnssDcReport parseDcReport(const::GnssDcReportInfo &halDcReport);
 
     void logLocation(const GnssLocation &gnssLocation);
     LCAReportLoggerUtil & getLogger() {

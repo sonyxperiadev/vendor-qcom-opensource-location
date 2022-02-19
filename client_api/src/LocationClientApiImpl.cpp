@@ -26,7 +26,7 @@
  * IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
- /*
+/*
 Changes from Qualcomm Innovation Center are provided under the following license:
 
 Copyright (c) 2022 Qualcomm Innovation Center, Inc. All rights reserved.
@@ -1176,6 +1176,21 @@ GnssEnergyConsumedInfo LocationClientApiImpl::parseGnssConsumedInfo(::GnssEnergy
     return energyConsumed;
 }
 
+GnssDcReport LocationClientApiImpl::parseDcReport(const::GnssDcReportInfo &halDcReport) {
+    GnssDcReport dcReport = {};
+    switch (halDcReport.dcReportType) {
+        case ::QZSS_JMA_DISASTER_PREVENTION_INFO:
+            dcReport.dcReportType = QZSS_JMA_DISASTER_PREVENTION_INFO;
+            break;
+        case ::QZSS_NON_JMA_DISASTER_PREVENTION_INFO:
+            dcReport.dcReportType = QZSS_NON_JMA_DISASTER_PREVENTION_INFO;
+            break;
+    }
+    dcReport.numValidBits = halDcReport.numValidBits;
+    dcReport.dcReportData = std::move(halDcReport.dcReportData);
+    return dcReport;
+}
+
 void LocationClientApiImpl::logLocation(const GnssLocation &gnssLocation)
 {
     mLogger.log(gnssLocation, mCapsMask, mSessionStartBootTimestampNs);
@@ -1492,6 +1507,10 @@ void LocationClientApiImpl::updateCallbacksSync(LocationCallbacks& callbacks) {
     if (callbacks.gnssNHzMeasurementsCb) {
         callBacksMask |= E_LOC_CB_GNSS_NHZ_MEAS_BIT;
         mLocationCbs.gnssNHzMeasurementsCb = callbacks.gnssNHzMeasurementsCb;
+    }
+    if (callbacks.gnssDcReportCb) {
+        callBacksMask |= E_LOC_CB_GNSS_DC_REPORT_BIT;
+        mLocationCbs.gnssDcReportCb = callbacks.gnssDcReportCb;
     }
     // handle callbacks that are not related to a fix session
     if (mLocationSysInfoCb) {
@@ -2926,6 +2945,23 @@ void IpcListener::onReceive(const char* data, uint32_t length,
                             &mApiImpl.mPbufMsgConv);
                     const LocAPIDataIndMsg* pDataIndMsg = (LocAPIDataIndMsg*)(&msg);
                     mApiImpl.mLocationCbs.gnssDataCb(msg.gnssDataNotification);
+                }
+                break;
+            }
+
+            case E_LOCAPI_DC_REPORT_MSG_ID:
+            {
+                LOC_LOGd("<<< message = DC report");
+                if ((mApiImpl.mSessionId != LOCATION_CLIENT_SESSION_ID_INVALID) &&
+                        (mApiImpl.mCallbacksMask & E_LOC_CB_GNSS_DC_REPORT_BIT) &&
+                        (mApiImpl.mLocationCbs.gnssDcReportCb)) {
+                    PBLocAPIDcReportIndMsg pbMsg;
+                    if (0 == pbMsg.ParseFromString(pbLocApiMsg.payload())) {
+                        LOC_LOGe("Failed to parse DC report from payload!!");
+                        return;
+                    }
+                    LocAPIDcReportIndMsg msg(sockName.c_str(), pbMsg, &mApiImpl.mPbufMsgConv);
+                    mApiImpl.mLocationCbs.gnssDcReportCb(msg.dcReportInfo);
                 }
                 break;
             }

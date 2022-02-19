@@ -417,6 +417,9 @@ private:
   void reportPowerStateChangeInfo(
         const qmiLocPlatformPowerStateChangedIndMsgT_v02 *pPowerStateChangedInfo);
 
+  /* report disaster and crisis message */
+  void reportDcMessage(const qmiLocEventDcReportIndMsgT_v02* pDcReportIndMsg);
+
 protected:
   virtual enum loc_api_adapter_err
     open(LOC_API_ADAPTER_EVENT_MASK_T mask);
