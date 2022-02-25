@@ -177,7 +177,7 @@ void TrackingSessCbHandler::initializeCommonCbs(LocationClientApiImpl *pClientAp
                 [pClientApiImpl, gnssNmeaCallback](::GnssNmeaNotification n) {
             uint64_t timestamp = n.timestamp;
             std::string nmea(n.nmea);
-            LOC_LOGd("<<< message = nmea[%s]", nmea.c_str());
+            LOC_LOGv("<<< message = nmea[%s]", nmea.c_str());
             std::stringstream ss(nmea);
             std::string each;
             while (std::getline(ss, each, '\n')) {
@@ -356,7 +356,7 @@ bool LocationClientApi::startPositionSession(
 
 void LocationClientApi::stopPositionSession() {
     if (mApiImpl) {
-        mApiImpl->stopTracking(0);
+        mApiImpl->stopTrackingAndClearSubscriptions(0);
     }
 }
 
@@ -490,7 +490,7 @@ void LocationClientApi::addGeofences(std::vector<Geofence>& geofences,
 
     callbacksOption.collectiveResponseCb = [this, collRspCb](size_t count,
             LocationError* errs, uint32_t* ids) {
-        std::vector<pair<Geofence, LocationResponse>> responses{};
+        std::vector<pair<Geofence, LocationResponse>> responses;
         LOC_LOGd("CollectiveRes Pload count: %zu", count);
         for (int i=0; i < count; i++) {
             responses.push_back(make_pair(

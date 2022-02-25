@@ -89,16 +89,13 @@ using namespace loc_util;
 
 namespace location_client
 {
-
-enum ReportCbEnumType {
-    REPORT_CB_TYPE_NONE   = 0,
-    /** cb for GNSS info, including location, sv info, nmea and
-     *  etc */
-    REPORT_CB_GNSS_INFO   = 1,
-    /** cb for GNSS info, including location, sv info, nmea and
-     *  etc and also for location of other engines running in the
-     *  system */
-    REPORT_CB_ENGINE_INFO = 2,
+enum LocationCallbackType {
+    // Tracking callbacks type
+    TRACKING_CBS = 0,
+    // Batching callbacks type
+    BATCHING_CBS = 1,
+    // Geofence callbacks type
+    GEOFENCE_CBS = 2
 };
 
 typedef std::function<void(
@@ -176,6 +173,10 @@ public:
             locationSystemInfoCallback locationSystemInfoCb,
             responseCallback responseCb);
 
+    uint32_t startTrackingSync(TrackingOptions&);
+    uint32_t startBatchingSync(BatchingOptions&);
+    void updateCallbacksSync(LocationCallbacks& callbacks);
+
     void addGeofences(const LocationCallbacks& callbacksOption,
                       const std::vector<Geofence>& geofences);
     inline Geofence getMappedGeofence(uint32_t id) {
@@ -225,15 +226,20 @@ public:
         return mLogger;
     }
 
+    void stopTrackingAndClearSubscriptions(uint32_t id);
+    void clearSubscriptions(LocationCallbackType cbTypeToClear);
+    void stopTrackingSync(bool clearSubscriptions);
+
 private:
     ~LocationClientApiImpl();
 
     inline LocationCapabilitiesMask getCapabilities() {return mCapsMask;}
     void capabilitesCallback(ELocMsgID  msgId, const void* msgData);
-    void updateTrackingOptionsSync(TrackingOptions& option);
+    void updateTrackingOptionsSync(TrackingOptions& option, bool clearSubscriptions);
     bool checkGeofenceMap(size_t count, uint32_t* ids);
     void addGeofenceMap(uint32_t id, Geofence& geofence);
     void eraseGeofenceMap(size_t count, uint32_t* ids);
+    bool isGeofenceMapEmpty();
 
     // convenient methods
     inline bool sendMessage(const uint8_t* data, uint32_t length) const {
