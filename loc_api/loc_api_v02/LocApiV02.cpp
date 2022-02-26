@@ -4101,6 +4101,29 @@ void  LocApiV02 :: reportSvPolynomial(const qmiLocEventGnssSvPolyIndMsgT_v02 *gn
         //Report SV Poly
         LocApiBase::reportSvPolynomial(svPolynomial);
 
+        if (1 == gnss_sv_poly_ptr->toc_valid) {
+            svPolynomial.is_valid |= ULP_GNSS_SV_POLY_BIT_TOC;
+            svPolynomial.toc = gnss_sv_poly_ptr->toc;
+        }
+
+        if (1 == gnss_sv_poly_ptr->IODC_valid) {
+            svPolynomial.is_valid |= ULP_GNSS_SV_POLY_BIT_IODC;
+            svPolynomial.iodc = gnss_sv_poly_ptr->IODC;
+        }
+
+        if (1 == gnss_sv_poly_ptr->toe_valid) {
+            svPolynomial.is_valid |= ULP_GNSS_SV_POLY_BIT_TOE;
+            svPolynomial.toe = gnss_sv_poly_ptr->toe;
+        }
+
+        if (1 == gnss_sv_poly_ptr->ephemerisSrc_valid) {
+            svPolynomial.is_valid |= ULP_GNSS_SV_POLY_BIT_EPHEMERIS_SOURCE;
+            svPolynomial.gnssLocEphemerisSource = gnss_sv_poly_ptr->ephemerisSrc;
+        }
+
+        //Report SV Poly
+        LocApiBase::reportSvPolynomial(svPolynomial);
+
         // need to save svPolynomial in mSvPolynomialMap
         /* For GAL we can get the poly message twice for the same SV,
         since it could be FNAV or INAV, based on svPolyFlags
@@ -5459,10 +5482,45 @@ void LocApiV02::reportGnssMeasurementData(
         mMsInWeek = convertGnssClock(mGnssMeasurements->gnssMeasNotification.clock,
                                      gnss_measurement_report_ptr);
     }
+    // AGC
+    uint32_t temp;
+    mAgcIsPresent = convertJammerIndicator(gnss_measurement_report_ptr,
+            mGnssMeasurements->gnssMeasNotification.
+                    gnssAgc[mGnssMeasurements->gnssMeasNotification.agcCount].agcLevelDb, temp);
+    convertSvType(gnss_measurement_report_ptr,
+                  mGnssMeasurements->gnssMeasNotification.
+                            gnssAgc[mGnssMeasurements->gnssMeasNotification.agcCount].svType,
+                  temp);
+
+    if (gnss_measurement_report_ptr.gnssSignalType_valid) {
+        LOC_LOGd("sigType=%" PRIu64, gnss_measurement_report_ptr.gnssSignalType);
+        mGnssMeasurements->gnssMeasNotification.
+                gnssAgc[mGnssMeasurements->gnssMeasNotification.agcCount].
+                        carrierFrequencyHz = convertSignalTypeToCarrierFrequency(
+                                gnss_measurement_report_ptr.gnssSignalType, 8);
+    } else {
+        mGnssMeasurements->gnssMeasNotification.
+                gnssAgc[mGnssMeasurements->gnssMeasNotification.agcCount].
+                        carrierFrequencyHz =
+                                CarrierFrequencies[mGnssMeasurements->gnssMeasNotification.
+                                        gnssAgc[mGnssMeasurements->gnssMeasNotification.
+                                                agcCount].svType];
+    }
+    LOC_LOGv("agcCount = %d", mGnssMeasurements->gnssMeasNotification.agcCount);
+    LOC_LOGv("agcLevelDb = %.2f",
+             mGnssMeasurements->gnssMeasNotification.
+                    gnssAgc[mGnssMeasurements->gnssMeasNotification.agcCount].agcLevelDb);
+    LOC_LOGv("svType = %d",
+             mGnssMeasurements->gnssMeasNotification.
+                    gnssAgc[mGnssMeasurements->gnssMeasNotification.agcCount].svType);
+    LOC_LOGv("carrierFrequencyHz = %.2f",
+             mGnssMeasurements->gnssMeasNotification.
+                    gnssAgc[mGnssMeasurements->gnssMeasNotification.agcCount].carrierFrequencyHz);
+    mGnssMeasurements->gnssMeasNotification.agcCount++;
 
     if (gnss_measurement_report_ptr.maxMessageNum == gnss_measurement_report_ptr.seqNum &&
         maxSubSeqNum == subSeqNum) {
-        LOC_LOGD("Report the measurements to the upper layer");
+        LOC_LOGd("Report the measurements to the upper layer");
         int64_t elapsedRealTime = -1;
         int64_t unc;
         if (gnss_measurement_report_ptr.refCountTicks_valid &&
@@ -5749,6 +5807,82 @@ void LocApiV02 ::reportSvMeasurementInternal() {
                             measurements[i].fullInterSignalBiasUncertaintyNs);
         }
         LocApiBase::reportGnssMeasurements(*mGnssMeasurements, mMsInWeek);
+    }
+}
+
+bool LocApiV02::convertJammerIndicator(
+        const qmiLocEventGnssSvMeasInfoIndMsgT_v02& gnss_measurement_report_ptr,
+        double& agcLevelDb,
+        GnssMeasurementsDataFlagsMask& flags,
+        bool updateFlags) {
+
+    bool bAgcIsPresent = false;
+    if (gnss_measurement_report_ptr.jammerIndicator_valid) {
+        if (GNSS_INVALID_JAMMER_IND !=
+            gnss_measurement_report_ptr.jammerIndicator.bpMetricDb) {
+            LOC_LOGv("AGC is valid: agcMetricDb = %d",
+                -gnss_measurement_report_ptr.jammerIndicator.bpMetricDb);
+
+            agcLevelDb = -(double)gnss_measurement_report_ptr.jammerIndicator.bpMetricDb / 100.0;
+            if (updateFlags) {
+                flags |= GNSS_MEASUREMENTS_DATA_AUTOMATIC_GAIN_CONTROL_BIT;
+            }
+        } else {
+            LOC_LOGv("AGC is invalid: bpMetricDb = 0x%X",
+                gnss_measurement_report_ptr.jammerIndicator.bpMetricDb);
+        }
+        bAgcIsPresent = true;
+    }
+    else {
+        LOC_LOGv("AGC is not present");
+        bAgcIsPresent = false;
+    }
+    return bAgcIsPresent;
+}
+
+void LocApiV02::convertSvType(
+        const qmiLocEventGnssSvMeasInfoIndMsgT_v02& gnss_measurement_report_ptr,
+        GnssSvType& svType,
+        GnssMeasurementsDataFlagsMask& flags,
+        uint16_t  gloFrequency,
+        bool updateFlags) {
+    switch (gnss_measurement_report_ptr.system)
+    {
+    case eQMI_LOC_SV_SYSTEM_GPS_V02:
+        svType = GNSS_SV_TYPE_GPS;
+        break;
+
+    case eQMI_LOC_SV_SYSTEM_GALILEO_V02:
+        svType = GNSS_SV_TYPE_GALILEO;
+        break;
+
+    case eQMI_LOC_SV_SYSTEM_SBAS_V02:
+        svType = GNSS_SV_TYPE_SBAS;
+        break;
+
+    case eQMI_LOC_SV_SYSTEM_GLONASS_V02:
+        svType = GNSS_SV_TYPE_GLONASS;
+        if (updateFlags) {
+            gloFrequency = gloFrequency;
+            flags |= GNSS_MEASUREMENTS_DATA_GLO_FREQUENCY_BIT;
+        }
+        break;
+
+    case eQMI_LOC_SV_SYSTEM_BDS_V02:
+        svType = GNSS_SV_TYPE_BEIDOU;
+        break;
+
+    case eQMI_LOC_SV_SYSTEM_QZSS_V02:
+        svType = GNSS_SV_TYPE_QZSS;
+        break;
+
+    case eQMI_LOC_SV_SYSTEM_NAVIC_V02:
+        svType = GNSS_SV_TYPE_NAVIC;
+        break;
+
+    default:
+        svType = GNSS_SV_TYPE_UNKNOWN;
+        break;
     }
 }
 
@@ -6443,43 +6577,11 @@ bool LocApiV02 :: convertGnssMeasurements(
     measurementData.flags |= GNSS_MEASUREMENTS_DATA_SV_ID_BIT | GNSS_MEASUREMENTS_DATA_SV_TYPE_BIT;
 
     // constellation
-    switch (gnss_measurement_report_ptr.system)
-    {
-        case eQMI_LOC_SV_SYSTEM_GPS_V02:
-            measurementData.svType = GNSS_SV_TYPE_GPS;
-            break;
-
-        case eQMI_LOC_SV_SYSTEM_GALILEO_V02:
-            measurementData.svType = GNSS_SV_TYPE_GALILEO;
-            break;
-
-        case eQMI_LOC_SV_SYSTEM_SBAS_V02:
-            measurementData.svType = GNSS_SV_TYPE_SBAS;
-            break;
-
-        case eQMI_LOC_SV_SYSTEM_GLONASS_V02:
-            measurementData.svType = GNSS_SV_TYPE_GLONASS;
-            measurementData.gloFrequency = gnss_measurement_info.gloFrequency;
-            measurementData.flags |= GNSS_MEASUREMENTS_DATA_GLO_FREQUENCY_BIT;
-            break;
-
-        case eQMI_LOC_SV_SYSTEM_BDS_V02:
-            measurementData.svType = GNSS_SV_TYPE_BEIDOU;
-            break;
-
-        case eQMI_LOC_SV_SYSTEM_QZSS_V02:
-            measurementData.svType = GNSS_SV_TYPE_QZSS;
-            break;
-
-        case eQMI_LOC_SV_SYSTEM_NAVIC_V02:
-            measurementData.svType = GNSS_SV_TYPE_NAVIC;
-            break;
-
-        default:
-            measurementData.svType = GNSS_SV_TYPE_UNKNOWN;
-            break;
-    }
-
+    convertSvType(gnss_measurement_report_ptr,
+                  measurementData.svType,
+                  measurementData.flags,
+                  measurementData.gloFrequency,
+                  true);
     // time_offset_ns
     if (0 != gnss_measurement_info.measLatency)
     {
@@ -6663,8 +6765,7 @@ bool LocApiV02 :: convertGnssMeasurements(
         measurementData.carrierFrequencyHz = convertSignalTypeToCarrierFrequency(
                 gnss_measurement_report_ptr.gnssSignalType, gnss_measurement_info.gloFrequency);
         measurementData.flags |= GNSS_MEASUREMENTS_DATA_CARRIER_FREQUENCY_BIT;
-    }
-    else {
+    } else {
         measurementData.carrierFrequencyHz = 0;
         // GLONASS is FDMA system, so each channel has its own carrier frequency
         // The formula is f(k) = fc + k * 0.5625;
@@ -6819,27 +6920,10 @@ bool LocApiV02 :: convertGnssMeasurements(
     measurementData.flags |= GNSS_MEASUREMENTS_DATA_MULTIPATH_INDICATOR_BIT;
 
     // AGC
-    if (gnss_measurement_report_ptr.jammerIndicator_valid) {
-        if (GNSS_INVALID_JAMMER_IND !=
-            gnss_measurement_report_ptr.jammerIndicator.bpMetricDb) {
-            LOC_LOGv("AGC is valid: agcMetricDb = %d bpMetricDb = %d",
-                     -gnss_measurement_report_ptr.jammerIndicator.bpMetricDb,
-                     gnss_measurement_report_ptr.jammerIndicator.bpMetricDb);
-
-            measurementData.agcLevelDb =
-                    -(double)gnss_measurement_report_ptr.jammerIndicator.bpMetricDb / 100.0;
-            measurementData.flags |= GNSS_MEASUREMENTS_DATA_AUTOMATIC_GAIN_CONTROL_BIT;
-        } else {
-            LOC_LOGv("AGC is invalid: agcMetricDb = 0x%X bpMetricDb = 0x%X",
-                     gnss_measurement_report_ptr.jammerIndicator.agcMetricDb,
-                     gnss_measurement_report_ptr.jammerIndicator.bpMetricDb);
-        }
-        bAgcIsPresent = true;
-    } else {
-        LOC_LOGv("AGC is not present");
-        bAgcIsPresent = false;
-    }
-
+    bAgcIsPresent = convertJammerIndicator(gnss_measurement_report_ptr,
+                                           measurementData.agcLevelDb,
+                                           measurementData.flags,
+                                           true);
     if (gnss_measurement_report_ptr.gnssSignalType_valid) {
         measurementData.gnssSignalType =
                 convertQmiGnssSignalType(gnss_measurement_report_ptr.gnssSignalType);

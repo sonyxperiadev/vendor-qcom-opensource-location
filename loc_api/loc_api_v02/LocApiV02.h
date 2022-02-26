@@ -368,6 +368,19 @@ private:
       mAgcIsPresent = false;
   }
 
+  bool convertJammerIndicator(
+        const qmiLocEventGnssSvMeasInfoIndMsgT_v02& gnss_measurement_report_ptr,
+        double& agcLevelDb,
+        GnssMeasurementsDataFlagsMask& flags,
+        bool updateFlags = false);
+
+  void convertSvType(
+        const qmiLocEventGnssSvMeasInfoIndMsgT_v02& gnss_measurement_report_ptr,
+        GnssSvType& svType,
+        GnssMeasurementsDataFlagsMask& flags,
+        uint16_t  gloFrequency = 0,
+        bool updateFlags = false);
+
   void setGnssBiases();
 
   /* convert and report ODCPI request */
