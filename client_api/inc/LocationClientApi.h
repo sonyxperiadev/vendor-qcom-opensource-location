@@ -26,6 +26,42 @@
  * IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/*
+Changes from Qualcomm Innovation Center are provided under the following license:
+
+Copyright (c) 2022 Qualcomm Innovation Center, Inc. All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted (subject to the limitations in the
+disclaimer below) provided that the following conditions are met:
+
+    * Redistributions of source code must retain the above copyright
+      notice, this list of conditions and the following disclaimer.
+
+    * Redistributions in binary form must reproduce the above
+      copyright notice, this list of conditions and the following
+      disclaimer in the documentation and/or other materials provided
+      with the distribution.
+
+    * Neither the name of Qualcomm Innovation Center, Inc. nor the names of its
+      contributors may be used to endorse or promote products derived
+      from this software without specific prior written permission.
+
+NO EXPRESS OR IMPLIED LICENSES TO ANY PARTY'S PATENT RIGHTS ARE
+GRANTED BY THIS LICENSE. THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT
+HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED
+WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR
+ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE
+GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER
+IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN
+IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
+
 #ifndef LOCATIONCLIENTAPI_H
 #define LOCATIONCLIENTAPI_H
 
@@ -155,7 +191,8 @@ enum GnssSvOptionsMask {
     GNSS_SV_OPTIONS_HAS_EPHEMER_BIT             = (1<<0),
     /** Almanac is available for this SV. <br/>   */
     GNSS_SV_OPTIONS_HAS_ALMANAC_BIT             = (1<<1),
-    /** This SV is used in the position fix. <br/>   */
+    /** This SV is used in the position fix that has output
+     *  engine type set to LOC_OUTPUT_ENGINE_SPE. <br/> */
     GNSS_SV_OPTIONS_USED_IN_FIX_BIT             = (1<<2),
     /** This SV has valid GnssSv::carrierFrequencyHz. <br/> */
     GNSS_SV_OPTIONS_HAS_CARRIER_FREQUENCY_BIT   = (1<<3),
@@ -163,7 +200,11 @@ enum GnssSvOptionsMask {
     GNSS_SV_OPTIONS_HAS_GNSS_SIGNAL_TYPE_BIT    = (1<<4),
     /** This SV has valid GnssSv::basebandCarrierToNoiseDbHz.
      *  <br/> */
-    GNSS_SV_OPTIONS_HAS_BASEBAND_CARRIER_TO_NOISE_BIT = (1<<5)
+    GNSS_SV_OPTIONS_HAS_BASEBAND_CARRIER_TO_NOISE_BIT = (1<<5),
+    /** This SV has valid GnssSv::elevation. <br/> */
+    GNSS_SV_OPTIONS_HAS_ELEVATION_BIT                 = (1<<6),
+    /** This SV has valid GnssSv::azimuth. <br/> */
+    GNSS_SV_OPTIONS_HAS_AZIMUTH_BIT                   = (1<<7),
 };
 
 /**
@@ -537,6 +578,18 @@ enum GnssLocationInfoFlagMask {
     GNSS_LOCATION_INFO_ALTITUDE_ASSUMED_BIT             = (1ULL<<33),
     /** GnssLocation has valid GnssLocation::sessionStatus. <br/> */
     GNSS_LOCATION_INFO_SESSION_STATUS_BIT               = (1ULL<<34),
+    /** GnssLocation has valid GnssLocation::integrityRiskUsed.
+     *  <br/> */
+    GNSS_LOCATION_INFO_INTEGRITY_RISK_USED_BIT          = (1ULL<<35),
+    /** GnssLocation has valid GnssLocation::protectAlongTrack.
+     *  <br/> */
+    GNSS_LOCATION_INFO_PROTECT_ALONG_TRACK_BIT          = (1ULL<<36),
+    /** GnssLocation has valid GnssLocation::protectCrossTrack.
+     *  <br/> */
+    GNSS_LOCATION_INFO_PROTECT_CROSS_TRACK_BIT          = (1ULL<<37),
+    /** GnssLocation has valid GnssLocation::sprotectVertical.
+     *  <br/> */
+    GNSS_LOCATION_INFO_PROTECT_VERTICAL_BIT             = (1ULL<<38),
 };
 
 /** Specify the reliability level of
@@ -1171,6 +1224,26 @@ struct GnssLocation : public Location {
     /** Indicates whether session is success, failure or
      *  intermediate. <br/> */
     LocSessionStatus sessionStatus;
+    /** Integrity risk used for protection level parameters. <br/>
+     *  Unit of 2.5e-10. Valid range is [1 to (4e9-1)].
+     *  </br> Other values means integrity risk is disabled and
+     *  GnssLocation::protectAlongTrack,
+     *  GnssLocation::protectCrossTrack and
+     *  GnssLocation::protectVertical will not be available. <br/>
+     */
+    uint32_t integrityRiskUsed;
+    /** Along-track protection level at specified integrity risk, in
+     *  unit of meter. <br/>
+     */
+    float    protectAlongTrack;
+   /** Cross-track protection level at specified integrity risk, in
+     *  unit of meter. <br/>
+     */
+    float    protectCrossTrack;
+    /** Vertical component protection level at specified integrity
+     *  risk, in unit of meter. <br/>
+     */
+    float    protectVertical;
 
     /* Default constructor to initalize GnssLocation structure */
     inline GnssLocation() :
@@ -1197,7 +1270,9 @@ struct GnssLocation : public Location {
             llaVRPBased({}),
             enuVelocityVRPBased{0.0f, 0.0f, 0.0f},
             drSolutionStatusMask((DrSolutionStatusMask)0),
-            altitudeAssumed(false), sessionStatus(LOC_SESS_FAILURE) {
+            altitudeAssumed(false), sessionStatus(LOC_SESS_FAILURE),
+            integrityRiskUsed(0), protectAlongTrack(0.0f),
+            protectCrossTrack(0.0f), protectVertical(0.0f) {
     }
     /** Method to print the struct to human readable form, for logging.
      *  <br/> */
@@ -1254,7 +1329,7 @@ struct GnssSv {
     double basebandCarrierToNoiseDbHz;
     /** GLONASS frequency channel number, range is [1, 14].
      * <br/>
-     * This field is always valid if and ony if sv is of GLONASS.
+     * This field is always valid if and only if sv is of GLONASS.
      * <br/> */
     uint16_t gloFrequency;
     /** Method to print the struct to human readable form, for logging.
@@ -1414,10 +1489,10 @@ enum GnssMeasurementsDataFlagsMask{
      *  GnssMeasurementsData::agcLevelDb.  <br/>   */
     GNSS_MEASUREMENTS_DATA_AUTOMATIC_GAIN_CONTROL_BIT       = (1<<17),
     /** GnssMeasurementsData has valid
-     *  GnssMeasurementsData::interSignalBiasNs.  <br/>   */
+     *  GnssMeasurementsData::fullInterSignalBiasNs.  <br/>   */
     GNSS_MEASUREMENTS_DATA_FULL_ISB_BIT                     = (1<<18),
     /** GnssMeasurementsData has valid
-     *  GnssMeasurementsData::interSignalBiasUncertaintyNs.  <br/>   */
+     *  GnssMeasurementsData::fullInterSignalBiasUncertaintyNs.  <br/>   */
     GNSS_MEASUREMENTS_DATA_FULL_ISB_UNCERTAINTY_BIT         = (1<<19),
     /** GnssMeasurementsData has valid
      *  GnssMeasurementsData::cycleslipCount.  <br/>   */
@@ -1425,6 +1500,9 @@ enum GnssMeasurementsDataFlagsMask{
     /** GnssMeasurementsData has valid
      *  GnssMeasurementsData::gnssSignalType. <br/> */
     GNSS_MEASUREMENTS_DATA_GNSS_SIGNAL_TYPE_BIT             = (1<<21),
+    /** GnssMeasurementsData has valid
+     *  GnssMeasurementsData::basebandCarrierToNoiseDbHz. <br/> */
+    GNSS_MEASUREMENTS_DATA_BASEBAND_CARRIER_TO_NOISE_BIT    = (1<<22),
 };
 
 /** Specify GNSS measurement state in
@@ -1603,12 +1681,18 @@ struct GnssMeasurementsData {
     /** GNSS signal type mask of the SV.
      *  Should always be available in measurement report. <br/> */
     GnssSignalTypeMask gnssSignalType;
-    /** GNSS Intersystem Time Bias. <br/> */
-    double interSignalBiasNs;
-    /** GNSS Intersystem Time Bias uncertanity. <br/> */
-    double interSignalBiasUncertaintyNs;
+    /** The full inter-signal bias (ISB) in nanoseconds. <br/>
+     *  This value is the sum of the estimated receiver-side and the
+     *  space-segment-side inter-system bias, inter-frequency bias
+     *  and inter-code bias. <br/>
+     */
+    double fullInterSignalBiasNs;
+    /** 1-sigma uncertainty associated with the full inter-signal
+     *  bias in nanoseconds. <br/>   */
+    double fullInterSignalBiasUncertaintyNs;
     /** Increments when a cycle slip is detected. <br/> */
     uint8_t cycleSlipCount;
+
     /** Method to print the struct to human readable form, for logging.
      *  <br/> */
     string toString() const;
@@ -1725,10 +1809,10 @@ struct LeapSecondSystemInfo {
      *     use this field to retrieve the current leap second. <br/>
      */
     uint8_t               leapSecondCurrent;
-    /** GPS timestamp that corrresponds to the last known leap
-     *  second change event. <br/>
-     *  The info can be available on two scenario: <br/>
-     *  1: this leap second change event has been scheduled and yet
+    /** GPS timestamp that corresponds to the last known leap second
+     *  change event. <br/>
+     *  The info can be available on two scenario: <br/> 1: this
+     *  leap second change event has been scheduled and yet
      *     to happen and GPS receiver has decoded this info since
      *     device last bootup. <br/
      *  2: this leap second change event happened after device was
@@ -1737,7 +1821,7 @@ struct LeapSecondSystemInfo {
      *     second change has happened, this info will become
      *     unavailable. <br/>
      *
-     *   If leap second change info is avaiable, to figure out the
+     *   If leap second change info is available, to figure out the
      *   current leap second info, compare current gps time with
      *   LeapSecondChangeInfo::gpsTimestampLsChange to know whether
      *   to choose leapSecondBefore or leapSecondAfter as current
@@ -2085,12 +2169,20 @@ public:
         <br/>
 
         If locationCallback is nullptr, this call is no op. <br/>
-        Otherwise, if this API is called for first time or after
-        stopPositionSession(), a position session will be started
-        with the specified parameters and callbacks. <br/>
 
-        If called during a session (no matter from which
-        location_client::startPositionSession()), parameters and
+        Otherwise, if this API is called for first time or after
+        previous position/baching/geofence session has been stopped,
+        a position session will be started with the specified
+        parameters and callbacks. <br/>
+
+        If this API is called when the previous
+        position/batching/geofence session has not yet received
+        responseCallback, this API will receive an error code of
+        LOCATION_RESPONSE_REQUEST_ALREADY_IN_PROGRESS via its
+        responseCallback. <br/>
+
+        If called during on-going session after the responseCb has
+        been received for the on-going session, parameters and
         callbacks will be updated, and the session continues but
         with the new set of parameters and callbacks. <br/>
 
@@ -2155,13 +2247,22 @@ public:
                info in format of GnssLocation and other reports,
                e.g.: SV report and NMEA report.
         If gnssReportCallbacks is nullptr, this call is no op. <br/>
+
         Otherwise, if this API is called for first time or after
-        stopPositionSession(), a position session will be started
-        with the specified parameters and callbacks. <br/>
-        If this API is called during a session (no matter from which
-        startPositionSession() API), parameters and callbacks will
-        be updated, and the session continues but with the new set
-        of parameters and callbacks. <br/>
+        previous position/baching/geofence session has been stopped,
+        a position session will be started with the specified
+        parameters and callbacks. <br/>
+
+        If this API is called when the previous
+        position/batching/geofence session has not yet received
+        responseCallback, this API will receive an error code of
+        LOCATION_RESPONSE_REQUEST_ALREADY_IN_PROGRESS via its
+        responseCallback. <br/>
+
+        If called during on-going session after the responseCb has
+        been received for the on-going session, parameters and
+        callbacks will be updated, and the session continues but
+        with the new set of parameters and callbacks. <br/>
 
         @param intervalInMs <br/>
         Time between fixes, or TBF, in milliseconds. <br/>
@@ -2208,14 +2309,23 @@ public:
         report, SV measurement reports. <br/>
 
         If EngineReportCbs is populated with nullptr only, this call
-        is no op. Otherwise...<br/>
-        If this API is called for first time or after
-        stopPositionSession(), a position session will be started
-        with the specified parameters and callbacks. <br/>
-        If this API is called during a session (no matter from which
-        startPositionSession() API), parameters / callback will be
-        updated, and the session continues but with the new set of
-        parameters / callbacks. <br/>
+        is no op. <br/>
+
+        Otherwise, if this API is called for first time or after
+        previous position/baching/geofence session has been stopped,
+        a position session will be started with the specified
+        parameters and callbacks. <br/>
+
+        If this API is called when the previous
+        position/batching/geofence session has not yet received
+        responseCallback, this API will receive an error code of
+        LOCATION_RESPONSE_REQUEST_ALREADY_IN_PROGRESS via its
+        responseCallback. <br/>
+
+        If called during on-going session after the responseCb has
+        been received for the on-going session, parameters /
+        callback will be updated, and the session continues but with
+        the new set of parameters / callbacks. <br/>
 
         @param intervalInMs
         Time between fixes, or TBF, in milliseconds. <br/>
@@ -2291,7 +2401,7 @@ public:
         If this API is invoked with single-shot terrestrial position
         already in progress, the request will fail and the
         responseCallback will get invoked with
-        LOCATION_RESPONSE_BUSY. <br/
+        LOCATION_RESPONSE_REQUEST_ALREADY_IN_PROGRESS. <br/
 
         @param timeoutMsec
         The amount of time that user is willing to wait for
@@ -2350,14 +2460,15 @@ public:
         If this API is invoked with single-shot terrestrial position
         already in progress, the request will fail and the
         responseCallback will get invoked with
-        LOCATION_RESPONSE_BUSY. <br/> */
+        LOCATION_RESPONSE_REQUEST_ALREADY_IN_PROGRESS. <br/> */
     void getSingleTerrestrialPosition(uint32_t timeoutMsec,
                                       TerrestrialTechnologyMask techMask,
                                       float horQos,
                                       LocationCb terrestrialPositionCallback,
                                       ResponseCb responseCallback);
 
-    /** @example example1:testTrackingApi
+    /** @example example1:testDetailedGnssReportApi
+    *
     * <pre>
     * <code>
     *    // Sample Code
@@ -2365,7 +2476,14 @@ public:
     *     //...
     * }
     * static void onResponseCb(location_client::LocationResponse response) {
-    *     //...
+    *     if (response == LOCATION_RESPONSE_SUCCESS) {
+    *         // successfully started the tracking session
+    *         // expecting to receive detailed GNSS PVT reports and other reports
+    *         // the registered callbacks
+    *     } else {
+    *         // request to start the tracking session failed
+    *         // detained GNSS PVT reports and other report callbacks will not be invoked
+    *     }
     * }
     * static void onGnssLocationCb(const GnssLocation& location) {
     *     //...
@@ -2378,7 +2496,7 @@ public:
     * static void onGnssNmeaCb(uint64_t timestamp, const std::string& nmea) {
     *     //...
     * }
-    * void testTrackingApi() {
+    * void testDetailedGnssReportApi() {
     *     LocationClientApi *pClient = new LocationClientApi(onCapabilitiesCb);
     *     if (nullptr == pClient) {
     *         LOC_LOGe("failed to create LocationClientApi instance");
@@ -2404,6 +2522,129 @@ public:
     *     //...
     *     // stop session
     *     pClient->stopPositionSession();
+    *     //...
+    * }
+    * </code>
+    * </pre>
+    */
+
+    /** @example example2:testEngineReportApi
+    * <pre>
+    * <code>
+    *    // Sample Code
+    * static void onCapabilitiesCb(location_client::LocationCapabilitiesMask mask) {
+    *     //...
+    * }
+    * static void onResponseCb(location_client::LocationResponse response) {
+    *     if (response == LOCATION_RESPONSE_SUCCESS) {
+    *         // successfully started the tracking session
+    *         // expecting to receive engine PVT reports and other reports
+    *         // the registered callbacks
+    *     } else {
+    *         // request to start the tracking session failed
+    *         // engine PVT reports and other report callbacks will not be invoked
+    *     }
+    * }
+    * static void onEngLocationsCb(const std::vector<location_client::GnssLocation>& locations) {
+    *     for (auto gnssLocation : locations) {
+    *          if (gnssLocation.locOutputEngType == LOC_OUTPUT_ENGINE_FUSED) {
+    *               // This is fused report, check engines contributed to the fused report
+    *               if (gnssLocation.locOutputEngMask & STANDARD_POSITIONING_ENGINE) {
+    *                   // standard position engine contributed to the fix
+    *               }
+    *               if (gnssLocation.locOutputEngMask & RECISE_POSITIONING_ENGINE) {
+    *                   // standard position engine contributed to the fix
+    *               }
+    *               if (gnssLocation.locOutputEngMask & DEAD_RECKONING_ENGINE) {
+    *                   // standard position engine contributed to the fix
+    *               }
+    *          } else if (gnssLocation.locOutputEngType == LOC_OUTPUT_ENGINE_SPE) {
+    *               // This is unmodified and prompt SPE report
+    *          } else if (gnssLocation.locOutputEngType == LOC_OUTPUT_ENGINE_PPE) {
+    *              // This is unmodified and prompt PPE report
+    *          }
+    *     }
+    * }
+    *
+    * static void onGnssSvCb(const std::vector<location_client::GnssSv>& gnssSvs) {
+    *     //...
+    * }
+    *
+    * static void onGnssNmeaCb(uint64_t timestamp, const std::string& nmea) {
+    *     //...
+    * }
+    * static void onGnssDataCb(const location_client::GnssData& gnssData) {
+    *     //...
+    * }
+    * static void onGnssMeasurementsCb(const location_client::GnssMeasurements& gnssMeasurements) {
+    *     //...
+    * }
+    *
+    * void testEngineReportApi() {
+    *     LocationClientApi *pClient = new LocationClientApi(onCapabilitiesCb);
+    *     if (nullptr == pClient) {
+    *         LOC_LOGe("failed to create LocationClientApi instance");
+    *         return;
+    *     }
+    *
+    *     uint32_t interval = 1000;
+    *     // Request position from fused engine, SPE and PPE engines
+    *     // Adjust reqEngMask to client need
+    *     LocReqEngineTypeMask reqEngMask = (LOC_REQ_ENGINE_FUSED_BIT | LOC_REQ_ENGINE_SPE_BIT |
+    *                                       LOC_REQ_ENGINE_PPE_BIT);
+    *
+    *     // set callbacks
+    *     EngineReportCbs enginecbs;
+    *     enginecbs.engLocationsCallback = EngineLocationsCb(onEngLocationsCb);
+    *     enginecbs.gnssSvCallback = GnssSvCb(onGnssSvCb);
+    *     enginecbs.gnssNmeaCallback = GnssNmeaCb(onGnssNmeaCb);
+    *     enginecbs.gnssMeasurementsCallback = GnssMeasurementsCb(onGnssMeasurementsCb);
+    *     enginecbs.gnssNHzMeasurementsCallback = GnssMeasurementsCb(onGnssMeasurementsCb);
+    *     enginecbs.gnssDataCallback = GnssDataCb(onGnssDataCb);
+    *
+    *     // start tracking session
+    *     pClient->startPositionSession(interval, reqEngMask, enginecbs, onResponseCb);
+    *     //...
+    *     // stop session
+    *     pClient->stopPositionSession();
+    *     //...
+    * }
+    * </code>
+    * </pre>
+    */
+
+   /** @example example3:testSingleShotTerrestrialFixApi
+    * <pre>
+    * <code>
+    *    // Sample Code
+    * static void onCapabilitiesCb(location_client::LocationCapabilitiesMask mask) {
+    *     //...
+    * }
+    * static void onResponseCb(location_client::LocationResponse response) {
+    *     if (response == LOCATION_RESPONSE_SUCCESS) {
+    *         // successfully requested single shot gtp location
+    *         // onGtpLocationCb() will be invoked once to deliver gtp location
+    *     } else {
+    *         // request for single shot gtp fix failed
+    *         // onGtpLocationCb() will not be invoked
+    *     }
+    * }
+    * static void onGtpLocationCb(const location_client::Location& location) {
+    *   //...
+    * }
+    * void testSingleShotTerrestrialFixApi() {
+    *     LocationClientApi *pClient = new LocationClientApi(onCapabilitiesCb);
+    *     if (nullptr == pClient) {
+    *         LOC_LOGe("failed to create LocationClientApi instance");
+    *         return;
+    *     }
+    *     uint32_t timeoutMsec = 60000,
+    *     uint32_t gtpTechmask = TERRESTRIAL_TECH_GTP_WWAN;
+    *     pClient->getSingleTerrestrialPosition(timeoutMsec,
+    *                                           (TerrestrialTechnologyMask) gtpTechMask,
+    *                                           0.0, onGtpLocationCb, onResponseCb);
+    *     //...
+    * }
     * </code>
     * </pre>
     */
@@ -2412,18 +2653,27 @@ public:
 
     /** @brief starts an outdoor trip mode batching session with specified parameters.
         Trip mode batching completes on its own when trip distance is covered.
-        The behavior of the call is non contextual. The current state or the history of
-        actions does not influence the end result of this call. For example, calling
-        this function when idle, or calling this function after another startTripBatchingSession()
-        or startRoutineBatchingSession(), or calling this function after stopBatchingSession()
-        achieve the same result, which is one of the below:
-        If batchingCallback is nullptr, this call is no op. Otherwise...
-        If both minInterval and tripDistance are don't care, this call is no op.
-           Otherwise...
-        If called during a session (no matter from which startTripBatchingSession()/
-        startRoutineBatchingSession() API), parameters / callback will be updated,
-        and the session continues but with the new set of parameters / callback.
-        locations are reported on the batchingCallback in batches when batch is full.
+
+        Calling this function when idle, or calling this function
+        after another the previous position/batching/geofence
+        session is stopped will achieve the same result, which is
+        one of the below: If batchingCallback is nullptr, this call
+        is no op. If both minInterval and tripDistance are don't
+        care, this call is no op. Otherwise a batching session will
+        be started with the specified parameters and callbacks.
+
+        If this API is called when any previous
+        position/batching/geofence session has not yet received
+        responseCallback, this API will receive an error code of
+        LOCATION_RESPONSE_REQUEST_ALREADY_IN_PROGRESS via its
+        responseCallback.
+
+        If called during on-going session after the responseCb has
+        been received for the on-going session, parameters /
+        callback will be updated. parameters / callback will be
+        updated, and the session continues but with the new set of
+        parameters / callback. locations are reported on the
+        batchingCallback in batches when batch is full.
         @param minInterval
         Time between fixes, or TBF, in milliseconds. The actual
         interval of reports recieved will be no larger than
@@ -2452,18 +2702,26 @@ public:
                                   BatchingCb batchingCallback, ResponseCb responseCallback);
 
     /** @brief starts a routine mode batching session with specified parameters.
-        The behavior of the call is non contextual. The current state or the history of
-        actions does not influence the end result of this call. For example, calling
-        this function when idle, or calling this function after another startTripBatchingSession()
-        or startRoutineBatchingSession(), or calling this function after stopBatchingSession()
-        achieve the same result, which is one of the below:
-        If batchingCallback is nullptr, this call is no op. Otherwise...
-        If both minInterval and minDistance are don't care, this call is no op.
-           Otherwise...
-        If called during a session (no matter from which startTripBatchingSession()/
-        startRoutineBatchingSession() API), parameters / callback will be updated,
-        and the session continues but with the new set of parameters / callback.
-        locations are reported on the batchingCallback in batches when batch is full.
+
+        Calling this function when idle, or calling this function
+        after another the previous position/batching/geofence
+        session is stopped will achieve the same result, which is
+        one of the below: If batchingCallback is nullptr, this call
+        is no op. If both minInterval and tripDistance are don't
+        care, this call is no op. Otherwise a batching session will
+        be started with the specified parameters and callbacks.
+
+        If this API is called when any previous
+        position/batching/geofence session has not yet received
+        responseCallback, this API will receive an error code of
+        LOCATION_RESPONSE_REQUEST_ALREADY_IN_PROGRESS via its
+        responseCallback.
+
+        If called during on-going session after the responseCb has
+        been received for the on-going session, parameters /
+        callback will be updated, and the session continues but with
+        the new set of parameters / callback. locations are reported
+        on the batchingCallback in batches when batch is full.
         @param minInterval
         Time between fixes, or TBF, in milliseconds. The actual
         interval of reports recieved will be no larger than
@@ -2498,7 +2756,7 @@ public:
     */
     void stopBatchingSession();
 
-    /** @example example2:testBatchingApi
+    /** @example example4:testBatchingApi
     * <pre>
     * <code>
     *    // Sample Code
@@ -2522,6 +2780,13 @@ public:
     /* ================================== Geofence ================================== */
     /** @brief Adds any number of geofences. The geofenceBreachCallback will
         deliver the status of each geofence according to the Geofence parameter for each.
+
+        If this API is called when any previous
+        position/batching/geofence session has not yet received
+        responseCallback, this API will receive an error code of
+        LOCATION_RESPONSE_REQUEST_ALREADY_IN_PROGRESS via its
+        responseCallback.
+
         @param geofences
         Geofence objects, Once addGeofences returns, each Geofence object in the vector would
         be the identifier throughout the remaining communication of that geofence.
@@ -2564,7 +2829,7 @@ public:
     */
     void resumeGeofences(std::vector<Geofence>& geofences);
 
-    /** @example example3:testGeofenceApi
+    /** @example example5:testGeofenceApi
     * <pre>
     * <code>
     *    // Sample Code
@@ -2633,6 +2898,44 @@ public:
     void getGnssEnergyConsumed(GnssEnergyConsumedCb gnssEnergyConsumedCallback,
                                ResponseCb responseCallback);
 
+
+    /** @example example6:testEnergyConsumedApi
+     * <pre>
+     * <code>
+     *    // Sample Code
+     * static void onCapabilitiesCb(location_client::LocationCapabilitiesMask mask) {
+     *     //...
+     * }
+     * static void onResponseCb(location_client::LocationResponse response) {
+     *     if (response == LOCATION_RESPONSE_SUCCESS) {
+     *         // successfully requested GNSS energy consumed info
+     *         // expecting to receive energy consumed info via ongnssEnergyConsumedInfoCb()
+     *     } else {
+     *         // request to retrieve GNSS energy consumed info failed
+     *         // ongnssEnergyConsumedInfoCb will not be invoked
+     *     }
+     * }
+     * static void ongnssEnergyConsumedInfoCb(const GnssEnergyConsumedInfo& gnssEneryConsumed) {
+     *   if (gnssEneryConsumed.flags & ENERGY_CONSUMED_SINCE_FIRST_BOOT_BIT) {
+     *       print("enery consumed since bootup: " +
+     *             gnssEneryConsumed.totalEnergyConsumedSinceFirstBoot);
+     *   }
+     * }
+     * void testEnergyConsumedApi() {
+     *     LocationClientApi *pClient = new LocationClientApi(onCapabilitiesCb);
+     *     if (nullptr == pClient) {
+     *         LOC_LOGe("failed to create LocationClientApi instance");
+     *         return;
+     *     }
+     *
+     *     pClient->getGnssEnergyConsumed(gnssEnergyConsumedInfoCb,
+     *        gnssEnergyConsumedResponseCb);
+     *     //...
+     * }
+     * </code>
+     * </pre>
+     */
+
     /** @brief
         Register/update listener to receive location system info
         that are not tied with positioning session, e.g.: next leap
@@ -2653,7 +2956,48 @@ public:
         */
     void updateLocationSystemInfoListener(LocationSystemInfoCb locSystemInfoCallback,
                                           ResponseCb responseCallback);
-
+    /** @example example7:testRegisterForSystemEventApi
+    * <pre>
+    * <code>
+    *    // Sample Code
+    * static void onCapabilitiesCb(location_client::LocationCapabilitiesMask mask) {
+    *     //...
+    * }
+    * static void onResponseCb(location_client::LocationResponse response) {
+    *     if (response == LOCATION_RESPONSE_SUCCESS) {
+    *         // successfully registered for system info update
+    *         // expecting to receive current leap second and leap second change event
+    *         via onLocationSystemInfoCb()
+    *     } else {
+    *         // failed to register for system info update
+    *         // onLocationSystemInfoCb() will not be invoked
+    *     }
+    * }
+    * static void onLocationSystemInfoCb(const location_client::LocationSystemInfo& systemInfo) {
+    *   if (systemInfo.systemInfoMask & LEAP_SECOND_SYS_INFO_CURRENT_LEAP_SECONDS_BIT) {
+    *       // current leap second info is valid
+    *   }
+    *   if (systemInfo.systemInfoMask & LEAP_SECOND_SYS_INFO_LEAP_SECOND_CHANGE_BIT) {
+    *       // leap second change event info is valid
+    *   }
+    * }
+    * void testRegisterForSystemEventApi() {
+    *     LocationClientApi *pClient = new LocationClientApi(onCapabilitiesCb);
+    *     if (nullptr == pClient) {
+    *         LOC_LOGe("failed to create LocationClientApi instance");
+    *         return;
+    *     }
+    *     // register for system info update
+    *     pClient->updateLocationSystemInfoListener(onLocationSystemInfoCb,
+    *             onResponseCb);
+    *     ...
+    *     // unregister for system info update when the info is no longer needed
+    *     pClient->updateLocationSystemInfoListener(null, null);
+    *     //...
+    * }
+    * </code>
+    * </pre>
+    */
 
     /** @brief
         Get the year of Hardware information.<br/>

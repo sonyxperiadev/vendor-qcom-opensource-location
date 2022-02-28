@@ -1,4 +1,4 @@
-/* Copyright (c) 2019-2020 The Linux Foundation. All rights reserved.
+/* Copyright (c) 2019-2021 The Linux Foundation. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -25,9 +25,46 @@
  * OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN
  * IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+
+/*
+Changes from Qualcomm Innovation Center are provided under the following license:
+
+Copyright (c) 2022 Qualcomm Innovation Center, Inc. All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted (subject to the limitations in the
+disclaimer below) provided that the following conditions are met:
+
+    * Redistributions of source code must retain the above copyright
+      notice, this list of conditions and the following disclaimer.
+
+    * Redistributions in binary form must reproduce the above
+      copyright notice, this list of conditions and the following
+      disclaimer in the documentation and/or other materials provided
+      with the distribution.
+
+    * Neither the name of Qualcomm Innovation Center, Inc. nor the names of its
+      contributors may be used to endorse or promote products derived
+      from this software without specific prior written permission.
+
+NO EXPRESS OR IMPLIED LICENSES TO ANY PARTY'S PATENT RIGHTS ARE
+GRANTED BY THIS LICENSE. THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT
+HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED
+WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR
+ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE
+GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER
+IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN
+IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
+
 #define LOG_TAG "LocSvc_LocationIntegrationApi"
 
-
+#include <inttypes.h>
 #include <LocationDataTypes.h>
 #include <LocationIntegrationApi.h>
 #include <LocationIntegrationApiImpl.h>
@@ -79,7 +116,7 @@ bool LocationIntegrationApi::configConstellations(
         blacklistSvConfig.size = sizeof(GnssSvIdConfig);
 
         for (GnssSvIdInfo it : *blacklistedSvIds) {
-            LOC_LOGv("constellation %d, sv id %f", (int) it.constellation, it.svId);
+            LOC_LOGv("constellation %d, sv id %u", (int) it.constellation, it.svId);
             GnssSvTypesMask svTypeMask = (GnssSvTypesMask) 0;
             uint64_t* svMaskPtr = NULL;
             GnssSvId initialSvId = 0;
@@ -395,7 +432,9 @@ bool LocationIntegrationApi::configDeadReckoningEngineParams(
         const DeadReckoningEngineConfig& dreConfig) {
 
     if (mApiImpl) {
-        LOC_LOGd("mask 0x%x, roll offset %f, pitch offset %f, yaw offset %f, offset unc %f",
+        LOC_LOGd("mask 0x%x, roll offset %f, pitch offset %f, yaw offset %f, offset unc %f, "
+                 "vehicleSpeedScaleFactor %f, vehicleSpeedScaleFactorUnc %f, "
+                 "gyroScaleFactor %f, gyroScaleFactorUnc %f",
                  dreConfig.validMask,
                  dreConfig.bodyToSensorMountParams.rollOffset,
                  dreConfig.bodyToSensorMountParams.pitchOffset,
@@ -465,7 +504,9 @@ bool LocationIntegrationApi::configDeadReckoningEngineParams(
             halConfig.gyroScaleFactorUnc = dreConfig.gyroScaleFactorUnc;
         }
         LOC_LOGd("mask 0x%" PRIx64 ", roll offset %f, pitch offset %f, "
-                  "yaw offset %f, offset unc %f", halConfig.validMask,
+                  "yaw offset %f, offset unc %f vehicleSpeedScaleFactor %f, "
+                  "vehicleSpeedScaleFactorUnc %f gyroScaleFactor %f gyroScaleFactorUnc %f",
+                 halConfig.validMask,
                  halConfig.bodyToSensorMountParams.rollOffset,
                  halConfig.bodyToSensorMountParams.pitchOffset,
                  halConfig.bodyToSensorMountParams.yawOffset,
@@ -509,12 +550,9 @@ bool LocationIntegrationApi::getMinSvElevation() {
     }
 }
 
-bool LocationIntegrationApi::configEngineRunState(LocIntegrationEngineType engType,
-                                                  LocIntegrationEngineRunState engState) {
-    if (mApiImpl) {
-        PositioningEngineMask halEngType = (PositioningEngineMask)0;
-        LocEngineRunState halEngState = (LocEngineRunState)0;
-        switch (engType) {
+PositioningEngineMask getHalEngType(LocIntegrationEngineType engType) {
+    PositioningEngineMask halEngType = (PositioningEngineMask)0;
+    switch (engType) {
         case LOC_INT_ENGINE_SPE:
             halEngType = STANDARD_POSITIONING_ENGINE;
             break;
@@ -529,9 +567,20 @@ bool LocationIntegrationApi::configEngineRunState(LocIntegrationEngineType engTy
             break;
         default:
             LOC_LOGe("unknown engine type of %d", engType);
+        break;
+    }
+    return halEngType;
+}
+
+bool LocationIntegrationApi::configEngineRunState(LocIntegrationEngineType engType,
+                                                  LocIntegrationEngineRunState engState) {
+    if (mApiImpl) {
+        PositioningEngineMask halEngType = getHalEngType(engType);
+        if (halEngType == (PositioningEngineMask) 0) {
             return false;
         }
 
+        LocEngineRunState halEngState = (LocEngineRunState)0;
         if (engState == LOC_INT_ENGINE_RUN_STATE_PAUSE) {
             halEngState = LOC_ENGINE_RUN_STATE_PAUSE;
         } else if (engState == LOC_INT_ENGINE_RUN_STATE_RESUME) {
@@ -596,6 +645,20 @@ bool LocationIntegrationApi::configOutputNmeaTypes(NmeaTypesMask enabledNMEAType
             halNmeaTypes |= ::NMEA_TYPE_GIGSV;
         }
         return (mApiImpl->configOutputNmeaTypes((GnssNmeaTypesMask) halNmeaTypes) == 0);
+    } else {
+        LOC_LOGe ("NULL mApiImpl");
+        return false;
+    }
+}
+
+bool LocationIntegrationApi::configEngineIntegrityRisk(
+        LocIntegrationEngineType engType, uint32_t integrityRisk) {
+    if (mApiImpl) {
+        PositioningEngineMask halEngType = getHalEngType(engType);
+        if (halEngType == (PositioningEngineMask) 0) {
+            return false;
+        }
+        return (mApiImpl->configEngineIntegrityRisk(halEngType, integrityRisk) == 0);
     } else {
         LOC_LOGe ("NULL mApiImpl");
         return false;

@@ -26,6 +26,42 @@
  * IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/*
+Changes from Qualcomm Innovation Center are provided under the following license:
+
+Copyright (c) 2022 Qualcomm Innovation Center, Inc. All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted (subject to the limitations in the
+disclaimer below) provided that the following conditions are met:
+
+    * Redistributions of source code must retain the above copyright
+      notice, this list of conditions and the following disclaimer.
+
+    * Redistributions in binary form must reproduce the above
+      copyright notice, this list of conditions and the following
+      disclaimer in the documentation and/or other materials provided
+      with the distribution.
+
+    * Neither the name of Qualcomm Innovation Center, Inc. nor the names of its
+      contributors may be used to endorse or promote products derived
+      from this software without specific prior written permission.
+
+NO EXPRESS OR IMPLIED LICENSES TO ANY PARTY'S PATENT RIGHTS ARE
+GRANTED BY THIS LICENSE. THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT
+HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED
+WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR
+ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE
+GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER
+IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN
+IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
+
 #ifndef LOCATIONCLIENTAPIIMPL_H
 #define LOCATIONCLIENTAPIIMPL_H
 
@@ -33,9 +69,7 @@
 
 #include <loc_pla.h>
 #include <LocIpc.h>
-#include <LocationDataTypes.h>
 #include <ILocationAPI.h>
-#include <LocationClientApi.h>
 #include <MsgTask.h>
 #include <LocationApiMsg.h>
 #include <LocationApiPbMsgConv.h>
@@ -67,17 +101,6 @@ enum ReportCbEnumType {
     REPORT_CB_ENGINE_INFO = 2,
 };
 
-struct ClientCallbacks {
-    CapabilitiesCb capabilitycb;
-    ResponseCb responsecb;
-    CollectiveResponseCb collectivecb;
-    LocationCb locationcb;
-    BatchingCb batchingcb;
-    GeofenceBreachCb gfbreachcb;
-    GnssReportCbs gnssreportcbs;
-    EngineReportCbs engreportcbs;
-};
-
 typedef std::function<void(
     uint32_t response
 )> PingTestCb;
@@ -102,8 +125,8 @@ class IpcListener;
 class LocationClientApiImpl : public ILocationAPI {
     friend IpcListener;
 public:
-    LocationClientApiImpl(CapabilitiesCb capabitiescb);
-    void destroy();
+    LocationClientApiImpl(capabilitiesCallback capabitiescb);
+    virtual void destroy(locationApiDestroyCompleteCallback destroyCompleteCb=nullptr) override;
 
     // Tracking
     virtual void updateCallbacks(LocationCallbacks&) override;
@@ -140,39 +163,85 @@ public:
     virtual void gnssNiResponse(uint32_t id, GnssNiResponse response) override;
 
     // other interface
-    void updateNetworkAvailability(bool available);
-    void updateCallbackFunctions(const ClientCallbacks&,
-                                 ReportCbEnumType reportCbType = REPORT_CB_TYPE_NONE);
-    void getGnssEnergyConsumed(GnssEnergyConsumedCb gnssEnergyConsumedCallback,
-                               ResponseCb responseCallback);
-    void updateLocationSystemInfoListener(LocationSystemInfoCb locSystemInfoCallback,
-                                          ResponseCb responseCallback);
-    void diagLogGnssLocation(const GnssLocation &gnssLocation);
-    inline LocationCapabilitiesMask getCapabilities() {return mCapsMask;}
+    void startPositionSession(const LocationCallbacks& callbacksOption,
+                              const TrackingOptions& trackingOptions);
 
+    void startBatchingSession(const LocationCallbacks& callbacksOption,
+                              const BatchingOptions& batchOptions);
+
+    void updateNetworkAvailability(bool available);
+    void getGnssEnergyConsumed(gnssEnergyConsumedCallback gnssEnergyConsumedCb,
+            responseCallback responseCb);
+    void updateLocationSystemInfoListener(
+            locationSystemInfoCallback locationSystemInfoCb,
+            responseCallback responseCb);
+
+    void addGeofences(const LocationCallbacks& callbacksOption,
+                      const std::vector<Geofence>& geofences);
+    inline Geofence getMappedGeofence(uint32_t id) {
+        return mGeofenceMap.at(id);
+    }
+
+    inline uint16_t getYearOfHw() {return mYearOfHw;}
+
+    void getSingleTerrestrialPos(uint32_t timeoutMsec, TerrestrialTechMask techMask,
+                                 float horQoS, trackingCallback terrestrialPositionCallback,
+                                 responseCallback responseCallback);
+
+    void pingTest(PingTestCb pingTestCallback);
+
+    static LocationSystemInfo parseLocationSystemInfo(
+            const::LocationSystemInfo &halSystemInfo);
+    static LocationResponse parseLocationError(::LocationError error);
+    static GnssMeasurements parseGnssMeasurements(const ::GnssMeasurementsNotification
+            &halGnssMeasurements);
+    static GnssData parseGnssData(const ::GnssDataNotification &halGnssData);
+    static GnssSv parseGnssSv(const ::GnssSv &halGnssSv);
+    static GnssLocation parseLocationInfo(const ::GnssLocationInfoNotification &halLocationInfo);
+    static GnssSystemTime parseSystemTime(const ::GnssSystemTime &halSystemTime);
+    static GnssGloTimeStructType parseGloTime(const ::GnssGloTimeStructType &halGloTime);
+    static GnssSystemTimeStructType parseGnssTime(const ::GnssSystemTimeStructType &halGnssTime);
+    static LocationReliability parseLocationReliability(
+            const ::LocationReliability &halReliability);
+    static GnssLocationPositionDynamics parseLocationPositionDynamics(
+            const ::GnssLocationPositionDynamics &halPositionDynamics,
+            const ::GnssLocationPositionDynamicsExt &halPositionDynamicsExt);
+    static void parseGnssMeasUsageInfo(const ::GnssLocationInfoNotification &halLocationInfo,
+            std::vector<GnssMeasUsageInfo>& clientMeasUsageInfo);
+    static GnssSignalTypeMask parseGnssSignalType(
+            const ::GnssSignalTypeMask &halGnssSignalTypeMask);
+    static GnssLocationSvUsedInPosition parseLocationSvUsedInPosition(
+            const ::GnssLocationSvUsedInPosition &halSv);
+    static void parseLocation(const ::Location &halLocation, Location& location);
+    static Location parseLocation(const ::Location &halLocation);
+    static uint16_t parseYearOfHw(::LocationCapabilitiesMask mask);
+    static LocationCapabilitiesMask parseCapabilitiesMask(::LocationCapabilitiesMask mask);
+    static GnssMeasurementsDataFlagsMask parseMeasurementsDataMask(
+            ::GnssMeasurementsDataFlagsMask in);
+    static GnssEnergyConsumedInfo parseGnssConsumedInfo(::GnssEnergyConsumedInfo);
+
+    void logLocation(const GnssLocation &gnssLocation);
+    LCAReportLoggerUtil & getLogger() {
+        return mLogger;
+    }
+
+private:
+    ~LocationClientApiImpl();
+
+    inline LocationCapabilitiesMask getCapabilities() {return mCapsMask;}
+    void capabilitesCallback(ELocMsgID  msgId, const void* msgData);
+    void updateTrackingOptionsSync(TrackingOptions& option);
     bool checkGeofenceMap(size_t count, uint32_t* ids);
     void addGeofenceMap(uint32_t id, Geofence& geofence);
     void eraseGeofenceMap(size_t count, uint32_t* ids);
 
-    std::vector<uint32_t>               mLastAddedClientIds;
-    std::unordered_map<uint32_t, Geofence> mGeofenceMap; //clientId --> Geofence object
     // convenient methods
     inline bool sendMessage(const uint8_t* data, uint32_t length) const {
         return (mIpcSender != nullptr) && LocIpc::send(*mIpcSender, data, length);
     }
 
-    void pingTest(PingTestCb pingTestCallback);
-    inline uint16_t getYearOfHw() {return mYearOfHw;}
-    void invokePositionSessionResponseCb(LocationResponse responseCode);
-
-    void getSingleTerrestrialPos(uint32_t timeoutMsec, TerrestrialTechMask techMask,
-                                 float horQoS, LocationCb terrestrialPositionCallback,
-                                 ResponseCb responseCallback);
-
-private:
-    ~LocationClientApiImpl();
-    void capabilitesCallback(ELocMsgID  msgId, const void* msgData);
-    void updateTrackingOptionsSync(LocationClientApiImpl* pImpl, TrackingOptions& option);
+    void invokePositionSessionResponseCb(LocationError errCode);
+    void diagLogGnssLocation(const GnssLocation &gnssLocation);
 
     // protobuf conversion util class
     LocationApiPbMsgConv mPbufMsgConv;
@@ -199,41 +268,33 @@ private:
     //Year of HW information, 0 is invalid
     uint16_t                   mYearOfHw;
     bool                       mPositionSessionResponseCbPending;
+    uint64_t                   mSessionStartBootTimestampNs;
 
     // callbacks
-    CapabilitiesCb          mCapabilitiesCb;
-    ResponseCb              mResponseCb;
-    CollectiveResponseCb    mCollectiveResCb;
-    LocationCb              mLocationCb;
-    BatchingCb              mBatchingCb;
-    GeofenceBreachCb        mGfBreachCb;
+    LocationCallbacks       mLocationCbs;
+
+    //TODO:: remove after replacing all calls with ILocationAPI callbacks
+    capabilitiesCallback    mCapabilitiesCb;
     PingTestCb              mPingTestCb;
 
-    // location callbacks
-    GnssLocationCb          mGnssLocationCb;
-    EngineLocationsCb       mEngLocationsCb;
+    gnssEnergyConsumedCallback    mGnssEnergyConsumedInfoCb;
+    responseCallback              mGnssEnergyConsumedResponseCb;
 
-    // other GNSS related callback
-    GnssSvCb                mGnssSvCb;
-    GnssNmeaCb              mGnssNmeaCb;
-    GnssDataCb              mGnssDataCb;
-    GnssMeasurementsCb      mGnssMeasurementsCb;
-    GnssMeasurementsCb      mGnssNHzMeasurementsCb;
-
-    GnssEnergyConsumedCb    mGnssEnergyConsumedInfoCb;
-    ResponseCb              mGnssEnergyConsumedResponseCb;
-
-    LocationSystemInfoCb    mLocationSysInfoCb;
-    ResponseCb              mLocationSysInfoResponseCb;
+    locationSystemInfoCallback    mLocationSysInfoCb;
+    responseCallback              mLocationSysInfoResponseCb;
 
     // Terrestrial fix callback
-    LocationCb              mSingleTerrestrialPosCb;
-    ResponseCb              mSingleTerrestrialPosRespCb;
+    trackingCallback              mSingleTerrestrialPosCb;
+    responseCallback              mSingleTerrestrialPosRespCb;
 
     MsgTask                    mMsgTask;
 
     LocIpc                     mIpc;
     shared_ptr<LocIpcSender>   mIpcSender;
+
+    std::vector<uint32_t>      mLastAddedClientIds;
+    // clientId --> Geofence object
+    std::unordered_map<uint32_t, Geofence> mGeofenceMap;
 
     LCAReportLoggerUtil        mLogger;
 };
