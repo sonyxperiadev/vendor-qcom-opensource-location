@@ -82,8 +82,8 @@ enum LocationApiMsgVersion {
     LOCAPI_MSG_VER_MAJOR = 1;
     // Minor - New features / API addition, new message/elemtent addition.
     // Bump the last byte of version i.e. x.2 to x.3
-    // Minor version 11: Add DebugReport for LCA
-    LOCAPI_MSG_VER_MINOR = 11;
+    // Minor version 12: Add DC control message
+    LOCAPI_MSG_VER_MINOR = 12;
 }
 
 // ============================================================================
@@ -155,6 +155,9 @@ enum PBELocMsgID {
     // Debug report
     PB_E_LOCAPI_GET_DEBUG_REQ_MSG_ID = 33;
     PB_E_LOCAPI_GET_DEBUG_RESP_MSG_ID = 34;
+
+    // Disaster and crisis reports
+    PB_E_LOCAPI_DC_REPORT_MSG_ID = 35;
 
     // ping
     PB_E_LOCAPI_PINGTEST_MSG_ID = 99;
@@ -230,6 +233,8 @@ enum PBLocationCallbacksMask {
     PB_E_LOC_CB_GNSS_MEAS_BIT               = 0x800;
     /**< Register for nHz GNSS Measurements */
     PB_E_LOC_CB_GNSS_NHZ_MEAS_BIT           = 0x1000;
+    /**< Register for disater and crisis report */
+    PB_E_LOC_CB_GNSS_DC_REPORT_BIT          = 0x2000;
 }
 
 enum PBEngineInfoCallbacksMask {
@@ -490,6 +495,11 @@ message PBLocAPIGnssEnergyConsumedIndMsg {
 // defintion for message with msg id of PB_E_LOCAPI_LOCATION_SYSTEM_INFO_MSG_ID
 message PBLocAPILocationSystemInfoIndMsg {
     PBLocationSystemInfo locationSystemInfo = 1;
+}
+
+// defintion for message with msg id of E_LOCAPI_DC_REPORT_MSG_ID
+message PBLocAPIDcReportIndMsg {
+    PBGnssDcReportInfo dcReportInfo = 1;
 }
 
 //*******************************************************************
