@@ -7277,6 +7277,9 @@ void LocApiV02 :: eventCb(locClientHandleType /*clientHandle*/,
       reportLatencyInfo(eventPayload.pLocLatencyInfoIndMsg);
       break;
 
+    case QMI_LOC_EVENT_PLATFORM_POWER_STATE_CHANGED_IND_V02:
+      reportPowerStateChangeInfo(eventPayload.pPowerStateChangedIndMsg);
+      break;
   }
 }
 
