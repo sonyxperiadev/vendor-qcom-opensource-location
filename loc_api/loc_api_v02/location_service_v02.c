@@ -25,6 +25,7 @@
  * OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN
  * IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+
 /*
 Changes from Qualcomm Innovation Center are provided under the following license:
 
@@ -60,12 +61,13 @@ IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
 OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN
 IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
+
 /*====*====*====*====*====*====*====*====*====*====*====*====*====*====*====*
  *THIS IS AN AUTO GENERATED FILE. DO NOT ALTER IN ANY WAY
  *====*====*====*====*====*====*====*====*====*====*====*====*====*====*====*/
 
 /* This file was generated with Tool version 6.14.9
-   It was generated on: Fri Nov 26 2021 (Spin 0)
+   It was generated on: Mon Dec 20 2021 (Spin 0)
    From IDL File: location_service_v02.idl */
 
 #include "stdint.h"
@@ -8949,6 +8951,41 @@ static const uint8_t qmiLocPlatformPowerStateChangedIndMsgT_data_v02[] = {
   QMI_IDL_OFFSET8(qmiLocPlatformPowerStateChangedIndMsgT_v02, powerStateNew)
 };
 
+static const uint8_t qmiLocInjectRawDataReqMsgT_data_v02[] = {
+  0x01,
+   QMI_IDL_GENERIC_4_BYTE,
+  QMI_IDL_OFFSET8(qmiLocInjectRawDataReqMsgT_v02, injectionType),
+
+  0x02,
+   QMI_IDL_GENERIC_4_BYTE,
+  QMI_IDL_OFFSET8(qmiLocInjectRawDataReqMsgT_v02, totalSize),
+
+  0x03,
+   QMI_IDL_GENERIC_2_BYTE,
+  QMI_IDL_OFFSET8(qmiLocInjectRawDataReqMsgT_v02, totalParts),
+
+  0x04,
+   QMI_IDL_GENERIC_2_BYTE,
+  QMI_IDL_OFFSET8(qmiLocInjectRawDataReqMsgT_v02, partNum),
+
+  QMI_IDL_TLV_FLAGS_LAST_TLV | 0x05,
+  QMI_IDL_FLAGS_IS_ARRAY | QMI_IDL_FLAGS_IS_VARIABLE_LEN | QMI_IDL_FLAGS_SZ_IS_16 |   QMI_IDL_GENERIC_1_BYTE,
+  QMI_IDL_OFFSET8(qmiLocInjectRawDataReqMsgT_v02, partData),
+  ((QMI_LOC_MAX_RAW_DATA_PART_LEN_V02) & 0xFF), ((QMI_LOC_MAX_RAW_DATA_PART_LEN_V02) >> 8),
+  QMI_IDL_OFFSET8(qmiLocInjectRawDataReqMsgT_v02, partData) - QMI_IDL_OFFSET8(qmiLocInjectRawDataReqMsgT_v02, partData_len)
+};
+
+static const uint8_t qmiLocInjectRawDataIndMsgT_data_v02[] = {
+  0x01,
+   QMI_IDL_GENERIC_4_BYTE,
+  QMI_IDL_OFFSET8(qmiLocInjectRawDataIndMsgT_v02, status),
+
+  QMI_IDL_TLV_FLAGS_LAST_TLV | QMI_IDL_TLV_FLAGS_OPTIONAL | (QMI_IDL_OFFSET8(qmiLocInjectRawDataIndMsgT_v02, partNum) - QMI_IDL_OFFSET8(qmiLocInjectRawDataIndMsgT_v02, partNum_valid)),
+  0x10,
+   QMI_IDL_GENERIC_2_BYTE,
+  QMI_IDL_OFFSET8(qmiLocInjectRawDataIndMsgT_v02, partNum)
+};
+
 /* Type Table */
 static const qmi_idl_type_table_entry  loc_type_table_v02[] = {
   {sizeof(qmiLocApplicationIdStructT_v02), qmiLocApplicationIdStructT_data_v02},
@@ -9367,7 +9404,9 @@ static const qmi_idl_message_table_entry loc_message_table_v02[] = {
   {sizeof(qmiLocGetMultibandConfigIndMsgT_v02), qmiLocGetMultibandConfigIndMsgT_data_v02},
   {sizeof(qmiLocLatencyInformationIndMsgT_v02), qmiLocLatencyInformationIndMsgT_data_v02},
   {sizeof(qmiLocInjectLocationCivicAddressReqMsgT_v02), qmiLocInjectLocationCivicAddressReqMsgT_data_v02},
-  {sizeof(qmiLocPlatformPowerStateChangedIndMsgT_v02), qmiLocPlatformPowerStateChangedIndMsgT_data_v02}
+  {sizeof(qmiLocPlatformPowerStateChangedIndMsgT_v02), qmiLocPlatformPowerStateChangedIndMsgT_data_v02},
+  {sizeof(qmiLocInjectRawDataReqMsgT_v02), qmiLocInjectRawDataReqMsgT_data_v02},
+  {sizeof(qmiLocInjectRawDataIndMsgT_v02), qmiLocInjectRawDataIndMsgT_data_v02}
 };
 
 /* Range Table */
@@ -9534,7 +9573,8 @@ static const qmi_idl_service_message_table_entry loc_service_command_messages_v0
   {QMI_LOC_GET_MAG_CAL_STATE_PDR_REQ_V02, QMI_IDL_TYPE16(0, 0), 0},
   {QMI_LOC_SET_MULTIBAND_CONFIG_REQ_V02, QMI_IDL_TYPE16(0, 309), 11},
   {QMI_LOC_GET_MULTIBAND_CONFIG_REQ_V02, QMI_IDL_TYPE16(0, 0), 0},
-  {QMI_LOC_INJECT_LOCATION_CIVIC_ADDRESS_REQ_V02, QMI_IDL_TYPE16(0, 312), 900}
+  {QMI_LOC_INJECT_LOCATION_CIVIC_ADDRESS_REQ_V02, QMI_IDL_TYPE16(0, 312), 900},
+  {QMI_LOC_INJECT_RAW_DATA_REQ_V02, QMI_IDL_TYPE16(0, 314), 4029}
 };
 
 static const qmi_idl_service_message_table_entry loc_service_response_messages_v02[] = {
@@ -9679,7 +9719,8 @@ static const qmi_idl_service_message_table_entry loc_service_response_messages_v
   {QMI_LOC_GET_MAG_CAL_STATE_PDR_RESP_V02, QMI_IDL_TYPE16(0, 1), 7},
   {QMI_LOC_SET_MULTIBAND_CONFIG_RESP_V02, QMI_IDL_TYPE16(0, 1), 7},
   {QMI_LOC_GET_MULTIBAND_CONFIG_RESP_V02, QMI_IDL_TYPE16(0, 1), 7},
-  {QMI_LOC_INJECT_LOCATION_CIVIC_ADDRESS_RESP_V02, QMI_IDL_TYPE16(0, 1), 7}
+  {QMI_LOC_INJECT_LOCATION_CIVIC_ADDRESS_RESP_V02, QMI_IDL_TYPE16(0, 1), 7},
+  {QMI_LOC_INJECT_RAW_DATA_RESP_V02, QMI_IDL_TYPE16(0, 1), 7}
 };
 
 static const qmi_idl_service_message_table_entry loc_service_indication_messages_v02[] = {
@@ -9872,7 +9913,8 @@ static const qmi_idl_service_message_table_entry loc_service_indication_messages
   {QMI_LOC_GET_MULTIBAND_CONFIG_IND_V02, QMI_IDL_TYPE16(0, 310), 18},
   {QMI_LOC_LATENCY_INFORMATION_IND_V02, QMI_IDL_TYPE16(0, 311), 124},
   {QMI_LOC_INJECT_LOCATION_CIVIC_ADDRESS_IND_V02, QMI_IDL_TYPE16(0, 2), 7},
-  {QMI_LOC_EVENT_PLATFORM_POWER_STATE_CHANGED_IND_V02, QMI_IDL_TYPE16(0, 313), 14}
+  {QMI_LOC_EVENT_PLATFORM_POWER_STATE_CHANGED_IND_V02, QMI_IDL_TYPE16(0, 313), 14},
+  {QMI_LOC_INJECT_RAW_DATA_IND_V02, QMI_IDL_TYPE16(0, 315), 12}
 };
 
 /*Service Object*/
@@ -9886,7 +9928,7 @@ struct qmi_idl_service_object loc_qmi_idl_service_object_v02 = {
     sizeof(loc_service_indication_messages_v02)/sizeof(qmi_idl_service_message_table_entry) },
   { loc_service_command_messages_v02, loc_service_response_messages_v02, loc_service_indication_messages_v02},
   &loc_qmi_idl_type_table_object_v02,
-  0x94,
+  0x95,
   NULL
 };
 

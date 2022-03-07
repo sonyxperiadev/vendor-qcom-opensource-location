@@ -25,6 +25,7 @@
  * OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN
  * IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+
 /*
 Changes from Qualcomm Innovation Center are provided under the following license:
 
@@ -60,6 +61,7 @@ IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
 OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN
 IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
+
 #ifndef LOC_SERVICE_02_H
 #define LOC_SERVICE_02_H
 /**
@@ -98,7 +100,7 @@ IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *====*====*====*====*====*====*====*====*====*====*====*====*====*====*====*/
 
 /* This file was generated with Tool version 6.14.9
-   It was generated on: Fri Nov 26 2021 (Spin 0)
+   It was generated on: Mon Dec 20 2021 (Spin 0)
    From IDL File: location_service_v02.idl */
 
 /** @defgroup loc_qmi_consts Constant values defined in the IDL */
@@ -124,11 +126,11 @@ extern "C" {
 /** Major Version Number of the IDL used to generate this file */
 #define LOC_V02_IDL_MAJOR_VERS 0x02
 /** Revision Number of the IDL used to generate this file */
-#define LOC_V02_IDL_MINOR_VERS 0x94
+#define LOC_V02_IDL_MINOR_VERS 0x95
 /** Major Version Number of the qmi_idl_compiler used to generate this file */
 #define LOC_V02_IDL_TOOL_VERS 0x06
 /** Maximum Defined Message ID */
-#define LOC_V02_MAX_MESSAGE_ID 0x00E4
+#define LOC_V02_MAX_MESSAGE_ID 0x00E5
 /**
     @}
   */
@@ -548,6 +550,7 @@ extern "C" {
 
 /**  Max string length of Road Post Modifier field.  */
 #define QMI_LOC_MAX_ROAD_POST_MODIFIER_STR_LENGTH_V02 16
+#define QMI_LOC_MAX_RAW_DATA_PART_LEN_V02 4000
 /**
     @}
   */
@@ -23836,6 +23839,96 @@ typedef struct {
     @}
   */
 
+/** @addtogroup loc_qmi_enums
+    @{
+  */
+typedef enum {
+  QMILOCINJECTRAWDATAENUMT_MIN_ENUM_VAL_V02 = -2147483647, /**< To force a 32 bit signed enum.  Do not change or use*/
+  eQMI_LOC_MAP_AIDING_DATA_V02 = 1, /**<  Map Aiding Data  */
+  QMILOCINJECTRAWDATAENUMT_MAX_ENUM_VAL_V02 = 2147483647 /**< To force a 32 bit signed enum.  Do not change or use*/
+}qmiLocInjectRawDataEnumT_v02;
+/**
+    @}
+  */
+
+/** @addtogroup loc_qmi_messages
+    @{
+  */
+/** Request Message; Used to inject raw data into location engine. */
+typedef struct {
+
+  /* Mandatory */
+  /*  Type of Injection */
+  qmiLocInjectRawDataEnumT_v02 injectionType;
+  /**<   Values: \n
+      - eQMI_LOC_MAP_AIDING_DATA (1) --  Map Aiding Data
+ */
+
+  /* Mandatory */
+  /*  Total Size */
+  uint32_t totalSize;
+  /**<   Total size of the raw data to inject. \n
+        - Units -- Bytes */
+
+  /* Mandatory */
+  /*  Total Parts */
+  uint16_t totalParts;
+  /**<   Total number of parts to divide the raw data into. */
+
+  /* Mandatory */
+  /*  Part Number */
+  uint16_t partNum;
+  /**<   Number of the current raw data part; starts at 1. */
+
+  /* Mandatory */
+  /*  Raw Data */
+  uint32_t partData_len;  /**< Must be set to # of elements in partData */
+  uint8_t partData[QMI_LOC_MAX_RAW_DATA_PART_LEN_V02];
+  /**<   XTRA data. \n
+         - Type -- Array of bytes \n
+         - Maximum length of the array -- 4000
+    */
+}qmiLocInjectRawDataReqMsgT_v02;  /* Message */
+/**
+    @}
+  */
+
+/** @addtogroup loc_qmi_messages
+    @{
+  */
+/** Indication Message; Used to inject raw data into location engine. */
+typedef struct {
+
+  /* Mandatory */
+  /*  Data Injection Status */
+  qmiLocStatusEnumT_v02 status;
+  /**<   Status of the data injection request.
+ Values: \n
+      - eQMI_LOC_SUCCESS (0) --  Request was completed successfully \n
+      - eQMI_LOC_GENERAL_FAILURE (1) --  Request failed because of a general failure \n
+      - eQMI_LOC_UNSUPPORTED (2) --  Request failed because it is not supported \n
+      - eQMI_LOC_INVALID_PARAMETER (3) --  Request failed because it contained invalid parameters \n
+      - eQMI_LOC_ENGINE_BUSY (4) --  Request failed because the engine is busy \n
+      - eQMI_LOC_PHONE_OFFLINE (5) --  Request failed because the phone is offline \n
+      - eQMI_LOC_TIMEOUT (6) --  Request failed because it has timed out \n
+      - eQMI_LOC_CONFIG_NOT_SUPPORTED (7) --  Request failed because an undefined configuration was requested \n
+      - eQMI_LOC_INSUFFICIENT_MEMORY (8) --  Request failed because the engine could not allocate sufficient memory for the request \n
+      - eQMI_LOC_MAX_GEOFENCE_PROGRAMMED (9) --  Request failed because the maximum number of Geofences are already programmed \n
+      - eQMI_LOC_XTRA_VERSION_CHECK_FAILURE (10) --  Location service failed because of an XTRA version-based file format check failure \n
+      - eQMI_LOC_GNSS_DISABLED (11) --  Request failed because the location service is disabled
+ */
+
+  /* Optional */
+  /*  Part Number */
+  uint8_t partNum_valid;  /**< Must be set to true if partNum is being passed */
+  uint16_t partNum;
+  /**<   Number of the raw data part for which this indication
+      is sent; starts at 1. */
+}qmiLocInjectRawDataIndMsgT_v02;  /* Message */
+/**
+    @}
+  */
+
 /* Conditional compilation tags for message removal */
 //#define REMOVE_QMI_LOC_ADD_CIRCULAR_GEOFENCE_V02
 //#define REMOVE_QMI_LOC_ADD_GEOFENCE_CONTEXT_V02
@@ -23964,6 +24057,7 @@ typedef struct {
 //#define REMOVE_QMI_LOC_INJECT_PLATFORM_POWER_STATE_V02
 //#define REMOVE_QMI_LOC_INJECT_POSITION_V02
 //#define REMOVE_QMI_LOC_INJECT_PREDICTED_ORBITS_DATA_V02
+//#define REMOVE_QMI_LOC_INJECT_RAW_DATA_V02
 //#define REMOVE_QMI_LOC_INJECT_SENSOR_DATA_V02
 //#define REMOVE_QMI_LOC_INJECT_SRN_AP_DATA_V02
 //#define REMOVE_QMI_LOC_INJECT_SUBSCRIBER_ID_V02
@@ -24515,6 +24609,9 @@ typedef struct {
 #define QMI_LOC_INJECT_LOCATION_CIVIC_ADDRESS_RESP_V02 0x00E3
 #define QMI_LOC_INJECT_LOCATION_CIVIC_ADDRESS_IND_V02 0x00E3
 #define QMI_LOC_EVENT_PLATFORM_POWER_STATE_CHANGED_IND_V02 0x00E4
+#define QMI_LOC_INJECT_RAW_DATA_REQ_V02 0x00E5
+#define QMI_LOC_INJECT_RAW_DATA_RESP_V02 0x00E5
+#define QMI_LOC_INJECT_RAW_DATA_IND_V02 0x00E5
 /**
     @}
   */
