@@ -1455,6 +1455,12 @@ void LocationClientApiImpl::updateCallbacksSync(LocationCallbacks& callbacks) {
     //convert callbacks to callBacksMask
     LocationCallbacksMask callBacksMask = 0;
 
+    if (callbacks.responseCb) {
+        mLocationCbs.responseCb = callbacks.responseCb;
+    }
+    if (callbacks.collectiveResponseCb) {
+        mLocationCbs.collectiveResponseCb = callbacks.collectiveResponseCb;
+    }
     if (callbacks.trackingCb) {
         callBacksMask |= E_LOC_CB_TRACKING_BIT;
         mLocationCbs.trackingCb = callbacks.trackingCb;
