@@ -2449,6 +2449,42 @@ void LocationClientApiImpl::getSingleTerrestrialPos(uint32_t timeoutMsec,
             terrestrialPositionCb, responseCb));
 }
 
+void LocationClientApiImpl::getDebugReport(GnssDebugReport& report) {
+
+    struct GetDebugReportReq : public LocMsg {
+
+        GetDebugReportReq(LocationClientApiImpl* apiImpl) :
+            mApiImpl(apiImpl) {}
+        virtual ~GetDebugReportReq() {}
+        void proc() const {
+            string pbStr;
+            LocAPIGetDebugReqMsg msg(mApiImpl->mSocketName, &mApiImpl->mPbufMsgConv);
+            if (msg.serializeToProtobuf(pbStr)) {
+                bool rc = mApiImpl->sendMessage(
+                    reinterpret_cast<uint8_t*>((uint8_t*)pbStr.c_str()),
+                    pbStr.size());
+                LOC_LOGd(">>> send LocAPIGetDebugReqMsg rc=%d", rc);
+            } else {
+                LOC_LOGe("LocAPIGetDebugReqMsg serializeToProtobuf failed");
+            }
+        }
+
+        LocationClientApiImpl* mApiImpl;
+    };
+
+    mpDebugReport = &report;
+    mMsgTask.sendMsg(new (nothrow) GetDebugReportReq(this));
+    wait(500);  //500ms
+}
+
+void LocationClientApiImpl::processGetDebugRespCb(const LocAPIGetDebugRespMsg* pRespMsg) {
+    *mpDebugReport = pRespMsg->mDebugReport;
+    for (uint32_t i = 0; i < pRespMsg->mDebugReport.mSatelliteInfo.size(); i++) {
+        mpDebugReport->mSatelliteInfo[i] = pRespMsg->mDebugReport.mSatelliteInfo[i];
+    }
+    notify();
+}
+
 /******************************************************************************
 LocationClientApiImpl - LocIpc onReceive handler
 ******************************************************************************/
@@ -2581,8 +2617,8 @@ void IpcListener::onReceive(const char* data, uint32_t length,
             uint32_t payloadSize = pbLocApiMsg.payloadsize();
             // pbLocApiMsg.payload() contains the payload data.
 
-            LOC_LOGi(">-- onReceive Rcvd msg id: %d, sockname: %s, payload size: %d", eLocMsgid,
-                    sockName.c_str(), payloadSize);
+            LOC_LOGi(">-- onReceive Rcvd msg id: %d %s, sockname: %s, payload size: %d",
+                    eLocMsgid, LocApiMsgString(eLocMsgid), sockName.c_str(), payloadSize);
             LocAPIMsgHeader locApiMsg(sockName.c_str(), eLocMsgid);
 
             // throw away message that does not come from location hal daemon
@@ -2965,6 +3001,19 @@ void IpcListener::onReceive(const char* data, uint32_t length,
                         mApiImpl.mLocationSysInfoCb(pDataIndMsg->locationSystemInfo);
                     }
                 }
+                break;
+            }
+
+            case E_LOCAPI_GET_DEBUG_RESP_MSG_ID:
+            {
+                PBLocAPIGetDebugRespMsg getDebugRespMsg;
+                if (0 == getDebugRespMsg.ParseFromString(pbLocApiMsg.payload())) {
+                    LOC_LOGe("Failed to parse cfgGetDebugRespMsg from payload!!");
+                    return;
+                }
+                LocAPIGetDebugRespMsg msg(sockName.c_str(),
+                        getDebugRespMsg, &mApiImpl.mPbufMsgConv);
+                mApiImpl.processGetDebugRespCb((LocAPIGetDebugRespMsg*)&msg);
                 break;
             }
 

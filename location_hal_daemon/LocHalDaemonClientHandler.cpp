@@ -1092,6 +1092,29 @@ void LocHalDaemonClientHandler::onLocationApiDestroyCompleteCb() {
     // PLEASE NOTE: no more code after this, including print for class variable
 }
 
+void LocHalDaemonClientHandler::getDebugReport() {
+    std::lock_guard<std::mutex> lock(LocationApiService::mMutex);
+
+    if (nullptr != mIpcSender) {
+        string pbStr;
+        GnssDebugReport report;
+
+        mLocationApi->getDebugReport(report);
+        LocAPIGetDebugRespMsg msg(SERVICE_NAME, report, &mService->mPbufMsgConv);
+        LOC_LOGv("Sending LocAPIGetDebugRespMsg to %s", mName.c_str());
+        if (msg.serializeToProtobuf(pbStr)) {
+            bool rc = sendMessage(pbStr.c_str(), pbStr.size(), msg.msgId);
+            // purge this client if failed
+            if (!rc) {
+                LOC_LOGe("failed rc=%d purging client=%s", rc, mName.c_str());
+                mService->deleteClientbyName(mName);
+            }
+        } else {
+            LOC_LOGe("LocAPIGetDebugRespMsg serializeToProtobuf failed");
+        }
+    }
+}
+
 /******************************************************************************
 LocHalDaemonClientHandler - Engine info related functionality
 ******************************************************************************/

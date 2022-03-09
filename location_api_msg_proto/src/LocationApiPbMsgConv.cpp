@@ -277,6 +277,12 @@ ELocMsgID LocationApiPbMsgConv::getEnumForPBELocMsgID(const PBELocMsgID &pbLocMs
         case PB_E_INTAPI_GET_CONSTELLATION_SECONDARY_BAND_CONFIG_RESP_MSG_ID:
             eLocMsgId = E_INTAPI_GET_CONSTELLATION_SECONDARY_BAND_CONFIG_RESP_MSG_ID;
             break;
+        case PB_E_LOCAPI_GET_DEBUG_REQ_MSG_ID:
+            eLocMsgId = E_LOCAPI_GET_DEBUG_REQ_MSG_ID;
+            break;
+        case PB_E_LOCAPI_GET_DEBUG_RESP_MSG_ID:
+            eLocMsgId = E_LOCAPI_GET_DEBUG_RESP_MSG_ID;
+            break;
         default:
             break;
     }
@@ -832,6 +838,12 @@ PBELocMsgID LocationApiPbMsgConv::getPBEnumForELocMsgID(const ELocMsgID &eLocMsg
             break;
         case E_INTAPI_GET_CONSTELLATION_SECONDARY_BAND_CONFIG_RESP_MSG_ID:
             pbLocMsgId = PB_E_INTAPI_GET_CONSTELLATION_SECONDARY_BAND_CONFIG_RESP_MSG_ID;
+            break;
+        case E_LOCAPI_GET_DEBUG_REQ_MSG_ID:
+            pbLocMsgId = PB_E_LOCAPI_GET_DEBUG_REQ_MSG_ID;
+            break;
+        case E_LOCAPI_GET_DEBUG_RESP_MSG_ID:
+            pbLocMsgId = PB_E_LOCAPI_GET_DEBUG_RESP_MSG_ID;
             break;
         default:
             break;
@@ -5644,5 +5656,379 @@ int LocationApiPbMsgConv::pbConvertToGeofenceInfo(const PBGeofenceInfo &pbGfInfo
     gfInfo.radius = pbGfInfo.radius();
     LOC_LOGv("LocApiPB: pbGfInfo - Lat:%lf, Lon:%lf, Rad:%lf", gfInfo.latitude, gfInfo.longitude,
             gfInfo.radius);
+    return 0;
+}
+
+// GnssDebugReport to PBGnssDebugReport
+int LocationApiPbMsgConv::convertTimespecToPB(const timespec& utcReported,
+        PBTimespec* pbUtcReported ) const {
+    if (nullptr == pbUtcReported) {
+        LOC_LOGe("pbUtcReported is NULL!, return");
+        return 1;
+    }
+    //second tv_sec = 1
+    pbUtcReported->set_tv_sec(utcReported.tv_sec);
+    //nanosecond tv_nsec = 2;
+    pbUtcReported->set_tv_nsec(utcReported.tv_nsec);
+    return 0;
+}
+
+int LocationApiPbMsgConv::convertGnssDebugLocationToPB(const GnssDebugLocation& debugLocation,
+        PBGnssDebugLocation* pbDebugLocation) const {
+    if (nullptr == pbDebugLocation) {
+        LOC_LOGe("pbDebugLocation is NULL!, return");
+        return 1;
+    }
+    //bool valid = 1;
+    pbDebugLocation->set_valid(debugLocation.mValid);
+    //PBLocation location = 2;
+    PBLocation* location = pbDebugLocation->mutable_location();
+    if (nullptr != location) {
+        if (convertLocationToPB(debugLocation.mLocation, location)) {
+            LOC_LOGe("convertLocationToPB failed");
+            free(location);
+            return 1;
+        }
+    } else {
+        LOC_LOGe("mutable_location failed");
+        return 1;
+    }
+    //double verticalAccuracyMeters = 3;
+    pbDebugLocation->set_verticalaccuracymeters(debugLocation.verticalAccuracyMeters);
+    //double speedAccuracyMetersPerSecond = 4;
+    pbDebugLocation->set_speedaccuracymeterspersecond(debugLocation.speedAccuracyMetersPerSecond);
+    //double bearingAccuracyDegrees = 5;
+    pbDebugLocation->set_bearingaccuracydegrees(debugLocation.bearingAccuracyDegrees);
+    //PBTimespec utcReported = 6;
+    PBTimespec* utcReported = pbDebugLocation->mutable_utcreported();
+    if (nullptr != utcReported) {
+        if (convertTimespecToPB(debugLocation.mUtcReported, utcReported)) {
+            LOC_LOGe("convertTimespecToPB failed");
+            free(utcReported);
+            return 1;
+        }
+    } else {
+        LOC_LOGe("mutable_utcreported failed");
+        return 1;
+    }
+    return 0;
+}
+
+int LocationApiPbMsgConv::convertGnssDebugTimeToPB(const GnssDebugTime& gnssDebugTime,
+        PBGnssDebugTime* pbGnssDebugTime) const {
+    if (nullptr == pbGnssDebugTime) {
+        LOC_LOGe("pbGnssDebugTime is NULL!, return");
+        return 1;
+    }
+    //bool valid = 1;
+    pbGnssDebugTime->set_valid(gnssDebugTime.mValid);
+    //int64 timeEstimate = 2;
+    pbGnssDebugTime->set_timeestimate(gnssDebugTime.timeEstimate);
+    //float timeUncertaintyNs = 3;
+    pbGnssDebugTime->set_timeuncertaintyns(gnssDebugTime.timeUncertaintyNs);
+    //float frequencyUncertaintyNsPerSec = 4;
+    pbGnssDebugTime->set_frequencyuncertaintynspersec(
+            gnssDebugTime.frequencyUncertaintyNsPerSec);
+    return 0;
+}
+
+PBGnssEphemerisType LocationApiPbMsgConv::getPBEnumForGnssEphemerisType(
+        const GnssEphemerisType& ephemerisType) const {
+    PBGnssEphemerisType pbEphemerisType = PB_GNSS_EPH_TYPE_UNKNOWN;
+    switch (ephemerisType) {
+        case GNSS_EPH_TYPE_UNKNOWN:
+            pbEphemerisType = PB_GNSS_EPH_TYPE_UNKNOWN;
+            break;
+        case GNSS_EPH_TYPE_EPHEMERIS:
+            pbEphemerisType = PB_GNSS_EPH_TYPE_EPHEMERIS;
+            break;
+        case GNSS_EPH_TYPE_ALMANAC:
+            pbEphemerisType = PB_GNSS_EPH_TYPE_ALMANAC;
+            break;
+        default:
+            break;
+    }
+    LocApiPb_LOGv("LocApiPB: gnssephemerisType:%d, pbGnssephemerisType:%d",
+            ephemerisType, pbEphemerisType);
+    return pbEphemerisType;
+}
+
+PBGnssEphemerisSource LocationApiPbMsgConv::getPBEnumForGnssEphemerisSource(
+        const GnssEphemerisSource& ephemerisSource) const {
+    PBGnssEphemerisSource pbEphemerisSource = PB_GNSS_EPH_SOURCE_UNKNOWN;
+    switch (ephemerisSource) {
+        case GNSS_EPH_SOURCE_UNKNOWN:
+            pbEphemerisSource = PB_GNSS_EPH_SOURCE_UNKNOWN;
+            break;
+        case GNSS_EPH_SOURCE_DEMODULATED:
+            pbEphemerisSource = PB_GNSS_EPH_SOURCE_DEMODULATED;
+            break;
+        case GNSS_EPH_SOURCE_SUPL_PROVIDED:
+            pbEphemerisSource = PB_GNSS_EPH_SOURCE_SUPL_PROVIDED;
+            break;
+        case GNSS_EPH_SOURCE_OTHER_SERVER_PROVIDED:
+            pbEphemerisSource = PB_GNSS_EPH_SOURCE_OTHER_SERVER_PROVIDED;
+            break;
+        case GNSS_EPH_SOURCE_LOCAL:
+            pbEphemerisSource = PB_GNSS_EPH_SOURCE_LOCAL;
+            break;
+        default:
+            break;
+    }
+    LocApiPb_LOGv("LocApiPB: gnssephemerisSource:%d, pbGnssephemerisSource:%d",
+            ephemerisSource, pbEphemerisSource);
+    return pbEphemerisSource;
+}
+
+PBGnssEphemerisHealth LocationApiPbMsgConv::getPBEnumForGnssEphemerisHealth(
+        const GnssEphemerisHealth& ephemerisHealth) const {
+    PBGnssEphemerisHealth pbEphemerisHealth = PB_GNSS_EPH_HEALTH_UNKNOWN;
+    switch (ephemerisHealth) {
+        case GNSS_EPH_HEALTH_UNKNOWN:
+            pbEphemerisHealth = PB_GNSS_EPH_HEALTH_UNKNOWN;
+            break;
+        case GNSS_EPH_HEALTH_GOOD:
+            pbEphemerisHealth = PB_GNSS_EPH_HEALTH_GOOD;
+            break;
+        case GNSS_EPH_HEALTH_BAD:
+            pbEphemerisHealth = PB_GNSS_EPH_HEALTH_BAD;
+            break;
+        default:
+            break;
+    }
+    LocApiPb_LOGv("LocApiPB: gnssephemerisHealth:%d, pbGnssephemerisHealth:%d",
+            ephemerisHealth, pbEphemerisHealth);
+    return pbEphemerisHealth;
+}
+
+int LocationApiPbMsgConv::convertGnssDebugSatelliteInfoToPB(
+        const GnssDebugSatelliteInfo& satelliteInfo,
+        PBGnssDebugSatelliteInfo* pbSatelliteInfo) const {
+    if (nullptr == pbSatelliteInfo) {
+        LOC_LOGe("pbSatelliteInfo is NULL!, return");
+        return 1;
+    }
+    //uint32 svid = 1;
+    pbSatelliteInfo->set_svid(satelliteInfo.svid);
+    //PBLocApiGnss_LocSvSystemEnumType constellation = 2;
+    pbSatelliteInfo->set_constellation(
+            getPBGnssLocSvSysEnumFromGnssSvType(satelliteInfo.constellation));
+    //PBGnssEphemerisType ephemerisType = 3;
+    pbSatelliteInfo->set_ephemeristype(
+            getPBEnumForGnssEphemerisType(satelliteInfo.mEphemerisType));
+    //PBGnssEphemerisSource ephemerisSource = 4;
+    pbSatelliteInfo->set_ephemerissource(
+            getPBEnumForGnssEphemerisSource(satelliteInfo.mEphemerisSource));
+    //PBGnssEphemerisHealth ephemerisHealth = 5;
+    pbSatelliteInfo->set_ephemerishealth(
+            getPBEnumForGnssEphemerisHealth(satelliteInfo.mEphemerisHealth));
+    //float ephemerisAgeSeconds = 6;
+    pbSatelliteInfo->set_ephemerisageseconds(satelliteInfo.ephemerisAgeSeconds);
+    //bool serverPredictionIsAvailable = 7;
+    pbSatelliteInfo->set_serverpredictionisavailable(satelliteInfo.serverPredictionIsAvailable);
+    //float serverPredictionAgeSeconds = 8;
+    pbSatelliteInfo->set_serverpredictionageseconds(satelliteInfo.serverPredictionAgeSeconds);
+    return 0;
+}
+
+int LocationApiPbMsgConv::convertGnssDebugReportToPB(
+        const GnssDebugReport& gnssDebugReport,
+        PBGnssDebugReport* pbGnssDebugReport) const {
+    if (nullptr == pbGnssDebugReport) {
+        LOC_LOGe("pbGnssDebugReport is NULL!, return");
+        return 1;
+    }
+    //pbGnssDebugReport-> location = 1;
+    PBGnssDebugLocation* location = pbGnssDebugReport->mutable_location();
+    if (nullptr != location) {
+        if (convertGnssDebugLocationToPB(gnssDebugReport.mLocation, location)) {
+            LOC_LOGe("convertGnssDebugLocation failed");
+            free(location);
+            return 1;
+        }
+    } else {
+        LOC_LOGe("mutable_location failed");
+        return 1;
+    }
+    //PBGnssDebugTime time = 2;
+    PBGnssDebugTime* time = pbGnssDebugReport->mutable_time();
+    if (nullptr != time) {
+        if (convertGnssDebugTimeToPB(gnssDebugReport.mTime, time)) {
+            LOC_LOGe("convertGnssDebugTimeToPB failed");
+            free(time);
+            return 1;
+        }
+    } else {
+        LOC_LOGe("mutable_time failed");
+        return 1;
+    }
+    //repeated PBGnssDebugSatelliteInfo satelliteInfo = 3;
+    int count = gnssDebugReport.mSatelliteInfo.size();
+    for (int i = 0; i < count; i++) {
+        PBGnssDebugSatelliteInfo* pbSatelliteInfo = pbGnssDebugReport->add_satelliteinfo();
+        if (nullptr != pbSatelliteInfo) {
+            if (convertGnssDebugSatelliteInfoToPB(
+                    gnssDebugReport.mSatelliteInfo[i], pbSatelliteInfo)) {
+                LOC_LOGe("convertGnssDebugSatelliteInfoToPB failed");
+                free(pbSatelliteInfo);
+                return 1;
+            }
+        } else {
+            LOC_LOGe("add_satelliteinfo failed");
+            return 1;
+        }
+    }
+    return 0;
+}
+
+// PBGnssDebugReport to GnssDebugReport
+int LocationApiPbMsgConv::pbConvertToGnssTimespec(const PBTimespec& pbTimespec,
+        timespec& timespec) const {
+    timespec.tv_sec = pbTimespec.tv_sec();
+    timespec.tv_nsec = pbTimespec.tv_nsec();
+    return 0;
+}
+
+int LocationApiPbMsgConv::pbConvertToGnssDebugTime(const PBGnssDebugTime& pbDebugTime,
+        GnssDebugTime debugTime) const {
+    //bool valid = 1;
+    debugTime.mValid = pbDebugTime.valid();
+    //int64 timeEstimate = 2;
+    debugTime.timeEstimate = pbDebugTime.timeestimate();
+    //float timeUncertaintyNs = 3;
+    debugTime.timeUncertaintyNs = pbDebugTime.timeuncertaintyns();
+    //float frequencyUncertaintyNsPerSec = 4;
+    debugTime.frequencyUncertaintyNsPerSec = pbDebugTime.frequencyuncertaintynspersec();
+    return 0;
+}
+
+int LocationApiPbMsgConv::pbConvertToGnssDebugLocation(
+        const PBGnssDebugLocation& pbDebugLocation,
+        GnssDebugLocation& debugLocation) const {
+    //bool valid = 1;
+    debugLocation.mValid = pbDebugLocation.valid();
+    //PBLocation location = 2;
+    pbConvertToLocation(pbDebugLocation.location(), debugLocation.mLocation);
+    //double verticalAccuracyMeters = 3;
+    debugLocation.verticalAccuracyMeters = pbDebugLocation.verticalaccuracymeters();
+    //double speedAccuracyMetersPerSecond = 4;
+    debugLocation.speedAccuracyMetersPerSecond = pbDebugLocation.speedaccuracymeterspersecond();
+    //double bearingAccuracyDegrees = 5;
+    debugLocation.bearingAccuracyDegrees = pbDebugLocation.bearingaccuracydegrees();
+    //PBTimespec utcReported = 6;
+    pbConvertToGnssTimespec(pbDebugLocation.utcreported(), debugLocation.mUtcReported);
+    return 0;
+}
+
+GnssEphemerisType LocationApiPbMsgConv::getEnumForPBGnssEphemerisType(
+        const PBGnssEphemerisType& pbGnssEphemerisType) const {
+    GnssEphemerisType ephemerisType = GNSS_EPH_TYPE_UNKNOWN;
+    switch (pbGnssEphemerisType) {
+        case PB_GNSS_EPH_TYPE_UNKNOWN:
+            ephemerisType = GNSS_EPH_TYPE_UNKNOWN;
+            break;
+        case PB_GNSS_EPH_TYPE_EPHEMERIS:
+            ephemerisType = GNSS_EPH_TYPE_EPHEMERIS;
+            break;
+        case PB_GNSS_EPH_TYPE_ALMANAC:
+            ephemerisType = GNSS_EPH_TYPE_ALMANAC;
+            break;
+        default:
+            break;
+    }
+    LocApiPb_LOGv("LocApiPB: gnssephemerisType:%d, pbGnssephemerisType:%d",
+            ephemerisType, pbGnssEphemerisType);
+    return ephemerisType;
+}
+
+GnssEphemerisSource LocationApiPbMsgConv::getEnumForPBGnssEphemerisSource(
+        const PBGnssEphemerisSource& pbGnssEphemerisSource) const {
+    GnssEphemerisSource ephemerisSource = GNSS_EPH_SOURCE_UNKNOWN;
+    switch (pbGnssEphemerisSource) {
+        case PB_GNSS_EPH_SOURCE_UNKNOWN:
+            ephemerisSource = GNSS_EPH_SOURCE_UNKNOWN;
+            break;
+        case PB_GNSS_EPH_SOURCE_DEMODULATED:
+            ephemerisSource = GNSS_EPH_SOURCE_DEMODULATED;
+            break;
+        case PB_GNSS_EPH_SOURCE_SUPL_PROVIDED:
+            ephemerisSource = GNSS_EPH_SOURCE_SUPL_PROVIDED;
+            break;
+        case PB_GNSS_EPH_SOURCE_OTHER_SERVER_PROVIDED:
+            ephemerisSource = GNSS_EPH_SOURCE_OTHER_SERVER_PROVIDED;
+            break;
+        case PB_GNSS_EPH_SOURCE_LOCAL:
+            ephemerisSource = GNSS_EPH_SOURCE_LOCAL;
+            break;
+        default:
+            break;
+    }
+    LocApiPb_LOGv("LocApiPB: gnssephemerisSource:%d, pbGnssephemerisSource:%d",
+            ephemerisSource, pbGnssEphemerisSource);
+    return ephemerisSource;
+}
+
+GnssEphemerisHealth LocationApiPbMsgConv::getEnumForPBGnssEphemerisHealth(
+        const PBGnssEphemerisHealth& pbGnssEphemerisHealth) const {
+    GnssEphemerisHealth ephemerisHealth = GNSS_EPH_HEALTH_UNKNOWN;
+    switch (pbGnssEphemerisHealth) {
+        case PB_GNSS_EPH_HEALTH_UNKNOWN:
+            ephemerisHealth = GNSS_EPH_HEALTH_UNKNOWN;
+            break;
+        case PB_GNSS_EPH_HEALTH_GOOD:
+            ephemerisHealth = GNSS_EPH_HEALTH_GOOD;
+            break;
+        case PB_GNSS_EPH_HEALTH_BAD:
+            ephemerisHealth = GNSS_EPH_HEALTH_BAD;
+            break;
+        default:
+            break;
+    }
+    LocApiPb_LOGv("LocApiPB: gnssephemerisHealth:%d, pbGnssephemerisHealth:%d",
+            ephemerisHealth, pbGnssEphemerisHealth);
+    return ephemerisHealth;
+}
+
+int LocationApiPbMsgConv::pbConvertToGnssDebugSatelliteInfo(
+        const PBGnssDebugSatelliteInfo& pbSatelliteInfo,
+        GnssDebugSatelliteInfo& satelliteInfo) const {
+    //uint32 svid = 1;
+    satelliteInfo.svid = pbSatelliteInfo.svid();
+    //PBLocApiGnss_LocSvSystemEnumType constellation = 2;
+    satelliteInfo.constellation = getGnssSvTypeFromPBGnssLocSvSystemEnumType(
+            pbSatelliteInfo.constellation());
+    //PBGnssEphemerisType ephemerisType = 3;
+    satelliteInfo.mEphemerisType = getEnumForPBGnssEphemerisType(
+            pbSatelliteInfo.ephemeristype());
+    //PBGnssEphemerisSource ephemerisSource = 4;
+    satelliteInfo.mEphemerisSource = getEnumForPBGnssEphemerisSource(
+            pbSatelliteInfo.ephemerissource());
+    //PBGnssEphemerisHealth ephemerisHealth = 5;
+    satelliteInfo.mEphemerisHealth = getEnumForPBGnssEphemerisHealth(
+            pbSatelliteInfo.ephemerishealth());
+    //float ephemerisAgeSeconds = 6;
+    satelliteInfo.ephemerisAgeSeconds = pbSatelliteInfo.ephemerisageseconds();
+    //bool serverPredictionIsAvailable = 7;
+    satelliteInfo.serverPredictionIsAvailable = pbSatelliteInfo.serverpredictionisavailable();
+    //float serverPredictionAgeSeconds = 8;
+    satelliteInfo.serverPredictionAgeSeconds = pbSatelliteInfo.serverpredictionageseconds();
+    return 0;
+}
+
+int LocationApiPbMsgConv::pbConvertToGnssDebugReport(
+        const PBGnssDebugReport& pbGnssDebugReport,
+        GnssDebugReport& gnssDebugReport) const {
+    //PBGnssDebugLocation location = 1;
+    pbConvertToGnssDebugLocation(pbGnssDebugReport.location(),
+            gnssDebugReport.mLocation);
+    //PBGnssDebugTime time = 2;
+    pbConvertToGnssDebugTime(pbGnssDebugReport.time(), gnssDebugReport.mTime);
+    //repeated PBGnssDebugSatelliteInfo satelliteInfo = 3;
+    int count = pbGnssDebugReport.satelliteinfo_size();
+    for (int i = 0; i < count; i++) {
+        GnssDebugSatelliteInfo satelliteInfo;
+        pbConvertToGnssDebugSatelliteInfo(pbGnssDebugReport.satelliteinfo(i), satelliteInfo);
+        gnssDebugReport.mSatelliteInfo.push_back(satelliteInfo);
+    }
     return 0;
 }

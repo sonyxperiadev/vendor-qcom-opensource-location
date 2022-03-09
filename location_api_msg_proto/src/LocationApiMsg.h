@@ -299,6 +299,10 @@ enum ELocMsgID {
     E_LOCAPI_GET_SINGLE_TERRESTRIAL_POS_REQ_MSG_ID = 31,
     E_LOCAPI_GET_SINGLE_TERRESTRIAL_POS_RESP_MSG_ID = 32,
 
+    // Debug Report
+    E_LOCAPI_GET_DEBUG_REQ_MSG_ID = 33,
+    E_LOCAPI_GET_DEBUG_RESP_MSG_ID = 34,
+
     // ping
     E_LOCAPI_PINGTEST_MSG_ID = 99,
 
@@ -331,6 +335,8 @@ enum ELocMsgID {
     E_INTAPI_GET_CONSTELLATION_SECONDARY_BAND_CONFIG_REQ_MSG_ID = 306,
     E_INTAPI_GET_CONSTELLATION_SECONDARY_BAND_CONFIG_RESP_MSG_ID = 307,
 };
+
+const char* LocApiMsgString(ELocMsgID msgId);
 
 typedef uint32_t LocationCallbacksMask;
 enum ELocationCallbacksOption {
@@ -1396,6 +1402,31 @@ struct LocConfigGetConstellationSecondaryBandConfigRespMsg: LocAPIMsgHeader
     LocConfigGetConstellationSecondaryBandConfigRespMsg(const char* name,
             const PBLocConfigGetConstltnSecondaryBandConfigRespMsg &pbCfgGetConstSecBandCfgResp,
             const LocationApiPbMsgConv *pbMsgConv);
+
+    int serializeToProtobuf(string& protoStr) override;
+};
+
+struct LocAPIGetDebugReqMsg : LocAPIMsgHeader
+{
+    inline LocAPIGetDebugReqMsg(const char* name,
+            const LocationApiPbMsgConv* pbMsgConv) :
+        LocAPIMsgHeader(name, E_LOCAPI_GET_DEBUG_REQ_MSG_ID, pbMsgConv) { }
+
+    int serializeToProtobuf(string& protoStr) override;
+};
+
+struct LocAPIGetDebugRespMsg : LocAPIMsgHeader
+{
+    GnssDebugReport mDebugReport;
+
+    inline LocAPIGetDebugRespMsg(const char* name,
+            GnssDebugReport debugReport,
+            const LocationApiPbMsgConv* pbMsgConv) :
+        LocAPIMsgHeader(name, E_LOCAPI_GET_DEBUG_RESP_MSG_ID, pbMsgConv),
+        mDebugReport(debugReport) { }
+    LocAPIGetDebugRespMsg(const char* name,
+        const PBLocAPIGetDebugRespMsg& pbMsg,
+        const LocationApiPbMsgConv* pbMsgConv);
 
     int serializeToProtobuf(string& protoStr) override;
 };
