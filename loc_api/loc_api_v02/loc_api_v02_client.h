@@ -1207,6 +1207,10 @@ typedef union
    /** Sent by the engine to notify client about engine lock state
    QMI_LOC_EVENT_ENGINE_LOCK_STATE_IND_V02 */
 
+   const qmiLocEngineDebugDataIndMsgT_v02 *pLocEngDbgDataInfoIndMsg;
+   /** Indication Message; Used by the service to
+     report engine debug information */
+
 }locClientEventIndUnionType;
 
 

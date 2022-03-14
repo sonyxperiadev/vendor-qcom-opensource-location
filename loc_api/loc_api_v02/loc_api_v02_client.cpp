@@ -343,6 +343,10 @@ static const locClientEventIndTableStructT locClientEventIndTable[]= {
     // engine Lock information ind
   { QMI_LOC_EVENT_ENGINE_LOCK_STATE_IND_V02,
     sizeof(qmiLocEventEngineLockStateIndMsgT_v02)},
+
+  // Engine Debug Data ind
+  { QMI_LOC_ENGINE_DEBUG_DATA_IND_V02,
+    sizeof(qmiLocEngineDebugDataIndMsgT_v02)},
 };
 
 /* table to relate the respInd Id with its size */

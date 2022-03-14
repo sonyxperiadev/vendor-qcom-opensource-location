@@ -412,6 +412,7 @@ private:
   void geofenceDwellEvent(const qmiLocEventGeofenceBatchedDwellIndMsgT_v02 *dwellEvent);
   void reportLatencyInfo(const qmiLocLatencyInformationIndMsgT_v02* pLocLatencyInfo);
   void reportEngineLockStatus(const qmiLocEngineLockStateEnumT_v02 engineLockState);
+  void reportEngDebugDataInfo(const qmiLocEngineDebugDataIndMsgT_v02* pLocEngDbgDataInfoIndMsg);
 
   void reportPowerStateChangeInfo(
         const qmiLocPlatformPowerStateChangedIndMsgT_v02 *pPowerStateChangedInfo);

@@ -228,6 +228,7 @@ static void globalEventCb(locClientHandleType clientHandle,
     case QMI_LOC_EVENT_GALILEO_EPHEMERIS_REPORT_IND_V02:
     case QMI_LOC_EVENT_QZSS_EPHEMERIS_REPORT_IND_V02:
     case QMI_LOC_LATENCY_INFORMATION_IND_V02:
+    case QMI_LOC_ENGINE_DEBUG_DATA_IND_V02:
         MODEM_LOG_CALLFLOW_DEBUG(%s, loc_get_v02_event_name(eventId));
         break;
     default:
@@ -705,7 +706,8 @@ locClientEventMaskType LocApiV02 :: adjustLocClientEventMask(locClientEventMaskT
                                            QMI_LOC_EVENT_MASK_GNSS_SV_POLYNOMIAL_REPORT_V02 |
                                            QMI_LOC_EVENT_MASK_EPHEMERIS_REPORT_V02 |
                                            QMI_LOC_EVENT_MASK_NEXT_LS_INFO_REPORT_V02 |
-                                           QMI_LOC_EVENT_MASK_LATENCY_INFORMATION_REPORT_V02;
+                                           QMI_LOC_EVENT_MASK_LATENCY_INFORMATION_REPORT_V02 |
+                                           QMI_LOC_EVENT_MASK_ENGINE_DEBUG_DATA_REPORT_V02;
         qmiMask = qmiMask & ~clearMask;
     } else if (!mEngineOn) {
         locClientEventMaskType clearMask = QMI_LOC_EVENT_MASK_NMEA_V02;
@@ -2691,6 +2693,10 @@ locClientEventMaskType LocApiV02 :: convertLocClientEventMask(
 
   if (mask & LOC_API_ADAPTER_BIT_LATENCY_INFORMATION) {
       eventMask |= QMI_LOC_EVENT_MASK_LATENCY_INFORMATION_REPORT_V02;
+  }
+
+  if (mask & LOC_API_ADAPTER_BIT_ENGINE_DEBUG_DATA_REPORT) {
+     eventMask |= QMI_LOC_EVENT_MASK_ENGINE_DEBUG_DATA_REPORT_V02;
   }
 
   return eventMask;
@@ -7289,6 +7295,9 @@ void LocApiV02 :: eventCb(locClientHandleType /*clientHandle*/,
     case QMI_LOC_LATENCY_INFORMATION_IND_V02:
       reportLatencyInfo(eventPayload.pLocLatencyInfoIndMsg);
       break;
+    case QMI_LOC_ENGINE_DEBUG_DATA_IND_V02:
+      reportEngDebugDataInfo(eventPayload.pLocEngDbgDataInfoIndMsg);
+      break;
 
     case QMI_LOC_EVENT_PLATFORM_POWER_STATE_CHANGED_IND_V02:
       reportPowerStateChangeInfo(eventPayload.pPowerStateChangedIndMsg);
@@ -7800,6 +7809,350 @@ void LocApiV02::reportEngineLockStatus(const qmiLocEngineLockStateEnumT_v02 engi
         setEngineLockState(lockState);
         LocApiBase::reportEngineLockStatus(lockState);
     }
+}
+
+void LocApiV02::reportEngDebugDataInfo(const qmiLocEngineDebugDataIndMsgT_v02*
+        pLocEngDbgDataInfoIndMsg) {
+    GnssEngineDebugDataInfo gnssEngineDebugDataInfo = {};
+
+    if (pLocEngDbgDataInfoIndMsg->week_valid) {
+        gnssEngineDebugDataInfo.timeValid = 1;
+        gnssEngineDebugDataInfo.gpsWeek = pLocEngDbgDataInfoIndMsg->week;
+    }
+
+    if (pLocEngDbgDataInfoIndMsg->timeOfWeek_valid) {
+        gnssEngineDebugDataInfo.gpsTowMs = pLocEngDbgDataInfoIndMsg->timeOfWeek;
+    }
+
+    if (pLocEngDbgDataInfoIndMsg->sourceOfTime_valid) {
+        gnssEngineDebugDataInfo.sourceOfTime = pLocEngDbgDataInfoIndMsg->sourceOfTime;
+    }
+
+    if (pLocEngDbgDataInfoIndMsg->clkTimeUnc_valid) {
+        gnssEngineDebugDataInfo.clkTimeUnc = pLocEngDbgDataInfoIndMsg->clkTimeUnc;
+    }
+
+    if (pLocEngDbgDataInfoIndMsg->clkFreqBias_valid) {
+        gnssEngineDebugDataInfo.clkFreqBias = pLocEngDbgDataInfoIndMsg->clkFreqBias;
+    }
+
+    if (pLocEngDbgDataInfoIndMsg->clkFreqUnc_valid) {
+        gnssEngineDebugDataInfo.clkFreqUnc = pLocEngDbgDataInfoIndMsg->clkFreqUnc;
+    }
+
+    if (pLocEngDbgDataInfoIndMsg->xoState_valid) {
+        gnssEngineDebugDataInfo.xoState = pLocEngDbgDataInfoIndMsg->xoState;
+    }
+
+    if (pLocEngDbgDataInfoIndMsg->rcvrErrRecovery_valid) {
+        gnssEngineDebugDataInfo.rcvrErrRecovery = pLocEngDbgDataInfoIndMsg->rcvrErrRecovery;
+    }
+
+    if (pLocEngDbgDataInfoIndMsg->leapSecondInfo_valid) {
+        gnssEngineDebugDataInfo.leapSecondInfo.size = sizeof(Gnss_LeapSecondInfoStructType);
+        gnssEngineDebugDataInfo.leapSecondInfo.leapSec =
+            pLocEngDbgDataInfoIndMsg->leapSecondInfo.leapSec;
+        gnssEngineDebugDataInfo.leapSecondInfo.leapSecUnc =
+            pLocEngDbgDataInfoIndMsg->leapSecondInfo.leapSecUnc;
+    }
+
+    if (pLocEngDbgDataInfoIndMsg->jammedSignalsMask_valid) {
+        gnssEngineDebugDataInfo.jammedSignalsMask = pLocEngDbgDataInfoIndMsg->jammedSignalsMask;
+    }
+
+    // jammerIndicatorList from modem is valid from index 1.
+    if (pLocEngDbgDataInfoIndMsg->jammerIndicatorList_valid) {
+        gnssEngineDebugDataInfo.jammerData.resize(
+                pLocEngDbgDataInfoIndMsg->jammerIndicatorList_len, {});
+        for (int i = 1; i < pLocEngDbgDataInfoIndMsg->jammerIndicatorList_len; i++) {
+            gnssEngineDebugDataInfo.jammerData[i-1] = {
+                    pLocEngDbgDataInfoIndMsg->jammerIndicatorList[i].bpMetricDb,
+                    pLocEngDbgDataInfoIndMsg->jammerIndicatorList[i].agcMetricDb};
+        }
+    }
+
+    if (pLocEngDbgDataInfoIndMsg->epiTime_valid) {
+        gnssEngineDebugDataInfo.epiTime.hours = pLocEngDbgDataInfoIndMsg->epiTime.hours;
+        gnssEngineDebugDataInfo.epiTime.mins = pLocEngDbgDataInfoIndMsg->epiTime.mins;
+        gnssEngineDebugDataInfo.epiTime.secs = pLocEngDbgDataInfoIndMsg->epiTime.secs;
+    }
+
+    if (pLocEngDbgDataInfoIndMsg->epiLat_valid) {
+        gnssEngineDebugDataInfo.epiValidity = 1;
+        gnssEngineDebugDataInfo.epiLat = pLocEngDbgDataInfoIndMsg->epiLat;
+    }
+
+    if (pLocEngDbgDataInfoIndMsg->epiLon_valid) {
+        gnssEngineDebugDataInfo.epiLon = pLocEngDbgDataInfoIndMsg->epiLon;
+    }
+
+    if (pLocEngDbgDataInfoIndMsg->epiAlt_valid) {
+        gnssEngineDebugDataInfo.epiAlt = pLocEngDbgDataInfoIndMsg->epiAlt;
+    }
+
+    if (pLocEngDbgDataInfoIndMsg->epiHepe_valid) {
+        gnssEngineDebugDataInfo.epiHepe = pLocEngDbgDataInfoIndMsg->epiHepe;
+    }
+
+    if (pLocEngDbgDataInfoIndMsg->epiAltUnc_valid) {
+        gnssEngineDebugDataInfo.epiAltUnc = pLocEngDbgDataInfoIndMsg->epiAltUnc;
+    }
+
+    if (pLocEngDbgDataInfoIndMsg->epiSrc_valid) {
+        gnssEngineDebugDataInfo.epiSrc = pLocEngDbgDataInfoIndMsg->epiSrc;
+    }
+
+    if (pLocEngDbgDataInfoIndMsg->bestPosTime_valid) {
+        gnssEngineDebugDataInfo.bestPosTime.hours = pLocEngDbgDataInfoIndMsg->bestPosTime.hours;
+        gnssEngineDebugDataInfo.bestPosTime.mins = pLocEngDbgDataInfoIndMsg->bestPosTime.mins;
+        gnssEngineDebugDataInfo.bestPosTime.secs = pLocEngDbgDataInfoIndMsg->bestPosTime.secs;
+    }
+
+    if (pLocEngDbgDataInfoIndMsg->bestPosLat_valid) {
+        gnssEngineDebugDataInfo.bestPosLat = pLocEngDbgDataInfoIndMsg->bestPosLat;
+    }
+
+    if (pLocEngDbgDataInfoIndMsg->bestPosLon_valid) {
+        gnssEngineDebugDataInfo.bestPosLon = pLocEngDbgDataInfoIndMsg->bestPosLon;
+    }
+
+    if (pLocEngDbgDataInfoIndMsg->bestPosAlt_valid) {
+        gnssEngineDebugDataInfo.bestPosAlt = pLocEngDbgDataInfoIndMsg->bestPosAlt;
+    }
+
+    if (pLocEngDbgDataInfoIndMsg->bestPosHepe_valid) {
+        gnssEngineDebugDataInfo.bestPosHepe = pLocEngDbgDataInfoIndMsg->bestPosHepe;
+    }
+
+    if (pLocEngDbgDataInfoIndMsg->bestPosAltUnc_valid) {
+        gnssEngineDebugDataInfo.bestPosAltUnc = pLocEngDbgDataInfoIndMsg->bestPosAltUnc;
+    }
+
+    if (pLocEngDbgDataInfoIndMsg->xtraInfoTime_valid) {
+        gnssEngineDebugDataInfo.xtraInfoTime.hours = pLocEngDbgDataInfoIndMsg->xtraInfoTime.hours;
+        gnssEngineDebugDataInfo.xtraInfoTime.mins = pLocEngDbgDataInfoIndMsg->xtraInfoTime.mins;
+        gnssEngineDebugDataInfo.xtraInfoTime.secs = pLocEngDbgDataInfoIndMsg->xtraInfoTime.secs;
+    }
+
+    if (pLocEngDbgDataInfoIndMsg->gpsXtraAge_valid) {
+        gnssEngineDebugDataInfo.gpsXtraAge = pLocEngDbgDataInfoIndMsg->gpsXtraAge;
+    }
+
+    if (pLocEngDbgDataInfoIndMsg->gloXtraAge_valid) {
+        gnssEngineDebugDataInfo.gloXtraAge = pLocEngDbgDataInfoIndMsg->gloXtraAge;
+    }
+
+    if (pLocEngDbgDataInfoIndMsg->bdsXtraAge_valid) {
+        gnssEngineDebugDataInfo.bdsXtraAge = pLocEngDbgDataInfoIndMsg->bdsXtraAge;
+    }
+
+    if (pLocEngDbgDataInfoIndMsg->galXtraAge_valid) {
+        gnssEngineDebugDataInfo.galXtraAge = pLocEngDbgDataInfoIndMsg->galXtraAge;
+    }
+
+    if (pLocEngDbgDataInfoIndMsg->qzssXtraAge_valid) {
+        gnssEngineDebugDataInfo.qzssXtraAge = pLocEngDbgDataInfoIndMsg->qzssXtraAge;
+    }
+
+    if (pLocEngDbgDataInfoIndMsg->navicXtraAge_valid) {
+        gnssEngineDebugDataInfo.navicXtraAge = pLocEngDbgDataInfoIndMsg->navicXtraAge;
+    }
+
+    if (pLocEngDbgDataInfoIndMsg->gpsXtraMask_valid) {
+        gnssEngineDebugDataInfo.xtraValidMask =
+            gnssEngineDebugDataInfo.xtraValidMask | GPS_XTRA_VALID_BIT;
+        gnssEngineDebugDataInfo.gpsXtraMask = pLocEngDbgDataInfoIndMsg->gpsXtraMask;
+    }
+
+    if (pLocEngDbgDataInfoIndMsg->gloXtraMask_valid) {
+        gnssEngineDebugDataInfo.xtraValidMask =
+            gnssEngineDebugDataInfo.xtraValidMask | GLONASS_XTRA_VALID_BIT;
+        gnssEngineDebugDataInfo.gloXtraMask = pLocEngDbgDataInfoIndMsg->gloXtraMask;
+    }
+
+    if (pLocEngDbgDataInfoIndMsg->bdsXtraMask_valid) {
+        gnssEngineDebugDataInfo.xtraValidMask =
+            gnssEngineDebugDataInfo.xtraValidMask | BDS_XTRA_VALID_BIT;
+        gnssEngineDebugDataInfo.bdsXtraMask = pLocEngDbgDataInfoIndMsg->bdsXtraMask;
+    }
+
+    if (pLocEngDbgDataInfoIndMsg->galXtraMask_valid) {
+        gnssEngineDebugDataInfo.xtraValidMask =
+            gnssEngineDebugDataInfo.xtraValidMask | GAL_XTRA_VALID_BIT;
+        gnssEngineDebugDataInfo.galXtraMask = pLocEngDbgDataInfoIndMsg->galXtraMask;
+    }
+
+    if (pLocEngDbgDataInfoIndMsg->qzssXtraMask_valid) {
+        gnssEngineDebugDataInfo.xtraValidMask =
+            gnssEngineDebugDataInfo.xtraValidMask | QZSS_XTRA_VALID_BIT;
+        gnssEngineDebugDataInfo.qzssXtraMask = pLocEngDbgDataInfoIndMsg->qzssXtraMask;
+    }
+
+    if (pLocEngDbgDataInfoIndMsg->navicXtraMask_valid) {
+        gnssEngineDebugDataInfo.xtraValidMask =
+            gnssEngineDebugDataInfo.xtraValidMask | NAVIC_XTRA_VALID_BIT;
+        gnssEngineDebugDataInfo.navicXtraMask = pLocEngDbgDataInfoIndMsg->navicXtraMask;
+    }
+
+    if (pLocEngDbgDataInfoIndMsg->ephInfoTime_valid) {
+        gnssEngineDebugDataInfo.ephInfoTime.hours = pLocEngDbgDataInfoIndMsg->ephInfoTime.hours;
+        gnssEngineDebugDataInfo.ephInfoTime.mins = pLocEngDbgDataInfoIndMsg->ephInfoTime.mins;
+        gnssEngineDebugDataInfo.ephInfoTime.secs = pLocEngDbgDataInfoIndMsg->ephInfoTime.secs;
+    }
+
+    if (pLocEngDbgDataInfoIndMsg->gpsEphMask_valid) {
+        gnssEngineDebugDataInfo.gpsEphMask = pLocEngDbgDataInfoIndMsg->gpsEphMask;
+    }
+
+    if (pLocEngDbgDataInfoIndMsg->gloEphMask_valid) {
+        gnssEngineDebugDataInfo.gloEphMask = pLocEngDbgDataInfoIndMsg->gloEphMask;
+    }
+
+    if (pLocEngDbgDataInfoIndMsg->bdsEphMask_valid) {
+        gnssEngineDebugDataInfo.bdsEphMask = pLocEngDbgDataInfoIndMsg->bdsEphMask;
+    }
+
+    if (pLocEngDbgDataInfoIndMsg->galEphMask_valid) {
+        gnssEngineDebugDataInfo.galEphMask = pLocEngDbgDataInfoIndMsg->galEphMask;
+    }
+
+    if (pLocEngDbgDataInfoIndMsg->qzssEphMask_valid) {
+        gnssEngineDebugDataInfo.qzssEphMask = pLocEngDbgDataInfoIndMsg->qzssEphMask;
+    }
+
+    if (pLocEngDbgDataInfoIndMsg->navicEphMask_valid) {
+        gnssEngineDebugDataInfo.navicEphMask = pLocEngDbgDataInfoIndMsg->navicEphMask;
+    }
+
+    if (pLocEngDbgDataInfoIndMsg->healthInfoTime_valid) {
+        gnssEngineDebugDataInfo.healthInfoTime.hours =
+            pLocEngDbgDataInfoIndMsg->healthInfoTime.hours;
+        gnssEngineDebugDataInfo.healthInfoTime.mins =
+            pLocEngDbgDataInfoIndMsg->healthInfoTime.mins;
+        gnssEngineDebugDataInfo.healthInfoTime.secs =
+            pLocEngDbgDataInfoIndMsg->healthInfoTime.secs;
+    }
+
+    if (pLocEngDbgDataInfoIndMsg->gpsHealthUnknownMask_valid) {
+        gnssEngineDebugDataInfo.gpsHealthUnknownMask =
+                pLocEngDbgDataInfoIndMsg->gpsHealthUnknownMask;
+    }
+
+    if (pLocEngDbgDataInfoIndMsg->gloHealthUnknownMask_valid) {
+        gnssEngineDebugDataInfo.gloHealthUnknownMask =
+                pLocEngDbgDataInfoIndMsg->gloHealthUnknownMask;
+    }
+
+    if (pLocEngDbgDataInfoIndMsg->bdsHealthUnknownMask_valid) {
+        gnssEngineDebugDataInfo.bdsHealthUnknownMask =
+                pLocEngDbgDataInfoIndMsg->bdsHealthUnknownMask;
+    }
+
+    if (pLocEngDbgDataInfoIndMsg->galHealthUnknownMask_valid) {
+        gnssEngineDebugDataInfo.galHealthUnknownMask =
+                pLocEngDbgDataInfoIndMsg->galHealthUnknownMask;
+    }
+
+    if (pLocEngDbgDataInfoIndMsg->qzssHealthUnknownMask_valid) {
+        gnssEngineDebugDataInfo.qzssHealthUnknownMask =
+                pLocEngDbgDataInfoIndMsg->qzssHealthUnknownMask;
+    }
+
+    if (pLocEngDbgDataInfoIndMsg->navicHealthUnknownMask_valid) {
+        gnssEngineDebugDataInfo.navicHealthUnknownMask =
+                pLocEngDbgDataInfoIndMsg->navicHealthUnknownMask;
+    }
+
+    if (pLocEngDbgDataInfoIndMsg->gpsHealthGoodMask_valid) {
+        gnssEngineDebugDataInfo.gpsHealthGoodMask = pLocEngDbgDataInfoIndMsg->gpsHealthGoodMask;
+    }
+
+    if (pLocEngDbgDataInfoIndMsg->gloHealthGoodMask_valid) {
+        gnssEngineDebugDataInfo.gloHealthGoodMask = pLocEngDbgDataInfoIndMsg->gloHealthGoodMask;
+    }
+
+    if (pLocEngDbgDataInfoIndMsg->bdsHealthGoodMask_valid) {
+        gnssEngineDebugDataInfo.bdsHealthGoodMask = pLocEngDbgDataInfoIndMsg->bdsHealthGoodMask;
+    }
+
+    if (pLocEngDbgDataInfoIndMsg->galHealthGoodMask_valid) {
+        gnssEngineDebugDataInfo.galHealthGoodMask = pLocEngDbgDataInfoIndMsg->galHealthGoodMask;
+    }
+
+    if (pLocEngDbgDataInfoIndMsg->qzssHealthGoodMask_valid) {
+        gnssEngineDebugDataInfo.qzssHealthGoodMask = pLocEngDbgDataInfoIndMsg->qzssHealthGoodMask;
+    }
+
+    if (pLocEngDbgDataInfoIndMsg->navicHealthGoodMask_valid) {
+        gnssEngineDebugDataInfo.navicHealthGoodMask = pLocEngDbgDataInfoIndMsg->navicHealthGoodMask;
+    }
+
+
+    if (pLocEngDbgDataInfoIndMsg->gpsHealthBadMask_valid) {
+        gnssEngineDebugDataInfo.gpsHealthBadMask = pLocEngDbgDataInfoIndMsg->gpsHealthBadMask;
+    }
+
+    if (pLocEngDbgDataInfoIndMsg->gloHealthBadMask_valid) {
+        gnssEngineDebugDataInfo.gloHealthBadMask = pLocEngDbgDataInfoIndMsg->gloHealthBadMask;
+    }
+
+    if (pLocEngDbgDataInfoIndMsg->bdsHealthBadMask_valid) {
+        gnssEngineDebugDataInfo.bdsHealthBadMask = pLocEngDbgDataInfoIndMsg->bdsHealthBadMask;
+    }
+
+    if (pLocEngDbgDataInfoIndMsg->galHealthBadMask_valid) {
+        gnssEngineDebugDataInfo.galHealthBadMask = pLocEngDbgDataInfoIndMsg->galHealthBadMask;
+    }
+
+    if (pLocEngDbgDataInfoIndMsg->qzssHealthBadMask_valid) {
+        gnssEngineDebugDataInfo.qzssHealthBadMask = pLocEngDbgDataInfoIndMsg->qzssHealthBadMask;
+    }
+
+    if (pLocEngDbgDataInfoIndMsg->navicHealthBadMask_valid) {
+        gnssEngineDebugDataInfo.navicHealthBadMask = pLocEngDbgDataInfoIndMsg->navicHealthBadMask;
+    }
+
+    if (pLocEngDbgDataInfoIndMsg->fixInfoTime_valid) {
+        gnssEngineDebugDataInfo.fixInfoTime.hours = pLocEngDbgDataInfoIndMsg->fixInfoTime.hours;
+        gnssEngineDebugDataInfo.fixInfoTime.mins = pLocEngDbgDataInfoIndMsg->fixInfoTime.mins;
+        gnssEngineDebugDataInfo.fixInfoTime.secs = pLocEngDbgDataInfoIndMsg->fixInfoTime.secs;
+    }
+
+    if (pLocEngDbgDataInfoIndMsg->fixInfoMask_valid) {
+        gnssEngineDebugDataInfo.fixInfoMask = pLocEngDbgDataInfoIndMsg->fixInfoMask;
+    }
+
+    if (pLocEngDbgDataInfoIndMsg->navDataTime_valid) {
+        gnssEngineDebugDataInfo.navDataTime.hours = pLocEngDbgDataInfoIndMsg->navDataTime.hours;
+        gnssEngineDebugDataInfo.navDataTime.mins = pLocEngDbgDataInfoIndMsg->navDataTime.mins;
+        gnssEngineDebugDataInfo.navDataTime.secs = pLocEngDbgDataInfoIndMsg->navDataTime.secs;
+    }
+
+    if (pLocEngDbgDataInfoIndMsg->navData_valid) {
+        for (int i = 0; i < pLocEngDbgDataInfoIndMsg->navData_len ; i++) {
+            gnssEngineDebugDataInfo.navData[i].gnssSvId =
+                pLocEngDbgDataInfoIndMsg->navData[i].gnssSvId;
+            gnssEngineDebugDataInfo.navData[i].type = pLocEngDbgDataInfoIndMsg->navData[i].type;
+            gnssEngineDebugDataInfo.navData[i].src = pLocEngDbgDataInfoIndMsg->navData[i].src;
+            gnssEngineDebugDataInfo.navData[i].age = pLocEngDbgDataInfoIndMsg->navData[i].age;
+        }
+    }
+
+    if (pLocEngDbgDataInfoIndMsg->fixStatusTime_valid) {
+        gnssEngineDebugDataInfo.fixStatusTime.hours = pLocEngDbgDataInfoIndMsg->fixStatusTime.hours;
+        gnssEngineDebugDataInfo.fixStatusTime.mins = pLocEngDbgDataInfoIndMsg->fixStatusTime.mins;
+        gnssEngineDebugDataInfo.fixStatusTime.secs = pLocEngDbgDataInfoIndMsg->fixStatusTime.secs;
+    }
+
+    if (pLocEngDbgDataInfoIndMsg->fixStatusMask_valid) {
+        gnssEngineDebugDataInfo.fixStatusMask = pLocEngDbgDataInfoIndMsg->fixStatusMask;
+    }
+
+    if (pLocEngDbgDataInfoIndMsg->fixHepeLimit_valid) {
+        gnssEngineDebugDataInfo.fixHepeLimit = pLocEngDbgDataInfoIndMsg->fixHepeLimit;
+    }
+
+    LocApiBase::reportEngDebugDataInfo(gnssEngineDebugDataInfo);
 }
 
 void LocApiV02::configRobustLocation
