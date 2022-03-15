@@ -9639,7 +9639,19 @@ LocApiV02::addGeofence(uint32_t clientId,
 
     // confidence
     addReq.confidence_valid = true;
-    addReq.confidence = eQMI_LOC_GEOFENCE_CONFIDENCE_HIGH_V02; // always high
+    switch (options.confidence) {
+    case GEOFENCE_CONFIDENCE_LOW:
+        addReq.confidence = eQMI_LOC_GEOFENCE_CONFIDENCE_LOW_V02;
+        break;
+    case GEOFENCE_CONFIDENCE_MEDIUM:
+        addReq.confidence = eQMI_LOC_GEOFENCE_CONFIDENCE_MED_V02;
+        break;
+    case GEOFENCE_CONFIDENCE_HIGH:
+        addReq.confidence = eQMI_LOC_GEOFENCE_CONFIDENCE_HIGH_V02;
+        break;
+    default: // default to HIGH
+        addReq.confidence = eQMI_LOC_GEOFENCE_CONFIDENCE_HIGH_V02;
+    }
 
     // custom responsiveness
     addReq.customResponsivenessValue_valid = true;
