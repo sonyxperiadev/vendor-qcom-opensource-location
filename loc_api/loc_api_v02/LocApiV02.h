@@ -144,6 +144,8 @@ typedef uint64_t GpsSvMeasHeaderFlags;
 #define BIAS_GPSL1_GPSL2C_UNC_VALID     0x00800000
 #define BIAS_GALE1_GALE5B_VALID         0x01000000
 #define BIAS_GALE1_GALE5B_UNC_VALID     0x02000000
+#define BIAS_BDSB1_BDSB2BI_VALID        0x04000000
+#define BIAS_BDSB1_BDSB2BI_UNC_VALID    0x08000000
 
 typedef struct {
     uint64_t flags;
@@ -171,13 +173,14 @@ typedef struct {
     float galE1_galE5aUnc;
     float galE1_galE5b;
     float galE1_galE5bUnc;
-
     float bdsB1;
     float bdsB1Unc;
     float bdsB1_bdsB1c;
     float bdsB1_bdsB1cUnc;
     float bdsB1_bdsB2a;
     float bdsB1_bdsB2aUnc;
+    float bdsB1_bdsB2bi;
+    float bdsB1_bdsB2biUnc;
 } timeBiases;
 
 /* This class derives from the LocApiBase class.
@@ -576,6 +579,8 @@ public:
 
   virtual void getParameter(uint32_t sessionId, GnssConfigFlagsMask flags,
                             LocApiResponse* adapterResponse=nullptr);
+  virtual void setTribandState(bool enabled);
+
   /*
   Returns
   Current value of GPS Lock on success
