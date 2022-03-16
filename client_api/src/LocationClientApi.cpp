@@ -1334,6 +1334,7 @@ string GnssLocation::toString() const {
     out += FIELDVAL_DEC(protectVertical);
     out += FIELDVAL_DEC(elapsedRealTimeNs);
     out += FIELDVAL_DEC(elapsedRealTimeUncNs);
+    out += FIELDVAL_DEC(timeUncMs);
     return out;
 }
 
