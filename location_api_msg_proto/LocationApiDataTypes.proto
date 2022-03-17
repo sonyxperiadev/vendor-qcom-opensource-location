@@ -80,8 +80,9 @@ enum LocationApiDataTypesVersion {
     LOCAPI_DATA_TYPES_VER_MAJOR = 1;
     // Minor - New features / API addition, new message/elemtent addition.
     // Bump the last byte of version i.e. x.2 to x.3
-    // Minor version 21: add time unc to basic location report
-    LOCAPI_DATA_TYPES_VER_MINOR = 21;
+    // Minor version 22: Add AntennaInfo messages for LCA
+    LOCAPI_DATA_TYPES_VER_MINOR = 22;
+
 }
 
 // ============================================================================
@@ -653,6 +654,10 @@ enum PBLocationCapabilitiesMask {
     /** This mask indicates QDR3_C license bundle is enabled.
      *  This bundle includes features for SV Polynomial. <br/> */
     PB_LOCATION_CAPS_QWES_QDR3                         = 131072;
+    /** This mask indicates DGNSS license bundle is enabled. <br/> */
+    PB_LOCATION_CAPS_QWES_DGNSS                        = 262144;
+    /** This mask indicates Antenna info is enabled. <br/> */
+    PB_LOCATION_CAPS_ANTENNA_INFO                      = 524288;
 }
 
 enum PBGnssDataMask {
@@ -1596,3 +1601,33 @@ message PBGnssDebugReport {
     PBGnssDebugTime time = 2;
     repeated PBGnssDebugSatelliteInfo satelliteInfo = 3;
 }
+
+// Antenna Info messages
+message PBGnssCoordinate {
+    double x = 1;
+    double xUncertainty = 2;
+    double y = 3;
+    double yUncertainty = 4;
+    double z = 5;
+    double zUncertainty = 6;
+}
+
+message PB2DimensionDoubleVector {
+    uint32 row = 1;
+    uint32 column = 2;
+    repeated double value = 3;
+}
+
+message PBGnssAntennaInformation {
+    double carrierFrequencyMHz = 1;
+    PBGnssCoordinate phaseCenterOffsetCoordinateMillimeters = 2;
+    PB2DimensionDoubleVector phaseCenterVariationCorrectionMillimeters = 3;
+    PB2DimensionDoubleVector phaseCenterVariationCorrectionUncertaintyMillimeters = 4;
+    PB2DimensionDoubleVector signalGainCorrectionDbi = 5;
+    PB2DimensionDoubleVector signalGainCorrectionUncertaintyDbi = 6;
+}
+
+message PBAntennaInformation {
+    repeated PBGnssAntennaInformation antennaInfos = 1;
+}
+

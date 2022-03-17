@@ -82,8 +82,8 @@ enum LocationApiMsgVersion {
     LOCAPI_MSG_VER_MAJOR = 1;
     // Minor - New features / API addition, new message/elemtent addition.
     // Bump the last byte of version i.e. x.2 to x.3
-    // Minor version 12: Add DC control message
-    LOCAPI_MSG_VER_MINOR = 12;
+    // Minor version 13: Add AntennaInfo messages for LCA
+    LOCAPI_MSG_VER_MINOR = 13;
 }
 
 // ============================================================================
@@ -158,6 +158,10 @@ enum PBELocMsgID {
 
     // Disaster and crisis reports
     PB_E_LOCAPI_DC_REPORT_MSG_ID = 35;
+
+    // Antenna Info
+    PB_E_LOCAPI_GET_ANTENNA_INFO_MSG_ID = 36;
+    PB_E_LOCAPI_ANTENNA_INFO_MSG_ID = 37;
 
     // ping
     PB_E_LOCAPI_PINGTEST_MSG_ID = 99;
@@ -668,6 +672,16 @@ message PBLocConfigGetXtraStatusRespMsg {
 // PB_E_LOCAPI_GET_DEBUG_RESP_MSG_ID
 message PBLocAPIGetDebugRespMsg {
     PBGnssDebugReport mDebugReport = 1;
+}
+
+// defintion for message with msg id of
+// PB_E_LOCAPI_GET_ANTENNA_INFO_MSG_ID
+// LocAPIGetAntennaInfoMsg - no struct member
+
+// defintion for message with msg id of
+// PB_E_LOCAPI_ANTENNA_INFO_MSG_ID
+message PBLocAPIAntennaInfoMsg {
+    PBAntennaInformation mAntennaInformation = 1;
 }
 
 //*****************************
