@@ -286,6 +286,7 @@ private:
     void getConstellationSecondaryBandConfig(
             const LocConfigGetConstellationSecondaryBandConfigReqMsg* pReqMsg);
     void getDebugReport(const LocAPIGetDebugReqMsg* pReqMsg);
+    void getAntennaInfo(const LocAPIGetAntennaInfoMsg* pMsg);
 
     // Location configuration API util routines
     void addConfigRequestToMap(uint32_t sessionId,

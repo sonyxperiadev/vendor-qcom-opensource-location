@@ -83,7 +83,6 @@ static const loc_param_s_type gConfigTable[] =
     {"DEBUG_LEVEL", &gDebug, NULL, 'n'}
 };
 
-
 namespace location_client {
 
 static uint32_t gfIdGenerator = LOCATION_CLIENT_SESSION_ID_INVALID;
@@ -1306,7 +1305,8 @@ LocationClientApiImpl::LocationClientApiImpl(capabilitiesCallback capabilitiescb
         mSingleTerrestrialPosRespCb(nullptr),
         mPingTestCb(nullptr),
         mMsgTask("LcaMsgTask"),
-        mLogger()
+        mLogger(),
+        mpAntennaInfoCb(nullptr)
 {
     // read configuration file
     UTIL_READ_CONF(LOC_PATH_GPS_CONF, gConfigTable);
@@ -2513,6 +2513,47 @@ void LocationClientApiImpl::processGetDebugRespCb(const LocAPIGetDebugRespMsg* p
     notify();
 }
 
+uint32_t LocationClientApiImpl::getAntennaInfo(AntennaInfoCallback* cb) {
+    struct GetAntennaInfoMsg : public LocMsg {
+        GetAntennaInfoMsg(LocationClientApiImpl* apiImpl) :
+                mApiImpl(apiImpl) {}
+        virtual ~GetAntennaInfoMsg() {}
+        void proc() const {
+            string pbStr;
+            LocAPIGetAntennaInfoMsg msg(mApiImpl->mSocketName, &mApiImpl->mPbufMsgConv);
+            if (msg.serializeToProtobuf(pbStr)) {
+                bool rc = mApiImpl->sendMessage(
+                    reinterpret_cast<uint8_t*>((uint8_t*)pbStr.c_str()),
+                    pbStr.size());
+                LOC_LOGd(">>> send LocAPIGetAntennaInfoMsg rc=%d", rc);
+            }
+            else {
+                LOC_LOGe("LocAPIGetAntennaInfoMsg serializeToProtobuf failed");
+            }
+        }
+
+        LocationClientApiImpl* mApiImpl;
+    };
+
+    if (!mHalRegistered) {
+        LOC_LOGe("Not registered yet");
+        return ANTENNA_INFO_ERROR_GENERIC;
+    }
+    mpAntennaInfoCb = cb;
+    mMsgTask.sendMsg(new (nothrow) GetAntennaInfoMsg(this));
+    return ANTENNA_INFO_SUCCESS;
+}
+
+void LocationClientApiImpl::processAntennaInfo(
+        const LocAPIAntennaInfoMsg* pAntennaInfoMsg) {
+    if (mpAntennaInfoCb) {
+        (*mpAntennaInfoCb)((std::vector<GnssAntennaInformation> &)
+                (pAntennaInfoMsg->mAntennaInfo.antennaInfos));
+    } else {
+        LOC_LOGe("NULL mpAntennaInfoCb");
+    }
+}
+
 /******************************************************************************
 LocationClientApiImpl - LocIpc onReceive handler
 ******************************************************************************/
@@ -3090,6 +3131,19 @@ void IpcListener::onReceive(const char* data, uint32_t length,
                     mApiImpl.mSingleTerrestrialPosRespCb = nullptr;
                     mApiImpl.mSingleTerrestrialPosCb = nullptr;
                 }
+                break;
+            }
+
+            case E_LOCAPI_ANTENNA_INFO_MSG_ID:
+            {
+                PBLocAPIAntennaInfoMsg antennaInfoMsg;
+                if (0 == antennaInfoMsg.ParseFromString(pbLocApiMsg.payload())) {
+                    LOC_LOGe("Failed to parse PBLocAPIAntennaInfoMsg from payload!!");
+                    return;
+                }
+                LocAPIAntennaInfoMsg msg(sockName.c_str(),
+                    antennaInfoMsg, &mApiImpl.mPbufMsgConv);
+                mApiImpl.processAntennaInfo((LocAPIAntennaInfoMsg*)&msg);
                 break;
             }
 

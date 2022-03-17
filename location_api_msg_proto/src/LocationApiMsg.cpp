@@ -152,6 +152,10 @@ const char* LocApiMsgString(ELocMsgID msgId) {
         return "E_LOCAPI_GET_DEBUG_REQ_MSG_ID";
     case E_LOCAPI_GET_DEBUG_RESP_MSG_ID:
         return "E_LOCAPI_GET_DEBUG_RESP_MSG_ID";
+    case E_LOCAPI_GET_ANTENNA_INFO_MSG_ID:
+        return "E_LOCAPI_GET_ANTENNA_INFO_MSG_ID";
+    case E_LOCAPI_ANTENNA_INFO_MSG_ID:
+        return "E_LOCAPI_ANTENNA_INFO_MSG_ID";
     case E_LOCAPI_PINGTEST_MSG_ID:
         return "E_LOCAPI_PINGTEST_MSG_ID";
     case E_INTAPI_CONFIG_CONSTRAINTED_TUNC_MSG_ID:
@@ -2728,6 +2732,8 @@ int LocConfigGetConstellationSecondaryBandConfigRespMsg::serializeToProtobuf(str
     return protoStr.size();
 }
 
+// Convert LocAPIGetDebugReqMsg ->
+// PBLocAPIGetDebugReqMsg
 int LocAPIGetDebugReqMsg::serializeToProtobuf(string& protoStr) {
     PBLocAPIMsgHeader pLocApiMsgHdr;
 
@@ -2753,6 +2759,8 @@ int LocAPIGetDebugReqMsg::serializeToProtobuf(string& protoStr) {
     return protoStr.size();
 }
 
+// Convert LocAPIGetDebugRespMsg ->
+// PBLocAPIGetDebugRespMsg
 int LocAPIGetDebugRespMsg::serializeToProtobuf(string& protoStr) {
     PBLocAPIGetDebugRespMsg pbMsg;
     PBLocAPIMsgHeader pLocApiMsgHdr;
@@ -2846,6 +2854,81 @@ int LocIntApiInjectLocationMsg::serializeToProtobuf(string& protoStr) {
     }
 
     pbMsg.clear_location();
+    return protoStr.size();
+}
+
+// Convert LocAPIGetAntennaInfoMsg ->
+// PBLocAPIGetAntennaInfoMsg
+int LocAPIGetAntennaInfoMsg::serializeToProtobuf(string& protoStr) {
+    PBLocAPIMsgHeader pLocApiMsgHdr;
+    if (nullptr == pLocApiPbMsgConv) {
+        LOC_LOGe("pLocApiPbMsgConv is null!");
+        return 0;
+    }
+    // string      mSocketName = 1;
+    pLocApiMsgHdr.set_msocketname(mSocketName);
+    // PBELocMsgID  msgId = 2;
+    pLocApiMsgHdr.set_msgid(pLocApiPbMsgConv->getPBEnumForELocMsgID(msgId));
+    // uint32   msgVersion = 3;
+    pLocApiMsgHdr.set_msgversion(msgVersion);
+    // LocAPIGetAntennaInfoMsg - no struct member
+    // bytes       payload = 4;
+    // uint32   payloadSize = 5;
+    pLocApiMsgHdr.set_payloadsize(sizeof(LocAPIGetAntennaInfoMsg));
+    if (!pLocApiMsgHdr.SerializeToString(&protoStr)) {
+        LOC_LOGe("SerializeToString on pLocApiMsgHdr failed!");
+        return 0;
+    }
+
+    return protoStr.size();
+}
+
+// Convert LocAPIAntennaInfoMsg ->
+// PBLocAPIAntennaInfoMsg
+int LocAPIAntennaInfoMsg::serializeToProtobuf(string& protoStr) {
+    PBLocAPIAntennaInfoMsg pbMsg;
+    PBLocAPIMsgHeader pLocApiMsgHdr;
+    if (nullptr == pLocApiPbMsgConv) {
+        LOC_LOGe("pLocApiPbMsgConv is null!");
+        return 0;
+    }
+    // string      mSocketName = 1;
+    pLocApiMsgHdr.set_msocketname(mSocketName);
+    // PBELocMsgID  msgId = 2;
+    pLocApiMsgHdr.set_msgid(pLocApiPbMsgConv->getPBEnumForELocMsgID(msgId));
+    // uint32   msgVersion = 3;
+    pLocApiMsgHdr.set_msgversion(msgVersion);
+
+    // >>>> PBLocAPIAntennaInfoMsg conversion
+    // PBAntennaInformation mAntennaInformation = 1
+    PBAntennaInformation* pbAntennaInforamtion = pbMsg.mutable_mantennainformation();
+    if (nullptr != pbAntennaInforamtion) {
+        if (pLocApiPbMsgConv->convertAntennaInfoToPB(mAntennaInfo,
+                pbAntennaInforamtion)) {
+            LOC_LOGe("convertAntennaInfoToPB failed");
+            free(pbAntennaInforamtion);
+            return 0;
+        }
+    } else {
+        LOC_LOGe("mutable_mantennainformation failed");
+        return 0;
+    }
+
+    string pbStr;
+    if (!pbMsg.SerializeToString(&pbStr)) {
+        LOC_LOGe("SerializeToString failed!");
+        return 0;
+    }
+    // bytes       payload = 4;
+    pLocApiMsgHdr.set_payload(pbStr);
+    // uint32   payloadSize = 5;
+    pLocApiMsgHdr.set_payloadsize(sizeof(LocAPIAntennaInfoMsg));
+    if (!pLocApiMsgHdr.SerializeToString(&protoStr)) {
+        LOC_LOGe("SerializeToString on pLocApiMsgHdr failed!");
+        return 0;
+    }
+    // free memory
+    pLocApiPbMsgConv->freeupPBAntennaInfoMsg(pbMsg);
     return protoStr.size();
 }
 
@@ -3605,7 +3688,7 @@ LocIntApiInjectLocationMsg::LocIntApiInjectLocationMsg(const char* name,
 }
 
 // Decode PBLocAPIGetDebugRespMsg ->
-// LocConfigGetDebugRespMsg
+// LocAPIGetDebugRespMsg
 LocAPIGetDebugRespMsg::LocAPIGetDebugRespMsg(const char* name,
         const PBLocAPIGetDebugRespMsg& pbMsg,
         const LocationApiPbMsgConv* pbMsgConv) :
@@ -3619,6 +3702,23 @@ LocAPIGetDebugRespMsg::LocAPIGetDebugRespMsg(const char* name,
     // GnssDebugReport mDebugReport = 1;
     pLocApiPbMsgConv->pbConvertToGnssDebugReport(
             pbMsg.mdebugreport(), mDebugReport);
+}
+
+// Decode PBLocAPIAntennaInfoMsg ->
+// LocAPIAntennaInfoMsg
+LocAPIAntennaInfoMsg::LocAPIAntennaInfoMsg(const char* name,
+    const PBLocAPIAntennaInfoMsg& pbMsg,
+    const LocationApiPbMsgConv* pbMsgConv) :
+    LocAPIMsgHeader(name, E_LOCAPI_ANTENNA_INFO_MSG_ID, pbMsgConv) {
+    if (nullptr == pLocApiPbMsgConv) {
+        LOC_LOGe("pLocApiPbMsgConv is null!");
+        return;
+    }
+
+    // >>>> PBLocAPIAntennaInfoMsg conversion {
+    // AntennaInformation mAntennaInfo = 1;
+    pLocApiPbMsgConv->pbConvertToAntennaInfo(
+        pbMsg.mantennainformation(), mAntennaInfo);
 }
 
 // Decode PBLocAPIPingTestReqMsg -> LocAPIPingTestReqMsg

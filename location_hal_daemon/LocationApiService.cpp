@@ -723,6 +723,11 @@ void LocationApiService::processClientMsg(const char* data, uint32_t length) {
             break;
         }
 
+        case E_LOCAPI_GET_ANTENNA_INFO_MSG_ID: {
+            getAntennaInfo((const LocAPIGetAntennaInfoMsg*)&locApiMsg);
+            break;
+        }
+
         default: {
             LOC_LOGe("Unknown message with id: %d ", eLocMsgid);
             break;
@@ -958,13 +963,24 @@ void LocationApiService::getConstellationSecondaryBandConfig(
 
 void LocationApiService::getDebugReport(
         const LocAPIGetDebugReqMsg* pReqMsg) {
-
     LOC_LOGi(">--getDebugReport from %s", pReqMsg->mSocketName);
+    std::lock_guard<std::recursive_mutex> lock(mMutex);
     LocHalDaemonClientHandler* pClient = getClient(pReqMsg->mSocketName);
     if (pClient) {
         pClient->getDebugReport();
     } else {
         LOC_LOGe(">-- invalid client=%s", pReqMsg->mSocketName);
+    }
+}
+
+void LocationApiService::getAntennaInfo(const LocAPIGetAntennaInfoMsg* pMsg) {
+    LOC_LOGi(">--getAntennaInfo from %s", pMsg->mSocketName);
+    std::lock_guard<std::recursive_mutex> lock(mMutex);
+    LocHalDaemonClientHandler* pClient = getClient(pMsg->mSocketName);
+    if (pClient) {
+        pClient->getAntennaInfo();
+    } else {
+        LOC_LOGe(">-- invalid client=%s", pMsg->mSocketName);
     }
 }
 

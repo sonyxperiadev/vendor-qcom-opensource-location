@@ -112,8 +112,8 @@ public:
                 mSubscriptionMask(0),
                 mEngineInfoRequestMask(0),
                 mGeofenceIds(nullptr),
-                mIpcSender(createSender(clientname.c_str())) {
-
+                mIpcSender(createSender(clientname.c_str())),
+                mAntennaInfoCb(*this) {
 
         if (mClientType == LOCATION_CLIENT_API) {
             updateSubscription(E_LOC_CB_GNSS_LOCATION_INFO_BIT);
@@ -167,6 +167,7 @@ public:
     void sendTerrestrialFix(LocationError error, const Location& location);
     void getDebugReport();
     void sendCapabilitiesMsg();
+    void getAntennaInfo();
 
     inline shared_ptr<LocIpcSender> getIpcSender () {return mIpcSender;};
     inline int getServiceId() {return mServiceId;}  // for EAP client
@@ -180,6 +181,15 @@ public:
     std::queue<ELocMsgID> mGfPendingMessages;
 
 private:
+    struct AntennaInfoHalClientCallback : public AntennaInfoCallback {
+        LocHalDaemonClientHandler& mLocHalDaemonClient;
+        inline AntennaInfoHalClientCallback(LocHalDaemonClientHandler& locHalDaemonClient) :
+            AntennaInfoCallback(), mLocHalDaemonClient(locHalDaemonClient) {}
+        inline virtual void operator()(std::vector<GnssAntennaInformation>& antennaInfo) override {
+            mLocHalDaemonClient.onAntennaInfoCb(antennaInfo);
+        }
+    };
+
     inline ~LocHalDaemonClientHandler() {}
 
     // Location API callback functions
@@ -203,6 +213,7 @@ private:
     void onLocationSystemInfoCb(LocationSystemInfo systemInfo);
     void onDcReportCb(const GnssDcReportInfo& dcReportInfo);
     void onLocationApiDestroyCompleteCb();
+    void onAntennaInfoCb(std::vector<GnssAntennaInformation>& gnssAntennaInformations);
 
     // send ipc message to this client for serialized payload
     bool sendMessage(const char* msg, size_t msglen, ELocMsgID msg_id) {
@@ -247,6 +258,7 @@ private:
     uint32_t* mGeofenceIds;
     shared_ptr<LocIpcSender> mIpcSender;
     std::unordered_map<uint32_t, uint32_t> mGfIdsMap; //geofence ID map, clientId-->session
+    AntennaInfoHalClientCallback mAntennaInfoCb;
 };
 
 #endif //LOCHAL_CLIENT_HANDLER_H
