@@ -3123,17 +3123,10 @@ void LocApiV02 :: reportPosition (
                 multiBandTypesAvailable = true;
             }
 
-            LOC_LOGv("sv length %d ", gnssSvUsedList_len);
-
-            locationExtended.numOfMeasReceived = gnssSvUsedList_len;
-            memset(locationExtended.measUsageInfo, 0, sizeof(locationExtended.measUsageInfo));
-            // Set of used_in_fix SV ID
-            bool reported = LocApiBase::needReport(location,
-                                                   (eQMI_LOC_SESS_STATUS_IN_PROGRESS_V02 ==
-                                                   location_report_ptr->sessionStatus ?
-                                                   LOC_SESS_INTERMEDIATE : LOC_SESS_SUCCESS),
-                                                   locationExtended.tech_mask);
-            if (unpropagatedPosition || reported) {
+            LOC_LOGv("gnssSvUsedList_len %d ", gnssSvUsedList_len);
+            if ((eQMI_LOC_SESS_STATUS_SUCCESS_V02 == location_report_ptr->sessionStatus) ||
+                    unpropagatedPosition) {
+                locationExtended.numOfMeasReceived = gnssSvUsedList_len;
                 for (idx = 0; idx < gnssSvUsedList_len; idx++)
                 {
                     gnssSvIdUsed = svUsedList[idx];
