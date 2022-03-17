@@ -1203,6 +1203,10 @@ typedef union
    /** Sent by the engine to inform power state change
     QMI_LOC_EVENT_PLATFORM_POWER_STATE_CHANGED_IND_V02 */
 
+   const qmiLocEventEngineLockStateIndMsgT_v02 *pEngineLockStateIndMsg;
+   /** Sent by the engine to notify client about engine lock state
+   QMI_LOC_EVENT_ENGINE_LOCK_STATE_IND_V02 */
+
 }locClientEventIndUnionType;
 
 
