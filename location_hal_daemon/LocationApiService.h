@@ -61,7 +61,6 @@ IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
 OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN
 IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
-
 #ifndef LOCATIONAPISERVICE_H
 #define LOCATIONAPISERVICE_H
 
@@ -195,7 +194,7 @@ public:
     // protobuf conversion util class
     LocationApiPbMsgConv mPbufMsgConv;
 
-    static std::mutex mMutex;
+    static std::recursive_mutex mMutex;
 
     // Utility routine used by maintenance timer
     void performMaintenance();
