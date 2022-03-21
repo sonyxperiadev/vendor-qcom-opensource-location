@@ -80,8 +80,8 @@ enum LocationApiDataTypesVersion {
     LOCAPI_DATA_TYPES_VER_MAJOR = 1;
     // Minor - New features / API addition, new message/elemtent addition.
     // Bump the last byte of version i.e. x.2 to x.3
-    // Minor version 20: Add LCA disaster and control report
-    LOCAPI_DATA_TYPES_VER_MINOR = 20;
+    // Minor version 21: add time unc to basic location report
+    LOCAPI_DATA_TYPES_VER_MINOR = 21;
 }
 
 // ============================================================================
@@ -539,10 +539,12 @@ enum PBLocationFlagsMask {
     PB_LOCATION_HAS_SPEED_ACCURACY_BIT       = 0x0040;
     // location has valid bearing accuracy
     PB_LOCATION_HAS_BEARING_ACCURACY_BIT     = 0x0080;
-    // location has valid valid Location::timestamp
+    // location has valid Location::timestamp
     PB_LOCATION_HAS_TIMESTAMP_BIT            = 0x0100;
-    // location has valid valid elapsedRealTime
+    // location has valid elapsedRealTime
     PB_LOCATION_HAS_ELAPSED_REAL_TIME_BIT    = 0x0200;
+    // location has valid time uncertainty
+    PB_LOCATION_HAS_TIME_UNC_BIT             = 0x0400;
 }
 
 enum PBLocationTechnologyMask {
@@ -775,6 +777,8 @@ message PBLocation {
     uint64 elapsedRealTime = 13;
     /** boot timestamp uncertainty corresponding to GPS timestamp, in ns */
     uint64 elapsedRealTimeUnc = 14;
+    /** time uncertainty in msec */
+    float  timeUncMs = 15;
 }
 
 message PBLocationOptions {
