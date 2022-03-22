@@ -1,4 +1,4 @@
-/* Copyright (c) 2011-2021, The Linux Foundation. All rights reserved.
+/* Copyright (c) 2011-2022, The Linux Foundation. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -10724,6 +10724,14 @@ LocApiV02::startTimeBasedTracking(const TrackingOptions& options, LocApiResponse
         // Force TBM = TBF for power mode M4
         if (GNSS_POWER_MODE_M4 == options.powerMode) {
             start_msg.powerMode.timeBetweenMeasurement = start_msg.minInterval;
+        }
+    }
+
+    //special req type
+    if (SPECIAL_REQ_INVALID != options.specialReq) {
+        if (SPECIAL_REQ_SHORT_CODE == options.specialReq) {
+            start_msg.specialReqType_valid = 1;
+            start_msg.specialReqType = eQMI_LOC_SPECIAL_REQUEST_SHORT_CODE_V02;
         }
     }
 
