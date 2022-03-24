@@ -26,6 +26,42 @@
  * IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/*
+Changes from Qualcomm Innovation Center are provided under the following license:
+
+Copyright (c) 2022 Qualcomm Innovation Center, Inc. All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted (subject to the limitations in the
+disclaimer below) provided that the following conditions are met:
+
+    * Redistributions of source code must retain the above copyright
+      notice, this list of conditions and the following disclaimer.
+
+    * Redistributions in binary form must reproduce the above
+      copyright notice, this list of conditions and the following
+      disclaimer in the documentation and/or other materials provided
+      with the distribution.
+
+    * Neither the name of Qualcomm Innovation Center, Inc. nor the names of its
+      contributors may be used to endorse or promote products derived
+      from this software without specific prior written permission.
+
+NO EXPRESS OR IMPLIED LICENSES TO ANY PARTY'S PATENT RIGHTS ARE
+GRANTED BY THIS LICENSE. THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT
+HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED
+WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR
+ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE
+GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER
+IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN
+IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
+
 #ifndef LOCATIONAPIMSG_H
 #define LOCATIONAPIMSG_H
 
@@ -263,6 +299,10 @@ enum ELocMsgID {
     E_LOCAPI_GET_SINGLE_TERRESTRIAL_POS_REQ_MSG_ID = 31,
     E_LOCAPI_GET_SINGLE_TERRESTRIAL_POS_RESP_MSG_ID = 32,
 
+    // Debug Report
+    E_LOCAPI_GET_DEBUG_REQ_MSG_ID = 33,
+    E_LOCAPI_GET_DEBUG_RESP_MSG_ID = 34,
+
     // ping
     E_LOCAPI_PINGTEST_MSG_ID = 99,
 
@@ -296,6 +336,8 @@ enum ELocMsgID {
     E_INTAPI_GET_CONSTELLATION_SECONDARY_BAND_CONFIG_RESP_MSG_ID = 307,
 };
 
+const char* LocApiMsgString(ELocMsgID msgId);
+
 typedef uint32_t LocationCallbacksMask;
 enum ELocationCallbacksOption {
     E_LOC_CB_TRACKING_BIT               = (1<<0), /**< Register for DBT location report */
@@ -322,6 +364,11 @@ enum ELocationCallbacksOption {
                                        E_LOC_CB_GNSS_NHZ_MEAS_BIT|\
                                        E_LOC_CB_ENGINE_LOCATIONS_INFO_BIT|\
                                        E_LOC_CB_SIMPLE_LOCATION_INFO_BIT)
+
+#define LOCATION_BATCHING_SESSION_MASK (E_LOC_CB_BATCHING_BIT|\
+                                        E_LOC_CB_BATCHING_STATUS_BIT)
+
+#define LOCATION_GEOFENCE_SESSION_MASK (E_LOC_CB_GEOFENCE_BREACH_BIT)
 
 typedef uint32_t EngineInfoCallbacksMask;
 enum EEngineInfoCallbacksMask {
@@ -557,8 +604,16 @@ struct LocAPIStartTrackingReqMsg: LocAPIMsgHeader
 // defintion for message with msg id of E_LOCAPI_STOP_TRACKING_MSG_ID
 struct LocAPIStopTrackingReqMsg: LocAPIMsgHeader
 {
-    inline LocAPIStopTrackingReqMsg(const char* name, const LocationApiPbMsgConv *pbMsgConv) :
-        LocAPIMsgHeader(name, E_LOCAPI_STOP_TRACKING_MSG_ID, pbMsgConv) { }
+    bool clearSubscriptions;
+
+    inline LocAPIStopTrackingReqMsg(const char* name, const LocationApiPbMsgConv *pbMsgConv,
+                                    bool clearSubsc) :
+        LocAPIMsgHeader(name, E_LOCAPI_STOP_TRACKING_MSG_ID, pbMsgConv),
+        clearSubscriptions(clearSubsc) { }
+
+    LocAPIStopTrackingReqMsg(const char* name,
+        const PBLocAPIStopTrackingReqMsg  &pbStopTrackingReqMsg,
+        const LocationApiPbMsgConv *pbMsgConv);
 
     int serializeToProtobuf(string& protoStr) override;
 };
@@ -1347,6 +1402,31 @@ struct LocConfigGetConstellationSecondaryBandConfigRespMsg: LocAPIMsgHeader
     LocConfigGetConstellationSecondaryBandConfigRespMsg(const char* name,
             const PBLocConfigGetConstltnSecondaryBandConfigRespMsg &pbCfgGetConstSecBandCfgResp,
             const LocationApiPbMsgConv *pbMsgConv);
+
+    int serializeToProtobuf(string& protoStr) override;
+};
+
+struct LocAPIGetDebugReqMsg : LocAPIMsgHeader
+{
+    inline LocAPIGetDebugReqMsg(const char* name,
+            const LocationApiPbMsgConv* pbMsgConv) :
+        LocAPIMsgHeader(name, E_LOCAPI_GET_DEBUG_REQ_MSG_ID, pbMsgConv) { }
+
+    int serializeToProtobuf(string& protoStr) override;
+};
+
+struct LocAPIGetDebugRespMsg : LocAPIMsgHeader
+{
+    GnssDebugReport mDebugReport;
+
+    inline LocAPIGetDebugRespMsg(const char* name,
+            GnssDebugReport debugReport,
+            const LocationApiPbMsgConv* pbMsgConv) :
+        LocAPIMsgHeader(name, E_LOCAPI_GET_DEBUG_RESP_MSG_ID, pbMsgConv),
+        mDebugReport(debugReport) { }
+    LocAPIGetDebugRespMsg(const char* name,
+        const PBLocAPIGetDebugRespMsg& pbMsg,
+        const LocationApiPbMsgConv* pbMsgConv);
 
     int serializeToProtobuf(string& protoStr) override;
 };

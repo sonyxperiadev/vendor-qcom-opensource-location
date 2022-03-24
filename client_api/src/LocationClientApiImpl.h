@@ -83,22 +83,20 @@ IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     #include <unordered_set>
     #include <unordered_map>
 #endif
+#include <condition_variable>
+#include <chrono>
 
-using namespace std;
 using namespace loc_util;
 
 namespace location_client
 {
-
-enum ReportCbEnumType {
-    REPORT_CB_TYPE_NONE   = 0,
-    /** cb for GNSS info, including location, sv info, nmea and
-     *  etc */
-    REPORT_CB_GNSS_INFO   = 1,
-    /** cb for GNSS info, including location, sv info, nmea and
-     *  etc and also for location of other engines running in the
-     *  system */
-    REPORT_CB_ENGINE_INFO = 2,
+enum LocationCallbackType {
+    // Tracking callbacks type
+    TRACKING_CBS = 0,
+    // Batching callbacks type
+    BATCHING_CBS = 1,
+    // Geofence callbacks type
+    GEOFENCE_CBS = 2
 };
 
 typedef std::function<void(
@@ -120,9 +118,27 @@ public:
     inline uint32_t getClientId() { return mId; }
 };
 
+// utility for wait / notify
+class Waitable {
+    std::mutex mMutex;
+    std::condition_variable mCond;
+public:
+    Waitable() = default;
+    ~Waitable() = default;
+
+    void wait(uint32_t ms) {
+        std::unique_lock<std::mutex> lock(mMutex);
+        mCond.wait_for(lock, std::chrono::milliseconds(ms));
+    }
+
+    void notify() {
+        mCond.notify_one();
+    }
+};
+
 class IpcListener;
 
-class LocationClientApiImpl : public ILocationAPI {
+class LocationClientApiImpl : public ILocationAPI, public Waitable {
     friend IpcListener;
 public:
     LocationClientApiImpl(capabilitiesCallback capabitiescb);
@@ -162,6 +178,8 @@ public:
     //GNSS
     virtual void gnssNiResponse(uint32_t id, GnssNiResponse response) override;
 
+    virtual void getDebugReport(GnssDebugReport& reports) override;
+
     // other interface
     void startPositionSession(const LocationCallbacks& callbacksOption,
                               const TrackingOptions& trackingOptions);
@@ -175,6 +193,10 @@ public:
     void updateLocationSystemInfoListener(
             locationSystemInfoCallback locationSystemInfoCb,
             responseCallback responseCb);
+
+    uint32_t startTrackingSync(TrackingOptions&);
+    uint32_t startBatchingSync(BatchingOptions&);
+    void updateCallbacksSync(LocationCallbacks& callbacks);
 
     void addGeofences(const LocationCallbacks& callbacksOption,
                       const std::vector<Geofence>& geofences);
@@ -225,15 +247,20 @@ public:
         return mLogger;
     }
 
+    void stopTrackingAndClearSubscriptions(uint32_t id);
+    void clearSubscriptions(LocationCallbackType cbTypeToClear);
+    void stopTrackingSync(bool clearSubscriptions);
+
 private:
     ~LocationClientApiImpl();
 
     inline LocationCapabilitiesMask getCapabilities() {return mCapsMask;}
     void capabilitesCallback(ELocMsgID  msgId, const void* msgData);
-    void updateTrackingOptionsSync(TrackingOptions& option);
+    void updateTrackingOptionsSync(TrackingOptions& option, bool clearSubscriptions);
     bool checkGeofenceMap(size_t count, uint32_t* ids);
     void addGeofenceMap(uint32_t id, Geofence& geofence);
     void eraseGeofenceMap(size_t count, uint32_t* ids);
+    bool isGeofenceMapEmpty();
 
     // convenient methods
     inline bool sendMessage(const uint8_t* data, uint32_t length) const {
@@ -242,6 +269,7 @@ private:
 
     void invokePositionSessionResponseCb(LocationError errCode);
     void diagLogGnssLocation(const GnssLocation &gnssLocation);
+    void processGetDebugRespCb(const LocAPIGetDebugRespMsg* pRespMsg);
 
     // protobuf conversion util class
     LocationApiPbMsgConv mPbufMsgConv;
@@ -269,6 +297,7 @@ private:
     uint16_t                   mYearOfHw;
     bool                       mPositionSessionResponseCbPending;
     uint64_t                   mSessionStartBootTimestampNs;
+    GnssDebugReport*           mpDebugReport;
 
     // callbacks
     LocationCallbacks       mLocationCbs;
@@ -297,6 +326,7 @@ private:
     std::unordered_map<uint32_t, Geofence> mGeofenceMap;
 
     LCAReportLoggerUtil        mLogger;
+
 };
 
 } // namespace location_client

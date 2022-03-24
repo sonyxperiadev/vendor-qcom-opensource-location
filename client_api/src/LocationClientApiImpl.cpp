@@ -1435,7 +1435,23 @@ void LocationClientApiImpl::destroy(locationApiDestroyCompleteCallback destroyCo
 /******************************************************************************
 LocationClientApiImpl - implementation
 ******************************************************************************/
+
 void LocationClientApiImpl::updateCallbacks(LocationCallbacks& callbacks) {
+    struct UpdateCallbacksReq : public LocMsg {
+        UpdateCallbacksReq(LocationClientApiImpl* apiImpl, const LocationCallbacks& callbacks) :
+                mApiImpl(apiImpl), mCallbacks(callbacks) {}
+        virtual ~UpdateCallbacksReq() {}
+        void proc() const {
+            mApiImpl->updateCallbacksSync(const_cast<LocationCallbacks&>(mCallbacks));
+        }
+
+        LocationClientApiImpl* mApiImpl;
+        LocationCallbacks mCallbacks;
+    };
+    mMsgTask.sendMsg(new (nothrow) UpdateCallbacksReq(this, callbacks));
+}
+
+void LocationClientApiImpl::updateCallbacksSync(LocationCallbacks& callbacks) {
     //convert callbacks to callBacksMask
     LocationCallbacksMask callBacksMask = 0;
 
@@ -1510,6 +1526,22 @@ void LocationClientApiImpl::updateCallbacks(LocationCallbacks& callbacks) {
 }
 
 uint32_t LocationClientApiImpl::startTracking(TrackingOptions& option) {
+    struct StartTrackingReq : public LocMsg {
+        StartTrackingReq(LocationClientApiImpl* apiImpl, const TrackingOptions& option) :
+                mApiImpl(apiImpl), mOptions(option) {}
+        virtual ~StartTrackingReq() {}
+        void proc() const {
+            mApiImpl->startTrackingSync(const_cast<TrackingOptions&>(mOptions));
+        }
+
+        LocationClientApiImpl* mApiImpl;
+        TrackingOptions mOptions;
+    };
+    mMsgTask.sendMsg(new (nothrow) StartTrackingReq(this, option));
+    return mClientId;
+}
+
+uint32_t LocationClientApiImpl::startTrackingSync(TrackingOptions& option) {
     // check if option is updated
     bool isOptionUpdated = false;
 
@@ -1551,12 +1583,55 @@ uint32_t LocationClientApiImpl::startTracking(TrackingOptions& option) {
     } else if (isOptionUpdated) {
         // update a tracking session, mLocationOptions
         // will be updated in updateTrackingOptionsSync
-        updateTrackingOptionsSync(const_cast<TrackingOptions&>(option));
+        updateTrackingOptionsSync(const_cast<TrackingOptions&>(option), true);
     } else {
         LOC_LOGd(">>> StartTrackingReq - no change in option");
         invokePositionSessionResponseCb(LOCATION_ERROR_SUCCESS);
     }
     return mSessionId;
+}
+
+// updateTrackingOptions is called from Android HIDL clients and must be purely used
+// to only update parameters of an ongoing session, and not start a new session.
+void LocationClientApiImpl::updateTrackingOptions(uint32_t id, TrackingOptions& options) {
+    struct UpdateTrackingReq : public LocMsg {
+        UpdateTrackingReq(LocationClientApiImpl* apiImpl, const TrackingOptions& options) :
+                mApiImpl(apiImpl), mUpdatedOptions(options) {}
+        virtual ~UpdateTrackingReq() {}
+        void proc() const {
+            // check if option is updated
+            bool isOptionUpdated = false;
+
+            if ((mApiImpl->mLocationOptions.minInterval != mUpdatedOptions.minInterval) ||
+                (mApiImpl->mLocationOptions.minDistance != mUpdatedOptions.minDistance) ||
+                (mApiImpl->mLocationOptions.locReqEngTypeMask !=
+                        mUpdatedOptions.locReqEngTypeMask)) {
+                isOptionUpdated = true;
+            }
+
+            if (!mApiImpl->mHalRegistered) {
+                LOC_LOGe(">>> updateTrackingOptions - Not registered yet");
+                return;
+            }
+
+            if (LOCATION_CLIENT_SESSION_ID_INVALID == mApiImpl->mSessionId) {
+                LOC_LOGe(">>> updateTrackingOptions - No ongoing session in progress");
+                return;
+            }
+
+            if (isOptionUpdated) {
+                // update a tracking session, mLocationOptions
+                // will be updated in updateTrackingOptionsSync
+                mApiImpl->updateTrackingOptionsSync(const_cast<TrackingOptions&>(mUpdatedOptions),
+                        false);
+            } else {
+                LOC_LOGd(">>> updateTrackingOptions - no change in option");
+            }
+        }
+        LocationClientApiImpl* mApiImpl;
+        TrackingOptions mUpdatedOptions;
+    };
+    mMsgTask.sendMsg(new (nothrow) UpdateTrackingReq(this, const_cast<TrackingOptions&>(options)));
 }
 
 void LocationClientApiImpl::startPositionSession(
@@ -1583,8 +1658,9 @@ void LocationClientApiImpl::startPositionSession(
                 mApiImpl->mSessionStartBootTimestampNs = ts.tv_sec * 1000000000ULL + ts.tv_nsec;
             }
 
-            mApiImpl->updateCallbacks(mCallbacksOption);
-            mApiImpl->startTracking(mTrackingOptions);
+            mApiImpl->clearSubscriptions(TRACKING_CBS);
+            mApiImpl->updateCallbacksSync(mCallbacksOption);
+            mApiImpl->startTrackingSync(mTrackingOptions);
         }
         LocationClientApiImpl* mApiImpl;
         mutable LocationCallbacks mCallbacksOption;
@@ -1601,40 +1677,85 @@ void LocationClientApiImpl::stopTracking(uint32_t) {
         StopTrackingReq(LocationClientApiImpl* apiImpl) : mApiImpl(apiImpl) {}
         virtual ~StopTrackingReq() {}
         void proc() const {
-            if (mApiImpl->mSessionId != LOCATION_CLIENT_SESSION_ID_INVALID) {
-                if (mApiImpl->mHalRegistered &&
-                        ((mApiImpl->mLocationOptions.minInterval != 0) ||
-                         (mApiImpl->mLocationOptions.minDistance != 0))) {
-                    string pbStr;
-                    LocAPIStopTrackingReqMsg msg(mApiImpl->mSocketName, &mApiImpl->mPbufMsgConv);
-                    if (msg.serializeToProtobuf(pbStr)) {
-                        bool rc = mApiImpl->sendMessage(
-                                reinterpret_cast<uint8_t *>((uint8_t *)pbStr.c_str()),
-                                        pbStr.size());
-                        LOC_LOGd(">>> StopTrackingReq rc=%d\n", rc);
-                    } else {
-                        LOC_LOGe("LocAPIStopTrackingReqMsg serializeToProtobuf failed");
-                    }
-                }
-            }
-
-            mApiImpl->mLocationOptions.minInterval = 0;
-            mApiImpl->mLocationOptions.minDistance = 0;
-            mApiImpl->mCallbacksMask = 0;
-            // handle callback that are not tied with fix session
-            if (mApiImpl->mLocationSysInfoCb) {
-                mApiImpl->mCallbacksMask |= E_LOC_CB_SYSTEM_INFO_BIT;
-            }
-            mApiImpl->mSessionId = LOCATION_CLIENT_SESSION_ID_INVALID;
-            mApiImpl->mPositionSessionResponseCbPending = false;
-            mApiImpl->mSessionStartBootTimestampNs = 0;
+            mApiImpl->stopTrackingSync(false);
         }
         LocationClientApiImpl* mApiImpl;
     };
     mMsgTask.sendMsg(new (nothrow) StopTrackingReq(this));
 }
 
-void LocationClientApiImpl::updateTrackingOptionsSync(TrackingOptions& option) {
+void LocationClientApiImpl::stopTrackingAndClearSubscriptions(uint32_t) {
+
+    struct StopTrackingReq : public LocMsg {
+        StopTrackingReq(LocationClientApiImpl* apiImpl) : mApiImpl(apiImpl) {}
+        virtual ~StopTrackingReq() {}
+        void proc() const {
+            mApiImpl->stopTrackingSync(true);
+            mApiImpl->clearSubscriptions(TRACKING_CBS);
+        }
+        LocationClientApiImpl* mApiImpl;
+    };
+    mMsgTask.sendMsg(new (nothrow) StopTrackingReq(this));
+}
+
+void LocationClientApiImpl::stopTrackingSync(bool clearSubscriptions) {
+    if (mSessionId != LOCATION_CLIENT_SESSION_ID_INVALID) {
+        if (mHalRegistered &&
+                ((mLocationOptions.minInterval != 0) ||
+                    (mLocationOptions.minDistance != 0))) {
+            string pbStr;
+            LocAPIStopTrackingReqMsg msg(mSocketName, &mPbufMsgConv,
+                    clearSubscriptions);
+            if (msg.serializeToProtobuf(pbStr)) {
+                bool rc = sendMessage(
+                        reinterpret_cast<uint8_t *>((uint8_t *)pbStr.c_str()),
+                                pbStr.size());
+                LOC_LOGd(">>> StopTrackingReq rc=%d\n", rc);
+            } else {
+                LOC_LOGe("LocAPIStopTrackingReqMsg serializeToProtobuf failed");
+            }
+        }
+    }
+
+    mLocationOptions.minInterval = 0;
+    mLocationOptions.minDistance = 0;
+    mSessionId = LOCATION_CLIENT_SESSION_ID_INVALID;
+    mPositionSessionResponseCbPending = false;
+    mSessionStartBootTimestampNs = 0;
+}
+
+void LocationClientApiImpl::clearSubscriptions(LocationCallbackType cbTypeToClear) {
+    switch (cbTypeToClear) {
+        case TRACKING_CBS:
+            mCallbacksMask &= ~LOCATION_SESSON_ALL_INFO_MASK;
+
+            mLocationCbs.trackingCb = nullptr;
+            mLocationCbs.gnssLocationInfoCb = nullptr;
+            mLocationCbs.gnssSvCb = nullptr;
+            mLocationCbs.gnssNmeaCb = nullptr;
+            mLocationCbs.gnssDataCb = nullptr;
+            mLocationCbs.gnssMeasurementsCb = nullptr;
+            mLocationCbs.gnssNHzMeasurementsCb = nullptr;
+            mLocationCbs.engineLocationsInfoCb = nullptr;
+            break;
+        case BATCHING_CBS:
+            mCallbacksMask &= ~LOCATION_BATCHING_SESSION_MASK;
+
+            mLocationCbs.batchingCb = nullptr;
+            mLocationCbs.batchingStatusCb = nullptr;
+            break;
+        case GEOFENCE_CBS:
+            mCallbacksMask &= ~LOCATION_GEOFENCE_SESSION_MASK;
+
+            mLocationCbs.geofenceBreachCb = nullptr;
+            mLocationCbs.geofenceStatusCb = nullptr;
+            break;
+        default: return;
+    }
+}
+
+void LocationClientApiImpl::updateTrackingOptionsSync(TrackingOptions& option,
+        bool clearSubscriptions) {
 
     LOC_LOGd(">>> updateTrackingOptionsSync,sessionId=%d, "
              "new Interval=%d Distance=%d, current Interval=%d Distance=%d",
@@ -1649,7 +1770,7 @@ void LocationClientApiImpl::updateTrackingOptionsSync(TrackingOptions& option) {
     if (((0 == option.minInterval) && (0 == option.minDistance)) &&
             ((mLocationOptions.minInterval != 0) ||
              (mLocationOptions.minDistance != 0))) {
-        LocAPIStopTrackingReqMsg msg(mSocketName, &mPbufMsgConv);
+        LocAPIStopTrackingReqMsg msg(mSocketName, &mPbufMsgConv, clearSubscriptions);
         if (msg.serializeToProtobuf(pbStr)) {
             rc = sendMessage(reinterpret_cast<uint8_t *>((uint8_t *)pbStr.c_str()),
                     pbStr.size());
@@ -1685,8 +1806,24 @@ void LocationClientApiImpl::updateTrackingOptionsSync(TrackingOptions& option) {
     mLocationOptions = option;
 }
 
-//Batching
 uint32_t LocationClientApiImpl::startBatching(BatchingOptions& batchOptions) {
+    struct StartBatchingReq : public LocMsg {
+        StartBatchingReq(LocationClientApiImpl* apiImpl, const BatchingOptions& batchOptions) :
+                mApiImpl(apiImpl), mBatchOptions(batchOptions) {}
+        virtual ~StartBatchingReq() {}
+        void proc() const {
+            mApiImpl->startBatchingSync(const_cast<BatchingOptions&>(mBatchOptions));
+        }
+
+        LocationClientApiImpl* mApiImpl;
+        BatchingOptions mBatchOptions;
+    };
+    mMsgTask.sendMsg(new (nothrow) StartBatchingReq(this, batchOptions));
+    return 0;
+}
+
+//Batching
+uint32_t LocationClientApiImpl::startBatchingSync(BatchingOptions& batchOptions) {
     if (!mHalRegistered) {
         mBatchingOptions = batchOptions;
         LOC_LOGe(">>> startBatching - Not registered yet");
@@ -1732,8 +1869,8 @@ void LocationClientApiImpl::startBatchingSession(const LocationCallbacks& callba
             // set up the flag to indicate that responseCb is pending
             mApiImpl->mPositionSessionResponseCbPending = true;
 
-            mApiImpl->updateCallbacks(mCallbacksOption);
-            mApiImpl->startBatching(mBatchingOptions);
+            mApiImpl->updateCallbacksSync(mCallbacksOption);
+            mApiImpl->startBatchingSync(mBatchingOptions);
         }
         LocationClientApiImpl* mApiImpl;
         mutable LocationCallbacks mCallbacksOption;
@@ -1818,6 +1955,10 @@ void LocationClientApiImpl::eraseGeofenceMap(size_t count, uint32_t* ids) {
     }
 }
 
+bool LocationClientApiImpl::isGeofenceMapEmpty() {
+    return mGeofenceMap.empty();
+}
+
 uint32_t* LocationClientApiImpl::addGeofences(size_t count, GeofenceOption* options,
         GeofenceInfo* infos) {
 
@@ -1866,7 +2007,7 @@ void LocationClientApiImpl::addGeofences(const LocationCallbacks& callbacksOptio
             }
             // set up the flag to indicate that responseCb is pending
             mApiImpl->mPositionSessionResponseCbPending = true;
-            mApiImpl->updateCallbacks(mCallbacksOption);
+            mApiImpl->updateCallbacksSync(mCallbacksOption);
 
             size_t count = mGeofences.size();
             mApiImpl->mLastAddedClientIds.clear();
@@ -2308,6 +2449,42 @@ void LocationClientApiImpl::getSingleTerrestrialPos(uint32_t timeoutMsec,
             terrestrialPositionCb, responseCb));
 }
 
+void LocationClientApiImpl::getDebugReport(GnssDebugReport& report) {
+
+    struct GetDebugReportReq : public LocMsg {
+
+        GetDebugReportReq(LocationClientApiImpl* apiImpl) :
+            mApiImpl(apiImpl) {}
+        virtual ~GetDebugReportReq() {}
+        void proc() const {
+            string pbStr;
+            LocAPIGetDebugReqMsg msg(mApiImpl->mSocketName, &mApiImpl->mPbufMsgConv);
+            if (msg.serializeToProtobuf(pbStr)) {
+                bool rc = mApiImpl->sendMessage(
+                    reinterpret_cast<uint8_t*>((uint8_t*)pbStr.c_str()),
+                    pbStr.size());
+                LOC_LOGd(">>> send LocAPIGetDebugReqMsg rc=%d", rc);
+            } else {
+                LOC_LOGe("LocAPIGetDebugReqMsg serializeToProtobuf failed");
+            }
+        }
+
+        LocationClientApiImpl* mApiImpl;
+    };
+
+    mpDebugReport = &report;
+    mMsgTask.sendMsg(new (nothrow) GetDebugReportReq(this));
+    wait(500);  //500ms
+}
+
+void LocationClientApiImpl::processGetDebugRespCb(const LocAPIGetDebugRespMsg* pRespMsg) {
+    *mpDebugReport = pRespMsg->mDebugReport;
+    for (uint32_t i = 0; i < pRespMsg->mDebugReport.mSatelliteInfo.size(); i++) {
+        mpDebugReport->mSatelliteInfo[i] = pRespMsg->mDebugReport.mSatelliteInfo[i];
+    }
+    notify();
+}
+
 /******************************************************************************
 LocationClientApiImpl - LocIpc onReceive handler
 ******************************************************************************/
@@ -2344,7 +2521,7 @@ void LocationClientApiImpl::capabilitesCallback(ELocMsgID msgId, const void* msg
         mSessionId = LOCATION_CLIENT_SESSION_ID_INVALID;
         TrackingOptions trackOption;
         trackOption.setLocationOptions(mLocationOptions);
-        (void)startTracking(trackOption);
+        (void)startTrackingSync(trackOption);
     }
 
     // hal daemon restarts
@@ -2440,8 +2617,8 @@ void IpcListener::onReceive(const char* data, uint32_t length,
             uint32_t payloadSize = pbLocApiMsg.payloadsize();
             // pbLocApiMsg.payload() contains the payload data.
 
-            LOC_LOGi(">-- onReceive Rcvd msg id: %d, sockname: %s, payload size: %d", eLocMsgid,
-                    sockName.c_str(), payloadSize);
+            LOC_LOGi(">-- onReceive Rcvd msg id: %d %s, sockname: %s, payload size: %d",
+                    eLocMsgid, LocApiMsgString(eLocMsgid), sockName.c_str(), payloadSize);
             LocAPIMsgHeader locApiMsg(sockName.c_str(), eLocMsgid);
 
             // throw away message that does not come from location hal daemon
@@ -2526,6 +2703,9 @@ void IpcListener::onReceive(const char* data, uint32_t length,
                             mApiImpl.eraseGeofenceMap(1, const_cast<uint32_t*>(
                                     &(pRespMsg->collectiveRes.resp[i].clientId)));
                         }
+                    }
+                    if (mApiImpl.isGeofenceMapEmpty()) {
+                        mApiImpl.clearSubscriptions(GEOFENCE_CBS);
                     }
                     mApiImpl.mLocationCbs.collectiveResponseCb(count, errs, ids);
                 }
@@ -2824,6 +3004,19 @@ void IpcListener::onReceive(const char* data, uint32_t length,
                 break;
             }
 
+            case E_LOCAPI_GET_DEBUG_RESP_MSG_ID:
+            {
+                PBLocAPIGetDebugRespMsg getDebugRespMsg;
+                if (0 == getDebugRespMsg.ParseFromString(pbLocApiMsg.payload())) {
+                    LOC_LOGe("Failed to parse cfgGetDebugRespMsg from payload!!");
+                    return;
+                }
+                LocAPIGetDebugRespMsg msg(sockName.c_str(),
+                        getDebugRespMsg, &mApiImpl.mPbufMsgConv);
+                mApiImpl.processGetDebugRespCb((LocAPIGetDebugRespMsg*)&msg);
+                break;
+            }
+
             case E_LOCAPI_GET_SINGLE_TERRESTRIAL_POS_RESP_MSG_ID:
             {
                 LOC_LOGd("<<< message = terrestrial pos info");
@@ -2886,9 +3079,6 @@ LocationClientApiImpl - Not implemented overrides
 ******************************************************************************/
 
 void LocationClientApiImpl::gnssNiResponse(uint32_t id, GnssNiResponse response) {
-}
-
-void LocationClientApiImpl::updateTrackingOptions(uint32_t id, TrackingOptions& options) {
 }
 
 

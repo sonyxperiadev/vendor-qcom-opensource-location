@@ -82,8 +82,8 @@ enum LocationApiMsgVersion {
     LOCAPI_MSG_VER_MAJOR = 1;
     // Minor - New features / API addition, new message/elemtent addition.
     // Bump the last byte of version i.e. x.2 to x.3
-    // Minor version 10: Add clearSubscription field in the PBLocAPIStopTrackingReqMsg
-    LOCAPI_MSG_VER_MINOR = 10;
+    // Minor version 11: Add DebugReport for LCA
+    LOCAPI_MSG_VER_MINOR = 11;
 }
 
 // ============================================================================
@@ -151,6 +151,10 @@ enum PBELocMsgID {
     // Terrestria fix request/response msg
     PB_E_LOCAPI_GET_SINGLE_TERRESTRIAL_POS_REQ_MSG_ID = 31;
     PB_E_LOCAPI_GET_SINGLE_TERRESTRIAL_POS_RESP_MSG_ID = 32;
+
+    // Debug report
+    PB_E_LOCAPI_GET_DEBUG_REQ_MSG_ID = 33;
+    PB_E_LOCAPI_GET_DEBUG_RESP_MSG_ID = 34;
 
     // ping
     PB_E_LOCAPI_PINGTEST_MSG_ID = 99;
@@ -645,6 +649,16 @@ message PBLocConfigGetXtraStatusRespMsg {
 // defintion for message with msg id of
 // PB_E_INTAPI_DEREGISTER_XTRA_STATUS_UPDATE_REQ_MSG_ID
 // no struct member
+
+// defintion for message with msg id of
+// PB_E_LOCAPI_GET_DEBUG_REQ_MSG_ID
+// LocAPIGetDebugReqMsg - no struct member.
+
+// defintion for message with msg id of
+// PB_E_LOCAPI_GET_DEBUG_RESP_MSG_ID
+message PBLocAPIGetDebugRespMsg {
+    PBGnssDebugReport mDebugReport = 1;
+}
 
 //*****************************
 // IPC message structure - ping

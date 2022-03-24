@@ -27,6 +27,42 @@
  *
  */
 
+/*
+Changes from Qualcomm Innovation Center are provided under the following license:
+
+Copyright (c) 2022 Qualcomm Innovation Center, Inc. All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted (subject to the limitations in the
+disclaimer below) provided that the following conditions are met:
+
+    * Redistributions of source code must retain the above copyright
+      notice, this list of conditions and the following disclaimer.
+
+    * Redistributions in binary form must reproduce the above
+      copyright notice, this list of conditions and the following
+      disclaimer in the documentation and/or other materials provided
+      with the distribution.
+
+    * Neither the name of Qualcomm Innovation Center, Inc. nor the names of its
+      contributors may be used to endorse or promote products derived
+      from this software without specific prior written permission.
+
+NO EXPRESS OR IMPLIED LICENSES TO ANY PARTY'S PATENT RIGHTS ARE
+GRANTED BY THIS LICENSE. THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT
+HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED
+WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR
+ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE
+GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER
+IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN
+IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -571,9 +607,12 @@ void parseDreConfig (char* buf, DeadReckoningEngineConfig& dreConfig) {
     do {
         token = strtok_r(NULL, " ", &save);
         if (token == NULL) {
-            printf("missing key word b2s, speed, or gyro\n");
+            if (validMask == 0) {
+                 printf("missing b2s/speed/gyro");
+            }
             break;
         }
+
         if (strncmp(token, "b2s", strlen("b2s"))==0) {
             token = strtok_r(NULL, " ", &save); // skip the token of "b2s"
             if (token == NULL) {
@@ -636,6 +675,8 @@ void parseDreConfig (char* buf, DeadReckoningEngineConfig& dreConfig) {
             }
             dreConfig.gyroScaleFactorUnc = atof(token);
             validMask |= GYRO_SCALE_FACTOR_UNC_VALID;
+        } else {
+            printf("unknown token %s\n", token);
         }
     } while (1);
 
@@ -1075,9 +1116,16 @@ int main(int argc, char *argv[]) {
         } else if (strncmp(buf, CONFIG_DR_ENGINE, strlen(CONFIG_DR_ENGINE)) == 0) {
             DeadReckoningEngineConfig dreConfig = {};
             parseDreConfig(buf, dreConfig);
-            printf("mask 0x%x, roll %f, speed %f, yaw %f\n", dreConfig.validMask,
-                   dreConfig.bodyToSensorMountParams.rollOffset, dreConfig.vehicleSpeedScaleFactor,
-                   dreConfig.gyroScaleFactor);
+            printf("mask 0x%x, roll offset %f, pitch offset %f, yaw offset %f, offset unc, %f\n"
+                   "speed scale factor %f, speed scale factor unc %10f,\n"
+                   "dreConfig.gyroScaleFactor %f, dreConfig.gyroScaleFactorUnc %10f\n",
+                   dreConfig.validMask,
+                   dreConfig.bodyToSensorMountParams.rollOffset,
+                   dreConfig.bodyToSensorMountParams.pitchOffset,
+                   dreConfig.bodyToSensorMountParams.yawOffset,
+                   dreConfig.bodyToSensorMountParams.offsetUnc,
+                   dreConfig.vehicleSpeedScaleFactor, dreConfig.vehicleSpeedScaleFactorUnc,
+                   dreConfig.gyroScaleFactor, dreConfig.gyroScaleFactorUnc);
             pIntClient->configDeadReckoningEngineParams(dreConfig);
         } else if (strncmp(buf, CONFIG_MIN_SV_ELEVATION, strlen(CONFIG_MIN_SV_ELEVATION)) == 0) {
             static char *save = nullptr;
