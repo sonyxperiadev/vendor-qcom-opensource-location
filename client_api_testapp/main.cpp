@@ -116,6 +116,7 @@ enum ReportType {
     DATA_REPORT     = 1 << 3,
     MEAS_REPORT     = 1 << 4,
     NHZ_MEAS_REPORT = 1 << 5,
+    DC_REPORT       = 1 << 6,
 };
 
 enum TrackingSessionType {
@@ -293,6 +294,19 @@ static void onEngLocationsCb(const std::vector<location_client::GnssLocation>& l
     }
 }
 
+static void onBatchingCb(const std::vector<Location>& locations,
+                         BatchingStatus batchStatus) {
+    printf("<<< onBatchingCb, batching status: %d, pos cnt %d", batchStatus, locations.size());
+    for (Location location : locations) {
+        printf("<<< onBatchingCb time=%" PRIu64" mask=0x%x lat=%f lon=%f alt=%f\n",
+               location.timestamp,
+               location.flags,
+               location.latitude,
+               location.longitude,
+               location.altitude);
+    }
+}
+
 static void onGnssSvCb(const std::vector<location_client::GnssSv>& gnssSvs) {
     numGnssSvCb++;
 
@@ -361,6 +375,16 @@ static void onGnssMeasurementsCb(const location_client::GnssMeasurements& gnssMe
     }
 }
 
+static void onGnssDcReportCb(const location_client::GnssDcReport & dcReport) {
+
+    if (detailedOutputEnabled) {
+        printf("<<< DC report %s\n", dcReport.toString().c_str());
+    } else {
+        printf("DC report type %d, valid bits cnt %d, data byte cnt %d\n",
+               dcReport.dcReportType, dcReport.numValidBits, dcReport.dcReportData.size());
+    }
+}
+
 static void onConfigResponseCb(location_integration::LocConfigTypeEnum    requestType,
                                location_integration::LocIntegrationResponse response) {
     printf("<<< onConfigResponseCb, type %d, err %d\n", requestType, response);
@@ -390,8 +414,8 @@ static void onGetSecondaryBandConfigCb(const ConstellationSet& secondaryBandDisa
 
 static void printHelp() {
     printf("\n************* options *************\n");
-    printf("e: Concurrent engine report session with 100 ms interval\n");
-    printf("g: Gnss report session with 100 ms interval\n");
+    printf("e reprottype tbf: Concurrent engine report session with 100 ms interval\n");
+    printf("g reporttype tbf engmask: Gnss report session with 100 ms interval\n");
     printf("u: Update a session with 2000 ms interval\n");
     printf("m: Interleaving fix session with 1000 and 2000 ms interval, change every 3 seconds\n");
     printf("s: Stop a session \n");
@@ -746,6 +770,54 @@ void getGtpWwanFixes (bool multipleFixes, char* buf) {
     }
 }
 
+static void setupGnssReportCbs(uint32_t reportType, GnssReportCbs& reportcbs) {
+    if (reportType & POSITION_REPORT) {
+        reportcbs.gnssLocationCallback = GnssLocationCb(onGnssLocationCb);
+    }
+    if (reportType & NMEA_REPORT) {
+        reportcbs.gnssNmeaCallback = GnssNmeaCb(onGnssNmeaCb);
+    }
+    if (reportType & SV_REPORT) {
+        reportcbs.gnssSvCallback = GnssSvCb(onGnssSvCb);
+    }
+    if (reportType & DATA_REPORT) {
+        reportcbs.gnssDataCallback = GnssDataCb(onGnssDataCb);
+    }
+    if (reportType & MEAS_REPORT) {
+        reportcbs.gnssMeasurementsCallback = GnssMeasurementsCb(onGnssMeasurementsCb);
+    }
+    if (reportType & NHZ_MEAS_REPORT) {
+        reportcbs.gnssNHzMeasurementsCallback = GnssMeasurementsCb(onGnssMeasurementsCb);
+    }
+    if (reportType & DC_REPORT) {
+        reportcbs.gnssDcReportCallback = GnssDcReportCb(onGnssDcReportCb);
+    }
+}
+
+static void setupEngineReportCbs(uint32_t reportType, EngineReportCbs& reportcbs) {
+    if (reportType & POSITION_REPORT) {
+        reportcbs.engLocationsCallback = EngineLocationsCb(onEngLocationsCb);
+    }
+    if (reportType & NMEA_REPORT) {
+        reportcbs.gnssNmeaCallback = GnssNmeaCb(onGnssNmeaCb);
+    }
+    if (reportType & SV_REPORT) {
+        reportcbs.gnssSvCallback = GnssSvCb(onGnssSvCb);
+    }
+    if (reportType & DATA_REPORT) {
+        reportcbs.gnssDataCallback = GnssDataCb(onGnssDataCb);
+    }
+    if (reportType & MEAS_REPORT) {
+        reportcbs.gnssMeasurementsCallback = GnssMeasurementsCb(onGnssMeasurementsCb);
+    }
+    if (reportType & NHZ_MEAS_REPORT) {
+        reportcbs.gnssNHzMeasurementsCallback = GnssMeasurementsCb(onGnssMeasurementsCb);
+    }
+    if (reportType & DC_REPORT) {
+        reportcbs.gnssDcReportCallback = GnssDcReportCb(onGnssDcReportCb);
+    }
+}
+
 static bool checkForAutoStart(int argc, char *argv[]) {
     bool autoRun = false;
     bool deleteAll = false;
@@ -872,49 +944,12 @@ static bool checkForAutoStart(int argc, char *argv[]) {
             if (trackingType == SIMPLE_REPORT_TRACKING) {
                 pLcaClient->startPositionSession(interval, 0, onLocationCb, onResponseCb);
             } else if (trackingType == DETAILED_REPORT_TRACKING) {
-                // callbacks
-                GnssReportCbs reportcbs;
-                if (reportType & POSITION_REPORT) {
-                    reportcbs.gnssLocationCallback = GnssLocationCb(onGnssLocationCb);
-                }
-                if (reportType & NMEA_REPORT) {
-                    reportcbs.gnssNmeaCallback = GnssNmeaCb(onGnssNmeaCb);
-                }
-                if (reportType & SV_REPORT) {
-                    reportcbs.gnssSvCallback = GnssSvCb(onGnssSvCb);
-                }
-                if (reportType & DATA_REPORT) {
-                    reportcbs.gnssDataCallback = GnssDataCb(onGnssDataCb);
-                }
-                if (reportType & MEAS_REPORT) {
-                    reportcbs.gnssMeasurementsCallback = GnssMeasurementsCb(onGnssMeasurementsCb);
-                }
-                if (reportType & NHZ_MEAS_REPORT) {
-                    reportcbs.gnssNHzMeasurementsCallback =
-                            GnssMeasurementsCb(onGnssMeasurementsCb);
-                }
+                GnssReportCbs reportcbs = {};
+                setupGnssReportCbs(reportType, reportcbs);
                 pLcaClient->startPositionSession(interval, reportcbs, onResponseCb);
             } else if (reqEngMask != 0) {
-                EngineReportCbs reportcbs;
-                if (reportType & POSITION_REPORT) {
-                    reportcbs.engLocationsCallback = EngineLocationsCb(onEngLocationsCb);
-                }
-                if (reportType & NMEA_REPORT) {
-                    reportcbs.gnssNmeaCallback = GnssNmeaCb(onGnssNmeaCb);
-                }
-                if (reportType & SV_REPORT) {
-                    reportcbs.gnssSvCallback = GnssSvCb(onGnssSvCb);
-                }
-                if (reportType & DATA_REPORT) {
-                    reportcbs.gnssDataCallback = GnssDataCb(onGnssDataCb);
-                }
-                if (reportType & MEAS_REPORT) {
-                    reportcbs.gnssMeasurementsCallback = GnssMeasurementsCb(onGnssMeasurementsCb);
-                }
-                if (reportType & NHZ_MEAS_REPORT) {
-                    reportcbs.gnssNHzMeasurementsCallback =
-                            GnssMeasurementsCb(onGnssMeasurementsCb);
-                }
+                EngineReportCbs reportcbs = {};
+                setupEngineReportCbs(reportType, reportcbs);
                 pLcaClient->startPositionSession(interval, reqEngMask,
                                                        reportcbs, onResponseCb);
             }
@@ -926,6 +961,31 @@ static bool checkForAutoStart(int argc, char *argv[]) {
         exit(0);
     }
     return autoRun;
+}
+
+// get report type for 'g' and 'e' option
+void getTrackingParams(char *buf, uint32_t *reportTypePtr, uint32_t *tbfMsecPtr,
+                       LocReqEngineTypeMask* reqEngMaskPtr) {
+    static char *save = nullptr;
+    char* token = strtok_r(buf, " ", &save); // skip first token
+    token = strtok_r(NULL, " ", &save);
+    if (token != nullptr) {
+        if (reportTypePtr) {
+            *reportTypePtr = atoi(token);
+        }
+    }
+    token = strtok_r(NULL, " ", &save);
+    if (token != nullptr) {
+        if (tbfMsecPtr) {
+            *tbfMsecPtr = atoi(token);
+        }
+    }
+    token = strtok_r(NULL, " ", &save);
+    if (token != nullptr) {
+        if (reqEngMaskPtr) {
+            *reqEngMaskPtr = (LocReqEngineTypeMask) atoi(token);
+        }
+    }
 }
 
 /******************************************************************************
@@ -943,23 +1003,14 @@ int main(int argc, char *argv[]) {
         return -1;;
     }
 
-    // callbacks
-    GnssReportCbs reportcbs;
-    reportcbs.gnssLocationCallback = GnssLocationCb(onGnssLocationCb);
-    reportcbs.gnssSvCallback = GnssSvCb(onGnssSvCb);
-    reportcbs.gnssNmeaCallback = GnssNmeaCb(onGnssNmeaCb);
+    // gnss callbacks
+    GnssReportCbs reportcbs = {};
 
-    // callbacks
-    EngineReportCbs enginecbs;
-    enginecbs.engLocationsCallback = EngineLocationsCb(onEngLocationsCb);
-    enginecbs.gnssSvCallback = GnssSvCb(onGnssSvCb);
-    enginecbs.gnssNmeaCallback = GnssNmeaCb(onGnssNmeaCb);
-    enginecbs.gnssMeasurementsCallback = GnssMeasurementsCb(onGnssMeasurementsCb);
-    enginecbs.gnssNHzMeasurementsCallback = GnssMeasurementsCb(onGnssMeasurementsCb);
-    enginecbs.gnssDataCallback = GnssDataCb(onGnssDataCb);
+    // engine callbacks
+    EngineReportCbs enginecbs = {};
 
     // create location integratin API
-    LocIntegrationCbs intCbs;
+    LocIntegrationCbs intCbs = {};
 
     intCbs.configCb = LocConfigCb(onConfigResponseCb);
     intCbs.getRobustLocationConfigCb =
@@ -1224,10 +1275,17 @@ int main(int argc, char *argv[]) {
                     pLcaClient = new LocationClientApi(onCapabilitiesCb);
                 }
                 if (pLcaClient) {
+                    uint32_t reportType = 0xff;
+                    uint32_t tbfMsec = 100;
                     LocReqEngineTypeMask reqEngMask = (LocReqEngineTypeMask)
                         (LOC_REQ_ENGINE_FUSED_BIT|LOC_REQ_ENGINE_SPE_BIT|
                          LOC_REQ_ENGINE_PPE_BIT);
-                    pLcaClient->startPositionSession(100, reqEngMask, enginecbs, onResponseCb);
+                    getTrackingParams(buf, &reportType, &tbfMsec, &reqEngMask);
+                    enginecbs = {};
+                    setupEngineReportCbs(reportType, enginecbs);
+                    printf("tbf %d, reprot type 0x%x, engine mask 0x%x\n",
+                           tbfMsec, reportType, reqEngMask);
+                    pLcaClient->startPositionSession(tbfMsec, reqEngMask, enginecbs, onResponseCb);
                 }
                 break;
             case 'g':
@@ -1235,7 +1293,35 @@ int main(int argc, char *argv[]) {
                     pLcaClient = new LocationClientApi(onCapabilitiesCb);
                 }
                 if (pLcaClient) {
-                    pLcaClient->startPositionSession(100, reportcbs, onResponseCb);
+                    uint32_t reportType = 0xff;
+                    uint32_t tbfMsec = 100;
+                    getTrackingParams(buf, &reportType, &tbfMsec, nullptr);
+                    reportcbs = {};
+                    setupGnssReportCbs(reportType, reportcbs);
+                    pLcaClient->startPositionSession(tbfMsec, reportcbs, onResponseCb);
+                }
+                break;
+            case 'b':
+                if (!pLcaClient) {
+                    pLcaClient = new LocationClientApi(onCapabilitiesCb);
+                }
+                if (pLcaClient) {
+                    int intervalmsec = 60000;
+                    int distance = 0;
+                    static char *save = nullptr;
+                    char* token = strtok_r(buf, " ", &save); // skip first token
+                    token = strtok_r(NULL, " ", &save);
+                    if (token != nullptr) {
+                        intervalmsec = atoi(token);
+                    }
+                    token = strtok_r(NULL, " ", &save);
+                    if (token != nullptr) {
+                        distance = atoi(token);
+                    }
+                    printf("start routine batching with interval %d msec, distance %d meters\n",
+                           intervalmsec, distance);
+                    pLcaClient->startRoutineBatchingSession(intervalmsec, distance,
+                                                            onBatchingCb, onResponseCb);
                 }
                 break;
             case 'u':
@@ -1249,6 +1335,7 @@ int main(int argc, char *argv[]) {
             case 's':
                 if (pLcaClient) {
                     pLcaClient->stopPositionSession();
+                    pLcaClient->stopBatchingSession();
                     delete pLcaClient;
                     pLcaClient = NULL;
                 }

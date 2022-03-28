@@ -347,6 +347,10 @@ static const locClientEventIndTableStructT locClientEventIndTable[]= {
   // Engine Debug Data ind
   { QMI_LOC_ENGINE_DEBUG_DATA_IND_V02,
     sizeof(qmiLocEngineDebugDataIndMsgT_v02)},
+
+  // disater and crisis report ind
+  { QMI_LOC_DC_REPORT_IND_V02,
+    sizeof(qmiLocEventDcReportIndMsgT_v02)},
 };
 
 /* table to relate the respInd Id with its size */

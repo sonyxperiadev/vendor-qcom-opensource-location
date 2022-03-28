@@ -204,6 +204,15 @@ void LocHalDaemonClientHandler::updateSubscription(uint32_t mask) {
         mCallbacks.locationSystemInfoCb = nullptr;
     }
 
+    // dc report
+    if (mSubscriptionMask & E_LOC_CB_GNSS_DC_REPORT_BIT) {
+        mCallbacks.gnssDcReportCb = [this](const GnssDcReportInfo& dcReportInfo) {
+            onDcReportCb(dcReportInfo);
+        };
+    } else {
+        mCallbacks.gnssDcReportCb = nullptr;
+    }
+
     // following callbacks are not supported
     mCallbacks.gnssNiCb = nullptr;
     mCallbacks.geofenceStatusCb = nullptr;
@@ -1080,6 +1089,27 @@ void LocHalDaemonClientHandler::onLocationSystemInfoCb(LocationSystemInfo notifi
             }
         } else {
             LOC_LOGe("LocAPILocationSystemInfoIndMsg serializeToProtobuf failed");
+        }
+    }
+}
+
+void LocHalDaemonClientHandler::onDcReportCb(const GnssDcReportInfo& dcReportInfo) {
+    std::lock_guard<std::mutex> lock(LocationApiService::mMutex);
+    LOC_LOGd("--< onDcReportCb, client name %s, ipc valid %d, sub mask 0x%x",
+             mName.c_str(), (nullptr != mIpcSender), mSubscriptionMask);
+
+    if ((nullptr != mIpcSender) && (mSubscriptionMask & E_LOC_CB_GNSS_DC_REPORT_BIT)) {
+        string pbStr;
+        LocAPIDcReportIndMsg msg(SERVICE_NAME, dcReportInfo, &mService->mPbufMsgConv);
+        if (msg.serializeToProtobuf(pbStr)) {
+            bool rc = sendMessage(pbStr.c_str(), pbStr.size(), msg.msgId);
+            // purge this client if failed
+            if (!rc) {
+                LOC_LOGe("failed rc=%d purging client=%s", rc, mName.c_str());
+                mService->deleteClientbyName(mName);
+            }
+        } else {
+            LOC_LOGe("LocAPIDcReportIndMsg serializeToProtobuf failed");
         }
     }
 }

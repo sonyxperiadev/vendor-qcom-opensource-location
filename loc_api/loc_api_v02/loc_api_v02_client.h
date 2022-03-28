@@ -1211,6 +1211,9 @@ typedef union
    /** Indication Message; Used by the service to
      report engine debug information */
 
+   const qmiLocEventDcReportIndMsgT_v02* pDcReportIndMsg;
+   /** Sent by the engine to inform disaster and crisis report
+    QMI_LOC_EVENT_DC_REPORT_IND_V02 */
 }locClientEventIndUnionType;
 
 

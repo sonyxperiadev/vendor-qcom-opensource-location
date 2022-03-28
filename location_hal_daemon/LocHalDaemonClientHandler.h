@@ -199,7 +199,8 @@ private:
     void onGnssNmeaCb(GnssNmeaNotification);
     void onGnssDataCb(GnssDataNotification gnssDataNotification);
     void onGnssMeasurementsCb(GnssMeasurementsNotification gnssMeasurementsNotification);
-    void onLocationSystemInfoCb(LocationSystemInfo);
+    void onLocationSystemInfoCb(LocationSystemInfo systemInfo);
+    void onDcReportCb(const GnssDcReportInfo& dcReportInfo);
     void onLocationApiDestroyCompleteCb();
 
     // send ipc message to this client for serialized payload
