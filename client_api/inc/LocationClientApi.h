@@ -239,6 +239,8 @@ enum LocationFlagsMask {
     LOCATION_HAS_ELAPSED_REAL_TIME_BIT = (1<<9),
     /** Location has valid Location::elapsedRealTimeUnc. <br/>   */
     LOCATION_HAS_ELAPSED_REAL_TIME_UNC_BIT = (1<<10),
+    /** Location has valid Location::timeUncMs. <br/>   */
+    LOCATION_HAS_TIME_UNC_BIT          = (1<<11),
 };
 
 /**
@@ -1046,6 +1048,12 @@ struct Location {
      *  presence of LOCATION_HAS_ELAPSED_REAL_TIME_UNC_BIT in
      *  location::flags before retrieving this field. <br/>   */
     uint64_t elapsedRealTimeUncNs;
+    /** Time uncertainty associated with this position.<br/>
+     *  In unit of milli-seconds.<br/>
+     *  This field may not always be available. Please check for the
+     *  presence of LOCATION_HAS_TIME_UNC_BIT in
+     *  location::flags before retrieving this field. <br/> */
+    float timeUncMs;
     /** Method to print the struct to human readable form, for logging.
      *  <br/> */
     string toString() const;
@@ -1181,12 +1189,6 @@ struct GnssLocation : public Location {
     /** Number of leap Seconds at time when this position is
      *  generated. */
     uint8_t leapSeconds;
-    /** Time uncertainty, in unit of milliseconds. <br/>
-     *  For PVT report from SPE engine, confidence leve is at
-     *  99%. <br/>
-     *  For PVT reports from other engines, confidence level is
-     *  undefined. <br/> */
-    float timeUncMs;
     /** Sensor calibration confidence percent, range [0, 100].
      *  <br/> */
     uint8_t calibrationConfidencePercent;
@@ -1262,7 +1264,7 @@ struct GnssLocation : public Location {
             posTechMask((LocationTechnologyMask)0),
             bodyFrameData({}),
             gnssSystemTime({}), measUsageInfo(), leapSeconds(0),
-            timeUncMs(0.0f), calibrationConfidencePercent(0),
+            calibrationConfidencePercent(0),
             calibrationStatus((DrCalibrationStatusMask)0),
             locOutputEngType ((LocOutputEngineType)0),
             locOutputEngMask((PositioningEngineMask)0),

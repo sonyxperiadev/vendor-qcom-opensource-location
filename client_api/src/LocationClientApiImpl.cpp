@@ -267,6 +267,7 @@ void LocationClientApiImpl::parseLocation(const ::Location &halLocation, Locatio
     uint32_t flags = 0;
 
     location.timestamp = halLocation.timestamp;
+    location.timeUncMs = halLocation.timeUncMs;
     location.latitude = halLocation.latitude;
     location.longitude = halLocation.longitude;
     location.altitude = halLocation.altitude;
@@ -286,6 +287,9 @@ void LocationClientApiImpl::parseLocation(const ::Location &halLocation, Locatio
 
     if (0 != halLocation.timestamp) {
         flags |= LOCATION_HAS_TIMESTAMP_BIT;
+    }
+    if (::LOCATION_HAS_TIME_UNC_BIT & halLocation.flags) {
+        flags |= LOCATION_HAS_TIME_UNC_BIT;
     }
     if (::LOCATION_HAS_LAT_LONG_BIT & halLocation.flags) {
         flags |= LOCATION_HAS_LAT_LONG_BIT;
@@ -774,7 +778,7 @@ GnssLocation LocationClientApiImpl::parseLocationInfo(
     if (::GNSS_LOCATION_INFO_LEAP_SECONDS_BIT & halLocationInfo.flags) {
        flags |= GNSS_LOCATION_INFO_LEAP_SECONDS_BIT;
     }
-    if (::GNSS_LOCATION_INFO_TIME_UNC_BIT & halLocationInfo.flags) {
+    if (::LOCATION_HAS_TIME_UNC_BIT & halLocationInfo.location.flags) {
         flags |= GNSS_LOCATION_INFO_TIME_UNC_BIT;
     }
     if (::GNSS_LOCATION_INFO_NUM_SV_USED_IN_POSITION_BIT & halLocationInfo.flags) {
@@ -917,7 +921,6 @@ GnssLocation LocationClientApiImpl::parseLocationInfo(
             halLocationInfo.bodyFrameData, halLocationInfo.bodyFrameDataExt);
     locationInfo.gnssSystemTime = parseSystemTime(halLocationInfo.gnssSystemTime);
     locationInfo.leapSeconds = halLocationInfo.leapSeconds;
-    locationInfo.timeUncMs = halLocationInfo.timeUncMs;
 
     return locationInfo;
 }
