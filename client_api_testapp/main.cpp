@@ -156,6 +156,7 @@ enum TrackingSessionType {
 #define CANCEL_SINGLE_GTP_WWAN_FIX "cancelSingleGtpWwanFix"
 #define CONFIG_NMEA_TYPES          "configOutputNmeaTypes"
 #define GET_ENERGY_CONSUMED        "getEnergyConsumed"
+#define INJECT_LOCATION            "injectLocation"
 
 // debug utility
 static uint64_t getTimestampMs() {
@@ -458,6 +459,7 @@ static void printHelp() {
     printf("%s: config nmea types \n", CONFIG_NMEA_TYPES);
     printf("%s: config engine integrity risk \n", CONFIG_ENGINE_INTEGRITY_RISK);
     printf("%s: get gnss energy consumed \n", GET_ENERGY_CONSUMED);
+    printf("%s: inject location \n", INJECT_LOCATION);
 }
 
 void setRequiredPermToRunAsLocClient() {
@@ -713,6 +715,55 @@ void parseDreConfig (char* buf, DeadReckoningEngineConfig& dreConfig) {
     } while (1);
 
     dreConfig.validMask = (DeadReckoningEngineConfigValidMask)validMask;
+}
+
+// This function retrieves location info from the buf
+// format is: lat lon alt horizontalaccuracy verticalaccuracy timestamp timestampunc
+void parseLocation(char* buf, location_client::Location& location) {
+    static char *save = nullptr;
+    char* token = strtok_r(buf, " ", &save); // skip header
+    uint32_t flags = 0;
+
+    token = strtok_r(NULL, " ", &save);
+    if (token != NULL) {
+        location.latitude = atof(token);
+    }
+    token = strtok_r(NULL, " ", &save);
+    if (token != NULL) {
+        location.longitude = atof(token);
+    }
+    flags |= LOCATION_HAS_LAT_LONG_BIT;
+
+    token = strtok_r(NULL, " ", &save);
+    if (token != NULL) {
+        location.altitude = atof(token);
+    }
+    flags |= LOCATION_HAS_ALTITUDE_BIT;
+
+    token = strtok_r(NULL, " ", &save);
+    if (token != NULL) {
+        location.horizontalAccuracy = atof(token);
+    }
+    flags |= LOCATION_HAS_ACCURACY_BIT;
+
+    token = strtok_r(NULL, " ", &save);
+    if (token != NULL) {
+        location.verticalAccuracy = atof(token);
+    }
+    flags |= LOCATION_HAS_VERTICAL_ACCURACY_BIT;
+
+    token = strtok_r(NULL, " ", &save);
+    if (token != NULL) {
+        location.timestamp = (uint64_t) atof(token);
+    }
+    flags |= LOCATION_HAS_TIMESTAMP_BIT;
+
+    token = strtok_r(NULL, " ", &save);
+    if (token != NULL) {
+        location.timeUncMs = atof(token);
+    }
+    flags |= LOCATION_HAS_TIME_UNC_BIT;
+    location.flags = (LocationFlagsMask) flags;
 }
 
 void getGtpWwanFixes (bool multipleFixes, char* buf) {
@@ -993,6 +1044,19 @@ void getTrackingParams(char *buf, uint32_t *reportTypePtr, uint32_t *tbfMsecPtr,
         if (reqEngMaskPtr) {
             *reqEngMaskPtr = (LocReqEngineTypeMask) atoi(token);
         }
+    }
+
+    // initialize to default value in case of invalid input
+    if (*reportTypePtr == 0) {
+        *reportTypePtr = 0xFF;
+    }
+    if (*tbfMsecPtr == 0) {
+        *tbfMsecPtr = 100;
+    }
+    if (*reqEngMaskPtr == (LocReqEngineTypeMask) 0) {
+        *reqEngMaskPtr = (LocReqEngineTypeMask)
+                (LOC_REQ_ENGINE_FUSED_BIT|LOC_REQ_ENGINE_SPE_BIT|
+                 LOC_REQ_ENGINE_PPE_BIT);
     }
 }
 
@@ -1280,6 +1344,12 @@ int main(int argc, char *argv[]) {
             }
             printf("nmeaTypes 0x%x\n", nmeaTypes);
             retVal = pIntClient->configOutputNmeaTypes(nmeaTypes);
+        } else if (strncmp(buf, INJECT_LOCATION,
+                           strlen(INJECT_LOCATION)) == 0) {
+            location_client::Location injectLocation = {};
+            parseLocation(buf, injectLocation);
+            printf("Injected location info: %s\n", injectLocation.toString().c_str());
+            pIntClient->injectLocation(injectLocation);
         } else {
             int command = buf[0];
             switch(command) {

@@ -712,6 +712,17 @@ void LocationApiService::processClientMsg(const char* data, uint32_t length) {
             break;
         }
 
+        case E_INTAPI_INJECT_LOCATION_MSG_ID: {
+            PBLocIntApiInjectLocationMsg pbMsg;
+            if (0 == pbMsg.ParseFromString(pbLocApiMsg.payload())) {
+                LOC_LOGe("Failed to parse LocIntApiInjectLocationMsg from payload!!");
+                return;
+            }
+            LocIntApiInjectLocationMsg msg(sockName.c_str(), pbMsg, &mPbufMsgConv);
+            injectLocation(reinterpret_cast<LocIntApiInjectLocationMsg*> (&msg));
+            break;
+        }
+
         default: {
             LOC_LOGe("Unknown message with id: %d ", eLocMsgid);
             break;
@@ -1432,6 +1443,21 @@ void LocationApiService::configDeadReckoningEngineParams(const LocConfigDrEngine
     uint32_t sessionId = mLocationControlApi->configDeadReckoningEngineParams(
             pMsg->mDreConfig);
     addConfigRequestToMap(sessionId, pMsg);
+}
+
+void LocationApiService::injectLocation(
+        const LocIntApiInjectLocationMsg* pMsg) {
+    if (!pMsg) {
+        return;
+    }
+    std::lock_guard<std::recursive_mutex> lock(mMutex);
+    LocHalDaemonClientHandler* pClient = getClient(pMsg->mSocketName);
+    if (!pClient) {
+        LOC_LOGe(">-- invlalid client=%s", pMsg->mSocketName);
+        return;
+    }
+
+    mLocationControlApi->odcpiInject(pMsg->mLocation);
 }
 
 void LocationApiService::addConfigRequestToMap(

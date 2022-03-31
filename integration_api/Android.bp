@@ -37,6 +37,7 @@ cc_library_shared {
         "libloc_pla_headers",
         "liblocation_api_headers",
         "liblocation_api_msg.headers",
+        "liblocation_client_api.impl_headers",
     ],
 }
 
