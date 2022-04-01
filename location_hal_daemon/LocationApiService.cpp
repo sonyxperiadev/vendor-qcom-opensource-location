@@ -740,14 +740,13 @@ void LocationApiService::newClient(LocAPIClientRegisterReqMsg *pMsg) {
 
     // if this name is already used, we inform client of the capability
     // to allow callflow to continue on client side
-    if (mClients.find(clientname) != mClients.end()) {
+    LocHalDaemonClientHandler* pClient = getClient(clientname);
+    if (pClient) {
         LOC_LOGi("client=%s already exists, send capability", clientname.c_str());
-        LocHalDaemonClientHandler* pClient = getClient(clientname);
         pClient->sendCapabilitiesMsg();
     } else {
         // store it in client property database
-        LocHalDaemonClientHandler *pClient =
-                new LocHalDaemonClientHandler(this, clientname, pMsg->mClientType);
+        pClient = new LocHalDaemonClientHandler(this, clientname, pMsg->mClientType);
         if (!pClient) {
             LOC_LOGe("failed to register client=%s", clientname.c_str());
             return;
