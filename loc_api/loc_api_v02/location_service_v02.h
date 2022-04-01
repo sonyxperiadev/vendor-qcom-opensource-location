@@ -1,30 +1,30 @@
 /* Copyright (c) 2011-2021, The Linux Foundation. All rights reserved.
-*
-* Redistribution and use in source and binary forms, with or without
-* modification, are permitted provided that the following conditions are
-* met:
-*     * Redistributions of source code must retain the above copyright
-*       notice, this list of conditions and the following disclaimer.
-*     * Redistributions in binary form must reproduce the above
-*       copyright notice, this list of conditions and the following
-*       disclaimer in the documentation and/or other materials provided
-*       with the distribution.
-*     * Neither the name of The Linux Foundation, nor the names of its
-*       contributors may be used to endorse or promote products derived
-*       from this software without specific prior written permission.
-*
-* THIS SOFTWARE IS PROVIDED "AS IS" AND ANY EXPRESS OR IMPLIED
-* WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
-* MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT
-* ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS
-* BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
-* CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
-* SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
-* BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
-* WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE
-* OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN
-* IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-*/
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are
+ * met:
+ *     * Redistributions of source code must retain the above copyright
+ *       notice, this list of conditions and the following disclaimer.
+ *     * Redistributions in binary form must reproduce the above
+ *       copyright notice, this list of conditions and the following
+ *       disclaimer in the documentation and/or other materials provided
+ *       with the distribution.
+ *     * Neither the name of The Linux Foundation, nor the names of its
+ *       contributors may be used to endorse or promote products derived
+ *       from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED "AS IS" AND ANY EXPRESS OR IMPLIED
+ * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT
+ * ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS
+ * BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
+ * BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE
+ * OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN
+ * IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
 
 /*
 Changes from Qualcomm Innovation Center are provided under the following license:
@@ -61,6 +61,7 @@ IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
 OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN
 IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
+
 #ifndef LOC_SERVICE_02_H
 #define LOC_SERVICE_02_H
 /**
@@ -93,13 +94,13 @@ IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   by the decode routine and should be checked so that the correct number of
   elements in the array will be accessed.
 
-*/
+ *====*====*====*====*====*====*====*====*====*====*====*====*====*====*====*/
 /*====*====*====*====*====*====*====*====*====*====*====*====*====*====*====*
  *THIS IS AN AUTO GENERATED FILE. DO NOT ALTER IN ANY WAY
  *====*====*====*====*====*====*====*====*====*====*====*====*====*====*====*/
 
 /* This file was generated with Tool version 6.14.7
-   It was generated on: Fri Jan 21 2022 (Spin 0)
+   It was generated on: Tue Mar 15 2022 (Spin 0)
    From IDL File: location_service_v02.idl */
 
 /** @defgroup loc_qmi_consts Constant values defined in the IDL */
@@ -3536,11 +3537,11 @@ typedef struct {
        - 0x00 (FALSE) -- Civic Address is not needed \n
        - 0x01 (TRUE) -- Civic Address is needed
 
-	NOTE: If the civic address is available with the AP, the AP Shall inject
-	the same using the new QMI API QMI_LOC_INJECT_LOCATION_CIVIC_ADDRESS.
+    NOTE: If the civic address is available with the AP, the AP Shall inject
+    the same using the new QMI API QMI_LOC_INJECT_LOCATION_CIVIC_ADDRESS.
 
         If the civic address is not available, the AP shall NOT use the new QMI API
-	QMI_LOC_INJECT_LOCATION_CIVIC_ADDRESS. The existing DBH injection API should
+    QMI_LOC_INJECT_LOCATION_CIVIC_ADDRESS. The existing DBH injection API should
         be used to inject hybrid location is available.
   */
 }qmiLocEventWifiReqIndMsgT_v02;  /* Message */
@@ -13146,7 +13147,7 @@ typedef struct {
        - 0x01 (TRUE) -- GPS engine is in E911 mode \n
        - 0x00 (FALSE) -- GPS engine is not in E911 mode
 
-	   Note: e911Mode shall be set as TRUE for Non-E911 Wifi Ap injections.
+       Note: e911Mode shall be set as TRUE for Non-E911 Wifi Ap injections.
     */
 }qmiLocEventInjectWifiApDataReqIndMsgT_v02;  /* Message */
 /**
@@ -15348,6 +15349,21 @@ typedef uint64_t qmiLocSignalHealthMaskT_v02;
 #define QMI_LOC_SIGNAL_HEALTH_MASK_L2B_HEALTHY_V02 ((qmiLocSignalHealthMaskT_v02)0x0200ull) /**<  L2B signal is healthy \n */
 #define QMI_LOC_SIGNAL_HEALTH_MASK_L2B_UNKNOWN_V02 ((qmiLocSignalHealthMaskT_v02)0x0400ull) /**<  L2B signal health is unknown \n */
 #define QMI_LOC_SIGNAL_HEALTH_MASK_L2B_UNHEALTHY_V02 ((qmiLocSignalHealthMaskT_v02)0x0800ull) /**<  L2B signal is unhealthy  */
+/** @addtogroup loc_qmi_enums
+    @{
+  */
+typedef enum {
+  QMILOCEPHEMERISSOURCEENUMT_MIN_ENUM_VAL_V02 = -2147483647, /**< To force a 32 bit signed enum.  Do not change or use*/
+  eQMI_LOC_EPHEMERIS_SOURCE_OTA_V02 = 1, /**<  Ephemeris decoded over-the-air \n */
+  eQMI_LOC_EPHEMERIS_SOURCE_XTRA_V02 = 2, /**<  Ephemeris from the XTRA file \n */
+  eQMI_LOC_EPHEMERIS_SOURCE_NETWORK_INJECTED_V02 = 3, /**<  Network-injected ephemeris \n */
+  eQMI_LOC_EPHEMERIS_SOURCE_EFS_V02 = 4, /**<  Source is EFS  */
+  QMILOCEPHEMERISSOURCEENUMT_MAX_ENUM_VAL_V02 = 2147483647 /**< To force a 32 bit signed enum.  Do not change or use*/
+}qmiLocEphemerisSourceEnumT_v02;
+/**
+    @}
+  */
+
 /** @addtogroup loc_qmi_messages
     @{
   */
@@ -15699,6 +15715,50 @@ typedef struct {
   /**<   Intersignal correction between BDS B2B_I (Data) and pilot channels. \n
        - Units -- Milliseconds
   */
+
+  /* Optional */
+  /*  Clock Data Reference Time of Week */
+  uint8_t toc_valid;  /**< Must be set to true if toc is being passed */
+  uint32_t toc;
+  /**<   Clock data reference time of week.  \n
+       - Units -- Seconds \n
+       If source is ephemeris, \n
+         for GPS/QZSS/BDS/GAL/NAVIC - value is decoded over the air in full GPS seconds \n
+         for GLONASS - same as GLO TOE in full GPS seconds. \n
+       If source is XTRA, \n
+         for GPS/QZSS/BDS/GAL/GLO - same as XTRA Time of Applicability in full GPS seconds. */
+
+  /* Optional */
+  /*  Issue of Data, Clock */
+  uint8_t IODC_valid;  /**< Must be set to true if IODC is being passed */
+  uint16_t IODC;
+  /**<   Issue of data, clock (unitless).
+    */
+
+  /* Optional */
+  /*  Reference Time Ephemeris */
+  uint8_t toe_valid;  /**< Must be set to true if toe is being passed */
+  uint32_t toe;
+  /**<   Reference time of ephemeris. \n
+       - Units -- Seconds \n
+       If source is ephemeris, \n
+         for GPS/QZSS/GAL/BDS - value is decoded over the air. \n
+         for GLO - value corresponds to ephemeris Tb. \n
+       If source is XTRA, \n
+         for GPS/QZSS/GAL/BDS - value is set to 0. \n
+         for GLO - value is set to the XTRA fit interval. */
+
+  /* Optional */
+  /*  Ephemeris Source */
+  uint8_t ephemerisSrc_valid;  /**< Must be set to true if ephemerisSrc is being passed */
+  qmiLocEphemerisSourceEnumT_v02 ephemerisSrc;
+  /**<   Source of ephemeris if polynomials are based on ephemeris. Valid Values: \n
+      - eQMI_LOC_EPHEMERIS_SOURCE_OTA (1) --  Ephemeris decoded over-the-air \n
+      - eQMI_LOC_EPHEMERIS_SOURCE_XTRA (2) --  Ephemeris from the XTRA file \n
+      - eQMI_LOC_EPHEMERIS_SOURCE_NETWORK_INJECTED (3) --  Network-injected ephemeris \n
+      - eQMI_LOC_EPHEMERIS_SOURCE_EFS (4) --  Source is EFS
+
+ */
 }qmiLocEventGnssSvPolyIndMsgT_v02;  /* Message */
 /**
     @}
@@ -23531,8 +23591,8 @@ typedef struct {
         - Units -- Degrees \n
         - Range -- -90.0 to 90.0 \n
 
-		Note: Positive values indicate northern latitude,
-		Negative values indicate southern latitude
+        Note: Positive values indicate northern latitude,
+        Negative values indicate southern latitude
    */
 
   /* Optional */
@@ -23543,8 +23603,8 @@ typedef struct {
         - Units -- Degrees \n
         - Range -- -180.0 to 180.0 \n
 
-		Note: Positive values indicate eastern longitude,
-		Negative values indicate western longitude
+        Note: Positive values indicate eastern longitude,
+        Negative values indicate western longitude
    */
 
   /* Optional */
@@ -23564,7 +23624,7 @@ typedef struct {
         - 0, 101 to 255 -- invalid value\n
         - If 100 is received, reinterpret to 99 \n
 
-		Note: This field must be specified together with horizontal uncertainty.
+        Note: This field must be specified together with horizontal uncertainty.
         If not specified when horUncCircular is set, the default value is 50.
    */
 
@@ -23574,8 +23634,8 @@ typedef struct {
   float altitudeWrtEllipsoid;
   /**<   Altitude with respect to the WGS84 ellipsoid.\n
         - Units -- Meters
-		- Positive = height
-		- Negative = depth
+        - Positive = height
+        - Negative = depth
    */
 
   /* Optional */
@@ -23601,13 +23661,13 @@ typedef struct {
   uint8_t vertConfidence;
   /**<   Vertical confidence, as defined by ETSI TS 101 109. \n
         - Units -- Percent (0-99)\n
-		- 0 -- invalid value \n
-		- 100 to 256 -- not used \n
-		- If 100 is received, reinterpret to 99 \n
+        - 0 -- invalid value \n
+        - 100 to 256 -- not used \n
+        - If 100 is received, reinterpret to 99 \n
 
-		Note: This field must be specified together with the vertical uncertainty.
+        Note: This field must be specified together with the vertical uncertainty.
         If not specified, the default value is 50.
-	*/
+    */
 
   /* Optional */
   /*  Altitude Source */
