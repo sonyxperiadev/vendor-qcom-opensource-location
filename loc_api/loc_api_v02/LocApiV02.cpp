@@ -2708,6 +2708,11 @@ locClientEventMaskType LocApiV02 :: convertLocClientEventMask(
       eventMask |= QMI_LOC_EVENT_MASK_DC_REPORT_V02;
   }
 
+  if (mask & LOC_API_ADAPTER_BIT_ENGINE_LOCK_STATE_DATA_REPORT) {
+     eventMask |= QMI_LOC_EVENT_MASK_ENGINE_LOCK_STATE_V02;
+  }
+
+
   return eventMask;
 }
 
