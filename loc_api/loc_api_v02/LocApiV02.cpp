@@ -7979,14 +7979,20 @@ void LocApiV02::reportEngDebugDataInfo(const qmiLocEngineDebugDataIndMsgT_v02*
         gnssEngineDebugDataInfo.jammedSignalsMask = pLocEngDbgDataInfoIndMsg->jammedSignalsMask;
     }
 
-    // jammerIndicatorList from modem is valid from index 1.
     if (pLocEngDbgDataInfoIndMsg->jammerIndicatorList_valid) {
-        gnssEngineDebugDataInfo.jammerData.resize(
-                pLocEngDbgDataInfoIndMsg->jammerIndicatorList_len, {});
-        for (int i = 1; i < pLocEngDbgDataInfoIndMsg->jammerIndicatorList_len; i++) {
-            gnssEngineDebugDataInfo.jammerData[i-1] = {
-                    pLocEngDbgDataInfoIndMsg->jammerIndicatorList[i].bpMetricDb,
-                    pLocEngDbgDataInfoIndMsg->jammerIndicatorList[i].agcMetricDb};
+        // initalize the bpMetricDb and agcMetricDb as invalid for all signal types
+        // modem does not report jammerData for signal types if they are invalid as earlier.
+        gnssEngineDebugDataInfo.jammerData.resize(GNSS_LOC_MAX_NUMBER_OF_SIGNAL_TYPES,
+                {INT32_MAX, INT32_MAX});
+        for (int i = 0; i < pLocEngDbgDataInfoIndMsg->jammerIndicatorList_len; i++) {
+            // get the signal type index from the signalTypeMask
+            int signalTypeIndex =
+                log2(pLocEngDbgDataInfoIndMsg->jammerIndicatorList[i].gnssSignalType);
+                if (gnssEngineDebugDataInfo.jammerData.size() > signalTypeIndex) {
+                    gnssEngineDebugDataInfo.jammerData[signalTypeIndex] = {
+                        pLocEngDbgDataInfoIndMsg->jammerIndicatorList[i].bpMetricDb,
+                        pLocEngDbgDataInfoIndMsg->jammerIndicatorList[i].agcMetricDb};
+                }
         }
     }
 
