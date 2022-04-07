@@ -801,6 +801,9 @@ static const locClientRespIndTableStructT locClientRespIndTable[]= {
 
    { QMI_LOC_GET_TRIBAND_STATE_IND_V02,
      sizeof(qmiLocGetTribandStateIndMsgT_v02) },
+
+   { QMI_LOC_SET_SDK_FEATURE_CONFIG_IND_V02,
+     sizeof(qmiLocSetSdkFeatureConfigIndMsgT_v02) },
 };
 
 
@@ -1911,6 +1914,12 @@ bool validateRequest(
     case QMI_LOC_SET_TRIBAND_STATE_REQ_V02:
     {
         *pOutLen = sizeof(qmiLocSetTribandStateReqMsgT_v02);
+        break;
+    }
+
+    case QMI_LOC_SET_SDK_FEATURE_CONFIG_REQ_V02:
+    {
+        *pOutLen = sizeof(qmiLocSetSdkFeatureConfigReqMsgT_v02);
         break;
     }
     // ALL requests with no payload
