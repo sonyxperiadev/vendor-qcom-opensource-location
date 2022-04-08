@@ -324,6 +324,7 @@ enum ELocMsgID {
     E_INTAPI_CONFIG_USER_CONSENT_TERRESTRIAL_POSITIONING_MSG_ID = 211,
     E_INTAPI_CONFIG_OUTPUT_NMEA_TYPES_MSG_ID = 212,
     E_INTAPI_CONFIG_ENGINE_INTEGRITY_RISK_MSG_ID = 213,
+    E_INTAPI_INJECT_LOCATION_MSG_ID = 214,
 
     // integration API config retrieval request/response
     E_INTAPI_GET_ROBUST_LOCATION_CONFIG_REQ_MSG_ID  = 300,
@@ -1448,6 +1449,22 @@ struct LocAPIGetDebugRespMsg : LocAPIMsgHeader
     LocAPIGetDebugRespMsg(const char* name,
         const PBLocAPIGetDebugRespMsg& pbMsg,
         const LocationApiPbMsgConv* pbMsgConv);
+
+    int serializeToProtobuf(string& protoStr) override;
+};
+
+struct LocIntApiInjectLocationMsg : LocAPIMsgHeader
+{
+    Location mLocation;
+    inline LocIntApiInjectLocationMsg(const char* name,
+                                      const Location &location,
+                                      const LocationApiPbMsgConv *pbMsgConv) :
+        LocAPIMsgHeader(name, E_INTAPI_INJECT_LOCATION_MSG_ID, pbMsgConv),
+        mLocation(location) { }
+
+    LocIntApiInjectLocationMsg(const char* name,
+                               const PBLocIntApiInjectLocationMsg &pbMsg,
+                               const LocationApiPbMsgConv *pbMsgConv);
 
     int serializeToProtobuf(string& protoStr) override;
 };

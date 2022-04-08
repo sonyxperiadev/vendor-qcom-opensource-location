@@ -286,6 +286,9 @@ ELocMsgID LocationApiPbMsgConv::getEnumForPBELocMsgID(const PBELocMsgID &pbLocMs
         case PB_E_LOCAPI_GET_DEBUG_RESP_MSG_ID:
             eLocMsgId = E_LOCAPI_GET_DEBUG_RESP_MSG_ID;
             break;
+        case PB_E_INTAPI_INJECT_LOCATION_MSG_ID:
+            eLocMsgId = E_INTAPI_INJECT_LOCATION_MSG_ID;
+            break;
         default:
             break;
     }
@@ -882,6 +885,9 @@ PBELocMsgID LocationApiPbMsgConv::getPBEnumForELocMsgID(const ELocMsgID &eLocMsg
             break;
         case E_LOCAPI_GET_DEBUG_RESP_MSG_ID:
             pbLocMsgId = PB_E_LOCAPI_GET_DEBUG_RESP_MSG_ID;
+            break;
+        case E_INTAPI_INJECT_LOCATION_MSG_ID:
+            pbLocMsgId = PB_E_INTAPI_INJECT_LOCATION_MSG_ID;
             break;
         default:
             break;
