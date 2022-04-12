@@ -211,6 +211,12 @@ ELocMsgID LocationApiPbMsgConv::getEnumForPBELocMsgID(const PBELocMsgID &pbLocMs
         case PB_E_LOCAPI_DC_REPORT_MSG_ID:
             eLocMsgId = E_LOCAPI_DC_REPORT_MSG_ID;
             break;
+        case PB_E_LOCAPI_GET_SINGLE_POS_REQ_MSG_ID:
+            eLocMsgId = E_LOCAPI_GET_SINGLE_POS_REQ_MSG_ID;
+            break;
+        case PB_E_LOCAPI_GET_SINGLE_POS_RESP_MSG_ID:
+            eLocMsgId = E_LOCAPI_GET_SINGLE_POS_RESP_MSG_ID;
+            break;
         case PB_E_LOCAPI_PINGTEST_MSG_ID:
             eLocMsgId = E_LOCAPI_PINGTEST_MSG_ID;
             break;
@@ -816,6 +822,12 @@ PBELocMsgID LocationApiPbMsgConv::getPBEnumForELocMsgID(const ELocMsgID &eLocMsg
             break;
         case E_LOCAPI_DC_REPORT_MSG_ID:
             pbLocMsgId = PB_E_LOCAPI_DC_REPORT_MSG_ID;
+            break;
+        case E_LOCAPI_GET_SINGLE_POS_REQ_MSG_ID:
+            pbLocMsgId = PB_E_LOCAPI_GET_SINGLE_POS_REQ_MSG_ID;
+            break;
+        case E_LOCAPI_GET_SINGLE_POS_RESP_MSG_ID:
+            pbLocMsgId = PB_E_LOCAPI_GET_SINGLE_POS_RESP_MSG_ID;
             break;
         case E_LOCAPI_PINGTEST_MSG_ID:
             pbLocMsgId = PB_E_LOCAPI_PINGTEST_MSG_ID;

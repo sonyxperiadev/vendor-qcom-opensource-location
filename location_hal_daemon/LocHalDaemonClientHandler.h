@@ -165,6 +165,8 @@ public:
     uint32_t* getClientIds(size_t count, uint32_t* sessionIds);
     // send terrestrial fix to the requesting LCA client
     void sendTerrestrialFix(LocationError error, const Location& location);
+    void sendSingleFusedFix(LocationError error, const Location& location);
+
     void getDebugReport();
     void sendCapabilitiesMsg();
     void getAntennaInfo();

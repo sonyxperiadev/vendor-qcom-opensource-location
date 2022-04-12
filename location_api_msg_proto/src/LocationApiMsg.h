@@ -309,6 +309,10 @@ enum ELocMsgID {
     E_LOCAPI_GET_ANTENNA_INFO_MSG_ID = 36,
     E_LOCAPI_ANTENNA_INFO_MSG_ID = 37,
 
+    // Single fix request/response msg
+    E_LOCAPI_GET_SINGLE_POS_REQ_MSG_ID = 38,
+    E_LOCAPI_GET_SINGLE_POS_RESP_MSG_ID = 39,
+
     // ping
     E_LOCAPI_PINGTEST_MSG_ID = 99,
 
@@ -860,6 +864,42 @@ struct LocAPIGetSingleTerrestrialPosRespMsg: LocAPIMsgHeader
 
     LocAPIGetSingleTerrestrialPosRespMsg(const char* name,
             const PBLocAPIGetSingleTerrestrialPosRespMsg &pbLocGetTerrestrialPosResp,
+            const LocationApiPbMsgConv *pbMsgConv);
+
+    int serializeToProtobuf(string& protoStr) override;
+};
+
+struct LocAPIGetSinglePosReqMsg: LocAPIMsgHeader
+{
+    uint32_t mTimeoutMsec;
+    float    mHorQoS;
+
+    inline LocAPIGetSinglePosReqMsg(
+            const char* name, uint32_t timeoutMsec,
+            float horQoS, const LocationApiPbMsgConv *pbMsgConv) :
+        LocAPIMsgHeader(name, E_LOCAPI_GET_SINGLE_POS_REQ_MSG_ID, pbMsgConv),
+        mTimeoutMsec(timeoutMsec), mHorQoS(horQoS) { }
+
+    LocAPIGetSinglePosReqMsg(const char* name,
+            const PBLocAPIGetSinglePosReqMsg &pbLocGetPosReq,
+            const LocationApiPbMsgConv *pbMsgConv);
+
+    int serializeToProtobuf(string& protoStr) override;
+};
+
+struct LocAPIGetSinglePosRespMsg: LocAPIMsgHeader
+{
+    LocationError mErrorCode;
+    Location      mLocation;
+
+    inline LocAPIGetSinglePosRespMsg(
+            const char* name, LocationError errorCode, Location location,
+            const LocationApiPbMsgConv *pbMsgConv) :
+        LocAPIMsgHeader(name, E_LOCAPI_GET_SINGLE_POS_RESP_MSG_ID, pbMsgConv),
+        mErrorCode(errorCode), mLocation(location) { }
+
+    LocAPIGetSinglePosRespMsg(const char* name,
+            const PBLocAPIGetSinglePosRespMsg &pbLocGetPosResp,
             const LocationApiPbMsgConv *pbMsgConv);
 
     int serializeToProtobuf(string& protoStr) override;

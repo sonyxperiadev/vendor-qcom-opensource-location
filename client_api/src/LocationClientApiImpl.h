@@ -69,6 +69,7 @@ IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <loc_pla.h>
 #include <LocIpc.h>
+#include <LocationDataTypes.h>
 #include <ILocationAPI.h>
 #include <MsgTask.h>
 #include <LocationApiMsg.h>
@@ -211,6 +212,9 @@ public:
     void getSingleTerrestrialPos(uint32_t timeoutMsec, TerrestrialTechMask techMask,
                                  float horQoS, trackingCallback terrestrialPositionCallback,
                                  responseCallback responseCallback);
+    void getSinglePos(uint32_t timeoutMsec, float horQoS,
+                      trackingCallback positionCb,
+                      responseCallback responseCb);
 
     void pingTest(PingTestCb pingTestCallback);
 
@@ -245,7 +249,11 @@ public:
     static GnssEnergyConsumedInfo parseGnssConsumedInfo(::GnssEnergyConsumedInfo);
     static GnssDcReport parseDcReport(const::GnssDcReportInfo &halDcReport);
 
-    void logLocation(const GnssLocation &gnssLocation);
+    void logLocation(const Location &location,
+                     LocReportTriggerType reportTriggerType);
+    void logLocation(const GnssLocation &gnssLocation,
+                     LocReportTriggerType reportTriggerType);
+
     LCAReportLoggerUtil & getLogger() {
         return mLogger;
     }
@@ -321,6 +329,10 @@ private:
     trackingCallback              mSingleTerrestrialPosCb;
     responseCallback              mSingleTerrestrialPosRespCb;
 
+    // Single fix callback
+    trackingCallback           mSinglePosCb;
+    responseCallback           mSinglePosRespCb;
+
     MsgTask                    mMsgTask;
 
     LocIpc                     mIpc;
@@ -331,7 +343,6 @@ private:
     std::unordered_map<uint32_t, Geofence> mGeofenceMap;
 
     LCAReportLoggerUtil        mLogger;
-
 };
 
 } // namespace location_client

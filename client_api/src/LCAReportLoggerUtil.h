@@ -66,6 +66,7 @@ IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define LOCATION_CLIENT_API_DIAG_BASE
 
 #include "LocLoggerBase.h"
+#include <LocationDataTypes.h>
 #include "LocationClientApi.h"
 #include <loc_misc_utils.h>
 
@@ -76,16 +77,15 @@ namespace location_client {
 class LCAReportLoggerUtil {
 public:
     typedef void (*LogGnssLocation)(const GnssLocation& gnssLocation,
-                                    const LocationCapabilitiesMask& capMask,
-                                    uint64_t sessionStartBootTimestampNs);
+                                    const DiagLocationInfoExt& diagLocationInfoExt);
     typedef void (*LogGnssSv)(const std::vector<GnssSv>& gnssSvsVector);
     typedef void (*LogGnssNmea)(uint64_t timestamp, uint32_t length, const char* nmea);
     typedef void (*LogGnssMeas)(const GnssMeasurements& gnssMeasurements);
     typedef void (*LogGnssDcReport)(const GnssDcReport& gnssDcReport);
 
     LCAReportLoggerUtil();
-    void log(const GnssLocation& gnssLocation, const LocationCapabilitiesMask& capMask,
-             uint64_t sessionStartBootTimestampNs);
+    void log(const GnssLocation& gnssLocation,
+             const DiagLocationInfoExt & diagLocationInfoExt);
     void log(const std::vector<GnssSv>& gnssSvsVector);
     void log(uint64_t timestamp, uint32_t length, const char* nmea);
     void log(const GnssMeasurements& gnssMeasurements);

@@ -129,30 +129,61 @@ private:
     LocationApiService* mLocationApiService;
 };
 
-class SingleTerrestrialFixTimer : public LocTimer {
+enum SingleShotTimerType{
+    SINGLE_SHOT_FIX_TIMER_TERRESTRIAL = 1,
+    SINGLE_SHOT_FIX_TIMER_FUSED = 2,
+};
+
+class SingleFixTimer : public LocTimer {
 public:
 
-    SingleTerrestrialFixTimer(LocationApiService* locationApiService,
-                              std::string& clientName) :
+    SingleFixTimer(LocationApiService* locationApiService,
+                   std::string& clientName,
+                   SingleShotTimerType timerType) :
             mLocationApiService(locationApiService),
-            mClientName(clientName) {
+            mClientName(clientName), mTimerType(timerType) {
+        LOC_LOGv("timer constructor called");
     }
 
-    ~SingleTerrestrialFixTimer() {
-    }
+    ~SingleFixTimer() {LOC_LOGv("timer destructed called");}
 
 public:
     void timeOutCallback() override;
 
 private:
     LocationApiService* mLocationApiService;
-    const std::string mClientName;
+    const std::string   mClientName;
+    SingleShotTimerType mTimerType;
 };
 
-// This keeps track of the client that requests single fix terrestrial position
-// and the timer that will fire when the timeout value has reached
-typedef std::unordered_map<std::string, SingleTerrestrialFixTimer>
-        SingleTerrestrialFixClientMap;
+// This keeps track of the client that requests single shot gtp or fused
+// fix and the timer that will fire when the timeout value has reached
+typedef std::unordered_map<std::string, SingleFixTimer>
+        SingleFixClientTimeoutMap;
+
+class SingleFixReqInfo {
+public:
+    float horQoS;
+    SingleFixTimer* timeoutTimer;
+
+    inline SingleFixReqInfo(float inQoS, SingleFixTimer* inTimer) :
+            horQoS(inQoS), timeoutTimer(inTimer) {
+    }
+
+    inline SingleFixReqInfo(SingleFixReqInfo&& inReq) {
+        horQoS = inReq.horQoS;
+        timeoutTimer = inReq.timeoutTimer;
+        inReq.timeoutTimer = nullptr;
+    }
+    inline ~SingleFixReqInfo() {
+        if (timeoutTimer != nullptr) {
+            delete timeoutTimer;
+        }
+        timeoutTimer = nullptr;
+    }
+};
+
+typedef std::unordered_map<std::string, SingleFixReqInfo> SingleFixReqMap;
 
 class LocationApiService
 {
@@ -202,6 +233,9 @@ public:
     // Utility routine used by gtp fix timeout timer
     void gtpFixRequestTimeout(const std::string& clientName);
 
+    // Utility routine used by fused fix timeout timer
+    void singleFixRequestTimeout(const std::string& clientName);
+
     inline const MsgTask& getMsgTask() const {return mMsgTask;};
 
 private:
@@ -220,6 +254,8 @@ private:
     void updateNetworkAvailability(bool availability);
     void getGnssEnergyConsumed(const char* clientSocketName);
     void getSingleTerrestrialPos(LocAPIGetSingleTerrestrialPosReqMsg*);
+    void getSinglePos(LocAPIGetSinglePosReqMsg*);
+    void stopTrackingSessionForSingleFixes();
 
     void startBatching(LocAPIStartBatchingReqMsg*);
     void stopBatching(LocAPIStopBatchingReqMsg*);
@@ -256,6 +292,7 @@ private:
     void onResponseCb(LocationError err, uint32_t id);
     void onCollectiveResponseCallback(size_t count, LocationError *errs, uint32_t *ids);
     void onGtpWwanTrackingCallback(Location location);
+    void onGnssLocationInfoCb(GnssLocationInfoNotification notification);
 
     // Location configuration API requests
     void configConstrainedTunc(
@@ -355,7 +392,7 @@ private:
     // maintenance timer
     MaintTimer mMaintTimer;
 
-   // msg task used by timers
+    // msg task used by timers
     const MsgTask   mMsgTask;
 
     // Terrestrial service related APIs
@@ -365,7 +402,18 @@ private:
     trackingCallback mGtpWwanPosCallback;
     // -1: not set, 0: user not opt-in, 1: user opt in
     int mOptInTerrestrialService;
-    SingleTerrestrialFixClientMap mTerrestrialFixReqs;
+    // LIA clients that register for xtra status update
+    SingleFixClientTimeoutMap mTerrestrialFixTimeoutMap;
+
+    // Single fused fix related variables
+    ILocationAPI* mSingleFixLocationApi;
+    uint32_t     mSingleFixTrackingSessionId;
+    LocationCallbacks mSingleFixLocationApiCallbacks;
+    SingleFixReqMap   mSingleFixReqMap;
+    Location          mSingleFixLastLocation;
+
+    // LIA clients that register for xtra status update
+    std::unordered_set<std::string> mClientsRegForXtraStatus;
 };
 
 #endif //LOCATIONAPISERVICE_H

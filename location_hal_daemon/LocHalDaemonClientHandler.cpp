@@ -678,6 +678,21 @@ void LocHalDaemonClientHandler::sendTerrestrialFix(LocationError error,
     }
 }
 
+void LocHalDaemonClientHandler::sendSingleFusedFix(LocationError error,
+                                                   const Location& location) {
+    LocAPIGetSinglePosRespMsg msg(SERVICE_NAME, error,
+                                  location, &mService->mPbufMsgConv);
+
+    const char* msgStream = nullptr;
+    size_t msgLen = 0;
+    string pbStr;
+    if (msg.serializeToProtobuf(pbStr)) {
+        msgStream = pbStr.c_str();
+        msgLen = pbStr.size();
+        sendMessage(msgStream, msgLen, E_LOCAPI_GET_SINGLE_POS_RESP_MSG_ID);
+    }
+}
+
 void LocHalDaemonClientHandler::onGnssConfigCb(ELocMsgID configMsgId,
                                                const GnssConfig & gnssConfig) {
     string pbStr;
