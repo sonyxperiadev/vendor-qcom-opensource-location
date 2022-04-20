@@ -65,6 +65,8 @@ IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define LOCATION_INTEGRATION_API_H
 
 #include <loc_pla.h>
+#include <LocationClientApi.h>
+
 #ifdef NO_UNORDERED_SET_OR_MAP
     #include <set>
     #include <map>
@@ -1369,6 +1371,28 @@ public:
     */
     bool configEngineIntegrityRisk(LocIntegrationEngineType engineType,
                                    uint32_t integrityRisk);
+
+    /** @brief
+        Inject location <br/>
+
+        The LIA client should only call this API as per defined use
+        cases. If the LIA client doesn’t follow the defined use case
+        and instead calling injectLocation randomly, it may cause
+        poor performance of the GNSS engine and break the defined
+        use case. <br/>
+
+        Please note that LocConfigCb() will not be invoked. <br/>
+
+        @param location location to be injected.<br/>
+
+        @return true, if the injected location is accepted. <br/>
+        @return false, if the injected location is not accepted.
+                Please note that the injected location will not be
+                accepted if does not have valid
+                latitude/longitude/horizontal accuracy or timestamp
+                info. <br/>
+    */
+    bool injectLocation(const location_client::Location& location);
 
     /** @example example1:testGetConfigApi
     * <pre>

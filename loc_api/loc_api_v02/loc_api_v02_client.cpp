@@ -26,7 +26,7 @@
  * IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
+ /*
 Changes from Qualcomm Innovation Center are provided under the following license:
 
 Copyright (c) 2022 Qualcomm Innovation Center, Inc. All rights reserved.
@@ -339,6 +339,18 @@ static const locClientEventIndTableStructT locClientEventIndTable[]= {
   // platform power state event ind
   { QMI_LOC_EVENT_PLATFORM_POWER_STATE_CHANGED_IND_V02,
     sizeof(qmiLocPlatformPowerStateChangedIndMsgT_v02)},
+
+    // engine Lock information ind
+  { QMI_LOC_EVENT_ENGINE_LOCK_STATE_IND_V02,
+    sizeof(qmiLocEventEngineLockStateIndMsgT_v02)},
+
+  // Engine Debug Data ind
+  { QMI_LOC_ENGINE_DEBUG_DATA_IND_V02,
+    sizeof(qmiLocEngineDebugDataIndMsgT_v02)},
+
+  // disater and crisis report ind
+  { QMI_LOC_DC_REPORT_IND_V02,
+    sizeof(qmiLocEventDcReportIndMsgT_v02)},
 };
 
 /* table to relate the respInd Id with its size */

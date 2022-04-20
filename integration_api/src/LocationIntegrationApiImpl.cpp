@@ -1123,6 +1123,31 @@ uint32_t LocationIntegrationApiImpl::configEngineIntegrityRisk(
     return 0;
 }
 
+void LocationIntegrationApiImpl::odcpiInject(const ::Location& location) {
+    struct InjectLocationReq : public LocMsg {
+        InjectLocationReq(LocationIntegrationApiImpl* apiImpl,
+                const ::Location &location) : mApiImpl(apiImpl), mLocation(location) {}
+        virtual ~InjectLocationReq() {}
+        void proc() const {
+            LocIntApiInjectLocationMsg msg(mApiImpl->mSocketName, mLocation,
+                                           &mApiImpl->mPbufMsgConv);
+            string pbStr;
+            msg.serializeToProtobuf(pbStr);
+            if (pbStr.size() != 0) {
+                mApiImpl->sendConfigMsgToHalDaemon((LocConfigTypeEnum)0, /* no response cb */
+                        reinterpret_cast<uint8_t*>((uint8_t *)pbStr.c_str()), pbStr.size(), false);
+            } else {
+                LOC_LOGe("serializeToProtobuf failed");
+            }
+        }
+
+        LocationIntegrationApiImpl* mApiImpl;
+        const ::Location            mLocation;
+    };
+
+    mMsgTask.sendMsg(new (nothrow) InjectLocationReq(this, location));
+}
+
 void LocationIntegrationApiImpl::sendConfigMsgToHalDaemon(
         LocConfigTypeEnum configType, uint8_t* pMsg,
         size_t msgSize, bool invokeResponseCb) {

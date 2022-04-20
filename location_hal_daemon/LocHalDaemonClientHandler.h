@@ -166,6 +166,7 @@ public:
     // send terrestrial fix to the requesting LCA client
     void sendTerrestrialFix(LocationError error, const Location& location);
     void getDebugReport();
+    void sendCapabilitiesMsg();
 
     inline shared_ptr<LocIpcSender> getIpcSender () {return mIpcSender;};
     inline int getServiceId() {return mServiceId;}  // for EAP client
@@ -199,7 +200,8 @@ private:
     void onGnssNmeaCb(GnssNmeaNotification);
     void onGnssDataCb(GnssDataNotification gnssDataNotification);
     void onGnssMeasurementsCb(GnssMeasurementsNotification gnssMeasurementsNotification);
-    void onLocationSystemInfoCb(LocationSystemInfo);
+    void onLocationSystemInfoCb(LocationSystemInfo systemInfo);
+    void onDcReportCb(const GnssDcReportInfo& dcReportInfo);
     void onLocationApiDestroyCompleteCb();
 
     // send ipc message to this client for serialized payload

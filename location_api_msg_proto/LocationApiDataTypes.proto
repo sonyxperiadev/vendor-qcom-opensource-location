@@ -1,4 +1,3 @@
-
 /* Copyright (c) 2020-2021 The Linux Foundation. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -80,8 +79,9 @@ enum LocationApiDataTypesVersion {
     LOCAPI_DATA_TYPES_VER_MAJOR = 1;
     // Minor - New features / API addition, new message/elemtent addition.
     // Bump the last byte of version i.e. x.2 to x.3
-    // Minor version 19: 1. Add DebugReport for LCA 2. Add fix quality level to PBLocations
-    LOCAPI_DATA_TYPES_VER_MINOR = 19;
+    // Minor version 22: Add AntennaInfo messages for LCA
+    LOCAPI_DATA_TYPES_VER_MINOR = 22;
+
 }
 
 // ============================================================================
@@ -539,10 +539,12 @@ enum PBLocationFlagsMask {
     PB_LOCATION_HAS_SPEED_ACCURACY_BIT       = 0x0040;
     // location has valid bearing accuracy
     PB_LOCATION_HAS_BEARING_ACCURACY_BIT     = 0x0080;
-    // location has valid valid Location::timestamp
+    // location has valid Location::timestamp
     PB_LOCATION_HAS_TIMESTAMP_BIT            = 0x0100;
-    // location has valid valid elapsedRealTime
+    // location has valid elapsedRealTime
     PB_LOCATION_HAS_ELAPSED_REAL_TIME_BIT    = 0x0200;
+    // location has valid time uncertainty
+    PB_LOCATION_HAS_TIME_UNC_BIT             = 0x0400;
 }
 
 enum PBLocationTechnologyMask {
@@ -651,6 +653,10 @@ enum PBLocationCapabilitiesMask {
     /** This mask indicates QDR3_C license bundle is enabled.
      *  This bundle includes features for SV Polynomial. <br/> */
     PB_LOCATION_CAPS_QWES_QDR3                         = 131072;
+    /** This mask indicates DGNSS license bundle is enabled. <br/> */
+    PB_LOCATION_CAPS_QWES_DGNSS                        = 262144;
+    /** This mask indicates Antenna info is enabled. <br/> */
+    PB_LOCATION_CAPS_ANTENNA_INFO                      = 524288;
 }
 
 enum PBGnssDataMask {
@@ -775,6 +781,8 @@ message PBLocation {
     uint64 elapsedRealTime = 13;
     /** boot timestamp uncertainty corresponding to GPS timestamp, in ns */
     uint64 elapsedRealTimeUnc = 14;
+    /** time uncertainty in msec */
+    float  timeUncMs = 15;
 }
 
 message PBLocationOptions {
@@ -1244,6 +1252,25 @@ message PBLocationSystemInfo {
     PBLeapSecondSystemInfo   leapSecondSysInfo = 2;
 }
 
+// Disaster crisis report type from GNSS engine
+enum PBGnssDcReportType {
+    PB_GNSS_DC_REPORT_TYPE_UNDEFINED = 0;
+    // Disaster Prevention information provided by Japan Meteolorogical Agency
+    PB_QZSS_JMA_DISASTER_PREVENTION_INFO = 43;
+    //  Disaster Prevention information provided by other organizations
+    PB_QZSS_NON_JMA_DISASTER_PREVENTION_INFO = 44;
+};
+
+// Disaster crisis report from GNSS engine
+message PBGnssDcReportInfo {
+    // dc report type, as defined in standard
+    PBGnssDcReportType  dcReportType = 1;
+    // number of valid bits that client should make use in dcReportData
+    uint32              numValidBits = 2;
+    // dc report data, packed into uint8_t
+    repeated uint32     dcReportData = 3;
+};
+
 message PBGnssConfigRobustLocationVersion {
     // Major version number
     uint32 major = 1;
@@ -1573,3 +1600,33 @@ message PBGnssDebugReport {
     PBGnssDebugTime time = 2;
     repeated PBGnssDebugSatelliteInfo satelliteInfo = 3;
 }
+
+// Antenna Info messages
+message PBGnssCoordinate {
+    double x = 1;
+    double xUncertainty = 2;
+    double y = 3;
+    double yUncertainty = 4;
+    double z = 5;
+    double zUncertainty = 6;
+}
+
+message PB2DimensionDoubleVector {
+    uint32 row = 1;
+    uint32 column = 2;
+    repeated double value = 3;
+}
+
+message PBGnssAntennaInformation {
+    double carrierFrequencyMHz = 1;
+    PBGnssCoordinate phaseCenterOffsetCoordinateMillimeters = 2;
+    PB2DimensionDoubleVector phaseCenterVariationCorrectionMillimeters = 3;
+    PB2DimensionDoubleVector phaseCenterVariationCorrectionUncertaintyMillimeters = 4;
+    PB2DimensionDoubleVector signalGainCorrectionDbi = 5;
+    PB2DimensionDoubleVector signalGainCorrectionUncertaintyDbi = 6;
+}
+
+message PBAntennaInformation {
+    repeated PBGnssAntennaInformation antennaInfos = 1;
+}
+

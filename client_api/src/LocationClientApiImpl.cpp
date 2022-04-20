@@ -26,7 +26,7 @@
  * IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
- /*
+/*
 Changes from Qualcomm Innovation Center are provided under the following license:
 
 Copyright (c) 2022 Qualcomm Innovation Center, Inc. All rights reserved.
@@ -267,6 +267,7 @@ void LocationClientApiImpl::parseLocation(const ::Location &halLocation, Locatio
     uint32_t flags = 0;
 
     location.timestamp = halLocation.timestamp;
+    location.timeUncMs = halLocation.timeUncMs;
     location.latitude = halLocation.latitude;
     location.longitude = halLocation.longitude;
     location.altitude = halLocation.altitude;
@@ -286,6 +287,9 @@ void LocationClientApiImpl::parseLocation(const ::Location &halLocation, Locatio
 
     if (0 != halLocation.timestamp) {
         flags |= LOCATION_HAS_TIMESTAMP_BIT;
+    }
+    if (::LOCATION_HAS_TIME_UNC_BIT & halLocation.flags) {
+        flags |= LOCATION_HAS_TIME_UNC_BIT;
     }
     if (::LOCATION_HAS_LAT_LONG_BIT & halLocation.flags) {
         flags |= LOCATION_HAS_LAT_LONG_BIT;
@@ -774,7 +778,7 @@ GnssLocation LocationClientApiImpl::parseLocationInfo(
     if (::GNSS_LOCATION_INFO_LEAP_SECONDS_BIT & halLocationInfo.flags) {
        flags |= GNSS_LOCATION_INFO_LEAP_SECONDS_BIT;
     }
-    if (::GNSS_LOCATION_INFO_TIME_UNC_BIT & halLocationInfo.flags) {
+    if (::LOCATION_HAS_TIME_UNC_BIT & halLocationInfo.location.flags) {
         flags |= GNSS_LOCATION_INFO_TIME_UNC_BIT;
     }
     if (::GNSS_LOCATION_INFO_NUM_SV_USED_IN_POSITION_BIT & halLocationInfo.flags) {
@@ -917,7 +921,6 @@ GnssLocation LocationClientApiImpl::parseLocationInfo(
             halLocationInfo.bodyFrameData, halLocationInfo.bodyFrameDataExt);
     locationInfo.gnssSystemTime = parseSystemTime(halLocationInfo.gnssSystemTime);
     locationInfo.leapSeconds = halLocationInfo.leapSeconds;
-    locationInfo.timeUncMs = halLocationInfo.timeUncMs;
 
     return locationInfo;
 }
@@ -1176,6 +1179,21 @@ GnssEnergyConsumedInfo LocationClientApiImpl::parseGnssConsumedInfo(::GnssEnergy
     return energyConsumed;
 }
 
+GnssDcReport LocationClientApiImpl::parseDcReport(const::GnssDcReportInfo &halDcReport) {
+    GnssDcReport dcReport = {};
+    switch (halDcReport.dcReportType) {
+        case ::QZSS_JMA_DISASTER_PREVENTION_INFO:
+            dcReport.dcReportType = QZSS_JMA_DISASTER_PREVENTION_INFO;
+            break;
+        case ::QZSS_NON_JMA_DISASTER_PREVENTION_INFO:
+            dcReport.dcReportType = QZSS_NON_JMA_DISASTER_PREVENTION_INFO;
+            break;
+    }
+    dcReport.numValidBits = halDcReport.numValidBits;
+    dcReport.dcReportData = std::move(halDcReport.dcReportData);
+    return dcReport;
+}
+
 void LocationClientApiImpl::logLocation(const GnssLocation &gnssLocation)
 {
     mLogger.log(gnssLocation, mCapsMask, mSessionStartBootTimestampNs);
@@ -1225,8 +1243,8 @@ public:
 
             virtual ~onHalServiceStatusChangeHandler() {}
             void proc() const {
+                LOC_LOGi("LocIpcQrtrWatcher:: HAL Daemon service status %d", mStatus);
                 if (LocIpcQrtrWatcher::ServiceStatus::UP == mStatus) {
-                    LOC_LOGi("LocIpcQrtrWatcher:: HAL Daemon ServiceStatus::UP");
                     auto sender = mWatcher.mIpcSender.lock();
                     if (nullptr != sender && sender->copyDestAddrFrom(mRefSender)) {
                         sleep(2);
@@ -1455,6 +1473,12 @@ void LocationClientApiImpl::updateCallbacksSync(LocationCallbacks& callbacks) {
     //convert callbacks to callBacksMask
     LocationCallbacksMask callBacksMask = 0;
 
+    if (callbacks.responseCb) {
+        mLocationCbs.responseCb = callbacks.responseCb;
+    }
+    if (callbacks.collectiveResponseCb) {
+        mLocationCbs.collectiveResponseCb = callbacks.collectiveResponseCb;
+    }
     if (callbacks.trackingCb) {
         callBacksMask |= E_LOC_CB_TRACKING_BIT;
         mLocationCbs.trackingCb = callbacks.trackingCb;
@@ -1486,6 +1510,10 @@ void LocationClientApiImpl::updateCallbacksSync(LocationCallbacks& callbacks) {
     if (callbacks.gnssNHzMeasurementsCb) {
         callBacksMask |= E_LOC_CB_GNSS_NHZ_MEAS_BIT;
         mLocationCbs.gnssNHzMeasurementsCb = callbacks.gnssNHzMeasurementsCb;
+    }
+    if (callbacks.gnssDcReportCb) {
+        callBacksMask |= E_LOC_CB_GNSS_DC_REPORT_BIT;
+        mLocationCbs.gnssDcReportCb = callbacks.gnssDcReportCb;
     }
     // handle callbacks that are not related to a fix session
     if (mLocationSysInfoCb) {
@@ -2629,7 +2657,7 @@ void IpcListener::onReceive(const char* data, uint32_t length,
             switch (locApiMsg.msgId) {
             case E_LOCAPI_CAPABILILTIES_MSG_ID:
             {
-                LOC_LOGd("<<< capabilities indication");
+                LOC_LOGi("<<< capabilities indication for client: %s", mApiImpl.mSocketName);
                 PBLocAPICapabilitiesIndMsg pbLocApiCapIndMsg;
                 if (0 == pbLocApiCapIndMsg.ParseFromString(pbLocApiMsg.payload())) {
                     LOC_LOGe("Failed to parse pbLocApiCapIndMsg from payload!!");
@@ -2643,7 +2671,7 @@ void IpcListener::onReceive(const char* data, uint32_t length,
 
             case E_LOCAPI_HAL_READY_MSG_ID:
             {
-                LOC_LOGd("<<< HAL ready");
+                LOC_LOGi("<<< HAL ready message for client: %s", mApiImpl.mSocketName);
 
                 // location hal deamon has restarted, need to set this
                 // flag to false to prevent messages to be sent to hal
@@ -2920,6 +2948,23 @@ void IpcListener::onReceive(const char* data, uint32_t length,
                             &mApiImpl.mPbufMsgConv);
                     const LocAPIDataIndMsg* pDataIndMsg = (LocAPIDataIndMsg*)(&msg);
                     mApiImpl.mLocationCbs.gnssDataCb(msg.gnssDataNotification);
+                }
+                break;
+            }
+
+            case E_LOCAPI_DC_REPORT_MSG_ID:
+            {
+                LOC_LOGd("<<< message = DC report");
+                if ((mApiImpl.mSessionId != LOCATION_CLIENT_SESSION_ID_INVALID) &&
+                        (mApiImpl.mCallbacksMask & E_LOC_CB_GNSS_DC_REPORT_BIT) &&
+                        (mApiImpl.mLocationCbs.gnssDcReportCb)) {
+                    PBLocAPIDcReportIndMsg pbMsg;
+                    if (0 == pbMsg.ParseFromString(pbLocApiMsg.payload())) {
+                        LOC_LOGe("Failed to parse DC report from payload!!");
+                        return;
+                    }
+                    LocAPIDcReportIndMsg msg(sockName.c_str(), pbMsg, &mApiImpl.mPbufMsgConv);
+                    mApiImpl.mLocationCbs.gnssDcReportCb(msg.dcReportInfo);
                 }
                 break;
             }

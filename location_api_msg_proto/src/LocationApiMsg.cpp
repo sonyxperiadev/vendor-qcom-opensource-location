@@ -198,6 +198,8 @@ const char* LocApiMsgString(ELocMsgID msgId) {
         return "E_INTAPI_GET_CONSTELLATION_SECONDARY_BAND_CONFIG_REQ_MSG_ID";
     case E_INTAPI_GET_CONSTELLATION_SECONDARY_BAND_CONFIG_RESP_MSG_ID:
         return "E_INTAPI_GET_CONSTELLATION_SECONDARY_BAND_CONFIG_RESP_MSG_ID";
+    case E_INTAPI_INJECT_LOCATION_MSG_ID:
+        return "E_INTAPI_INJECT_LOCATION_MSG_ID";
     default:
         return "unknown ELocMsgID";
     }
@@ -1113,7 +1115,7 @@ int LocAPIGetSingleTerrestrialPosRespMsg::serializeToProtobuf(string& protoStr) 
     if (nullptr != pbLocation) {
         if (pLocApiPbMsgConv->convertLocationToPB(mLocation, pbLocation)) {
             LOC_LOGe("convertLocationToPB failed");
-            free(pbLocation);
+            pbLocGetTerrestrialPosResp.clear_location();
             return 0;
         }
     } else {
@@ -1713,6 +1715,56 @@ int LocAPILocationSystemInfoIndMsg::serializeToProtobuf(string& protoStr) {
     }
     // free memory
     pLocApiPbMsgConv->freeUpPBLocAPILocationSystemInfoIndMsg(pbLocApiLocSysInfoInd);
+    return protoStr.size();
+}
+
+// Convert LocAPIDcReportIndMsg -> PBLocAPIDcReportIndMsg
+int LocAPIDcReportIndMsg::serializeToProtobuf(string& protoStr) {
+    PBLocAPIMsgHeader pLocApiMsgHdr;
+    PBLocAPIDcReportIndMsg pbMsg;
+
+    if (nullptr == pLocApiPbMsgConv) {
+        LOC_LOGe("pLocApiPbMsgConv is null!");
+        return 0;
+    }
+    // string      mSocketName = 1;
+    pLocApiMsgHdr.set_msocketname(mSocketName);
+    // PBELocMsgID  msgId = 2;
+    pLocApiMsgHdr.set_msgid(pLocApiPbMsgConv->getPBEnumForELocMsgID(msgId));
+    // uint32   msgVersion = 3;
+    pLocApiMsgHdr.set_msgversion(msgVersion);
+
+    PBGnssDcReportInfo* pbDcReportInfo = pbMsg.mutable_dcreportinfo();
+    if (nullptr != pbDcReportInfo) {
+        if (pLocApiPbMsgConv->convertGnssDcReportToPB(dcReportInfo, pbDcReportInfo)) {
+            LOC_LOGe("convertGnssDcReportToPB failed");
+            pbMsg.clear_dcreportinfo();
+            return 0;
+        }
+    } else {
+        LOC_LOGe("mutable_dcreportinfo failed");
+        return 0;
+    }
+
+    string pbStr;
+    if (!pbMsg.SerializeToString(&pbStr)) {
+        LOC_LOGe("SerializeToString on pbMsg failed!");
+        pbMsg.clear_dcreportinfo();
+        return 0;
+    }
+    // bytes       payload = 4;
+    pLocApiMsgHdr.set_payload(pbStr);
+
+    // uint32   payloadSize = 5;
+    pLocApiMsgHdr.set_payloadsize(sizeof(LocAPIDcReportIndMsg));
+
+    if (!pLocApiMsgHdr.SerializeToString(&protoStr)) {
+        LOC_LOGe("SerializeToString on pLocApiMsgHdr failed!");
+        pbMsg.clear_dcreportinfo();
+        return 0;
+    }
+    // free memory
+    pbMsg.clear_dcreportinfo();
     return protoStr.size();
 }
 
@@ -2749,6 +2801,54 @@ int LocAPIGetDebugRespMsg::serializeToProtobuf(string& protoStr) {
     return protoStr.size();
 }
 
+// Convert LocIntApiInjectLocationMsg -> PBLocIntApiInjectLocationMsg
+int LocIntApiInjectLocationMsg::serializeToProtobuf(string& protoStr) {
+    PBLocAPIMsgHeader pLocApiMsgHdr;
+    PBLocIntApiInjectLocationMsg pbMsg;
+
+    if (nullptr == pLocApiPbMsgConv) {
+        LOC_LOGe("pLocApiPbMsgConv is null!");
+        return 0;
+    }
+    // string      mSocketName = 1;
+    pLocApiMsgHdr.set_msocketname(mSocketName);
+    // PBELocMsgID  msgId = 2;
+    pLocApiMsgHdr.set_msgid(pLocApiPbMsgConv->getPBEnumForELocMsgID(msgId));
+    // uint32   msgVersion = 3;
+    pLocApiMsgHdr.set_msgversion(msgVersion);
+
+    // PBLocation      location = 1;
+    PBLocation* pbLocation = pbMsg.mutable_location();
+    if (nullptr != pbLocation) {
+        if (pLocApiPbMsgConv->convertLocationToPB(mLocation, pbLocation)) {
+            LOC_LOGe("convertLocationToPB failed");
+            pbMsg.clear_location();
+            return 0;
+        }
+    } else {
+        LOC_LOGe("mutable_location failed");
+        return 0;
+    }
+
+    string pbStr;
+    if (!pbMsg.SerializeToString(&pbStr)) {
+        pbMsg.clear_location();
+        LOC_LOGe("SerializeToString failed!");
+        return 0;
+    }
+
+    pLocApiMsgHdr.set_payload(pbStr);
+    pLocApiMsgHdr.set_payloadsize(sizeof(LocIntApiInjectLocationMsg));
+
+    if (!pLocApiMsgHdr.SerializeToString(&protoStr)) {
+        LOC_LOGe("SerializeToString on pLocApiMsgHdr failed!");
+        return 0;
+    }
+
+    pbMsg.clear_location();
+    return protoStr.size();
+}
+
 // Convert LocAPIPingTestReqMsg -> PBLocAPIPingTestReqMsg
 int LocAPIPingTestReqMsg::serializeToProtobuf(string& protoStr) {
     PBLocAPIMsgHeader pLocApiMsgHdr;
@@ -3256,6 +3356,17 @@ LocAPILocationSystemInfoIndMsg::LocAPILocationSystemInfoIndMsg(const char* name,
             locationSystemInfo);
 }
 
+// Decode PBLocAPIDcReportIndMsg -> LocAPIDcReportIndMsg
+LocAPIDcReportIndMsg::LocAPIDcReportIndMsg(const char* name,
+            const PBLocAPIDcReportIndMsg &pbMsg, const LocationApiPbMsgConv *pbMsgConv):
+        LocAPIMsgHeader(name, E_LOCAPI_DC_REPORT_MSG_ID, pbMsgConv) {
+    if (nullptr == pLocApiPbMsgConv) {
+        LOC_LOGe("pLocApiPbMsgConv is null!");
+        return;
+    }
+    pLocApiPbMsgConv->pbConvertToDcReport(pbMsg.dcreportinfo(), dcReportInfo);
+}
+
 // Decode PBLocConfigConstrainedTuncReqMsg -> LocConfigConstrainedTuncReqMsg
 LocConfigConstrainedTuncReqMsg::LocConfigConstrainedTuncReqMsg(const char* name,
             const PBLocConfigConstrainedTuncReqMsg &pbConfigConstrTuncReqMsg,
@@ -3473,6 +3584,24 @@ LocConfigGetConstellationSecondaryBandConfigRespMsg::
     // PBGnssSvTypeConfig mSecondaryBandConfig = 1;
     pLocApiPbMsgConv->pbConvertToGnssSvTypeConfig(
             pbCfgGetConstSecBandCfgResp.msecondarybandconfig(), mSecondaryBandConfig);
+}
+
+// Decode PBLocIntApiInjectLocationMsg -> LocIntApiInjectLocationMsg
+LocIntApiInjectLocationMsg::LocIntApiInjectLocationMsg(const char* name,
+                               const PBLocIntApiInjectLocationMsg &pbMsg,
+                               const LocationApiPbMsgConv *pbMsgConv) :
+        LocAPIMsgHeader(name, E_INTAPI_INJECT_LOCATION_MSG_ID, pbMsgConv) {
+
+    memset(&mLocation, 0, sizeof(mLocation));
+    // PBLocation location = 1;
+    if (pbMsg.has_location()) {
+        if (pbMsgConv) {
+            pbMsgConv->pbConvertToLocation(pbMsg.location(),
+                                           mLocation);
+        } else {
+            LOC_LOGe("pb msg conv is null");
+        }
+    }
 }
 
 // Decode PBLocAPIGetDebugRespMsg ->

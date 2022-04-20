@@ -303,6 +303,9 @@ enum ELocMsgID {
     E_LOCAPI_GET_DEBUG_REQ_MSG_ID = 33,
     E_LOCAPI_GET_DEBUG_RESP_MSG_ID = 34,
 
+    // Disater and crisis reports
+    E_LOCAPI_DC_REPORT_MSG_ID = 35,
+
     // ping
     E_LOCAPI_PINGTEST_MSG_ID = 99,
 
@@ -321,6 +324,7 @@ enum ELocMsgID {
     E_INTAPI_CONFIG_USER_CONSENT_TERRESTRIAL_POSITIONING_MSG_ID = 211,
     E_INTAPI_CONFIG_OUTPUT_NMEA_TYPES_MSG_ID = 212,
     E_INTAPI_CONFIG_ENGINE_INTEGRITY_RISK_MSG_ID = 213,
+    E_INTAPI_INJECT_LOCATION_MSG_ID = 214,
 
     // integration API config retrieval request/response
     E_INTAPI_GET_ROBUST_LOCATION_CONFIG_REQ_MSG_ID  = 300,
@@ -353,6 +357,7 @@ enum ELocationCallbacksOption {
     E_LOC_CB_SIMPLE_LOCATION_INFO_BIT   = (1<<10), /**< Register for simple location */
     E_LOC_CB_GNSS_MEAS_BIT              = (1<<11), /**< Register for GNSS Measurements */
     E_LOC_CB_GNSS_NHZ_MEAS_BIT          = (1<<12), /**< Register for NHZ GNSS Measurements */
+    E_LOC_CB_GNSS_DC_REPORT_BIT         = (1<<13), /**< Register for disaster and crisis reports */
 };
 
 // Mask related to all info that are tied with a position session and need to be unsubscribed
@@ -363,7 +368,8 @@ enum ELocationCallbacksOption {
                                        E_LOC_CB_GNSS_DATA_BIT|E_LOC_CB_GNSS_MEAS_BIT|\
                                        E_LOC_CB_GNSS_NHZ_MEAS_BIT|\
                                        E_LOC_CB_ENGINE_LOCATIONS_INFO_BIT|\
-                                       E_LOC_CB_SIMPLE_LOCATION_INFO_BIT)
+                                       E_LOC_CB_SIMPLE_LOCATION_INFO_BIT |\
+                                       E_LOC_CB_GNSS_DC_REPORT_BIT)
 
 #define LOCATION_BATCHING_SESSION_MASK (E_LOC_CB_BATCHING_BIT|\
                                         E_LOC_CB_BATCHING_STATUS_BIT)
@@ -1050,6 +1056,22 @@ struct LocAPILocationSystemInfoIndMsg: LocAPIMsgHeader
     int serializeToProtobuf(string& protoStr) override;
 };
 
+// defintion for message with msg id of E_LOCAPI_DC_REPORT_MSG_ID
+struct LocAPIDcReportIndMsg : LocAPIMsgHeader
+{
+    GnssDcReportInfo dcReportInfo;
+
+    inline LocAPIDcReportIndMsg(const char* name,
+                                const GnssDcReportInfo& gnssDcReportInfo,
+                                const LocationApiPbMsgConv *pbMsgConv) :
+        LocAPIMsgHeader(name, E_LOCAPI_DC_REPORT_MSG_ID, pbMsgConv),
+        dcReportInfo(gnssDcReportInfo) { }
+    LocAPIDcReportIndMsg(const char* name, const PBLocAPIDcReportIndMsg &pbLocAPIDcReportIndMsg,
+                         const LocationApiPbMsgConv *pbMsgConv);
+
+    int serializeToProtobuf(string& protoStr) override;
+};
+
 /******************************************************************************
 IPC message structure - Location Integration API Configure Request
 ******************************************************************************/
@@ -1427,6 +1449,22 @@ struct LocAPIGetDebugRespMsg : LocAPIMsgHeader
     LocAPIGetDebugRespMsg(const char* name,
         const PBLocAPIGetDebugRespMsg& pbMsg,
         const LocationApiPbMsgConv* pbMsgConv);
+
+    int serializeToProtobuf(string& protoStr) override;
+};
+
+struct LocIntApiInjectLocationMsg : LocAPIMsgHeader
+{
+    Location mLocation;
+    inline LocIntApiInjectLocationMsg(const char* name,
+                                      const Location &location,
+                                      const LocationApiPbMsgConv *pbMsgConv) :
+        LocAPIMsgHeader(name, E_INTAPI_INJECT_LOCATION_MSG_ID, pbMsgConv),
+        mLocation(location) { }
+
+    LocIntApiInjectLocationMsg(const char* name,
+                               const PBLocIntApiInjectLocationMsg &pbMsg,
+                               const LocationApiPbMsgConv *pbMsgConv);
 
     int serializeToProtobuf(string& protoStr) override;
 };
