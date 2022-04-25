@@ -2850,7 +2850,24 @@ void LocApiV02 :: reportPosition (
     memset(&dataNotify, 0, sizeof(dataNotify));
     msInWeek = (int)location_report_ptr->gpsTime.gpsTimeOfWeekMs;
 
-    if (location_report_ptr->jammerIndicatorList_valid) {
+    if (location_report_ptr->jammerIndicatorListExt_valid) {
+        msInWeek = -2;
+        for (uint32_t i = 0; i < location_report_ptr->jammerIndicatorListExt_len; i++) {
+            int signalId = log2(location_report_ptr->jammerIndicatorListExt[i].gnssSignalType);
+            if (signalId < GNSS_LOC_MAX_NUMBER_OF_SIGNAL_TYPES) {
+                LOC_LOGv("signal type %d, agcMetricDb=%d, bpMetricDb=%d",
+                        signalId, -location_report_ptr->jammerIndicatorListExt[i].bpMetricDb,
+                        location_report_ptr->jammerIndicatorListExt[i].bpMetricDb);
+                dataNotify.gnssDataMask[signalId] |=
+                    GNSS_LOC_DATA_AGC_BIT | GNSS_LOC_DATA_JAMMER_IND_BIT;
+                dataNotify.agc[signalId] =
+                    -(double)location_report_ptr->jammerIndicatorListExt[i].bpMetricDb / 100.0;
+                dataNotify.jammerInd[signalId] =
+                    (double)location_report_ptr->jammerIndicatorListExt[i].bpMetricDb / 100.0;
+                msInWeek = -1;
+            }
+        }
+    } else if (location_report_ptr->jammerIndicatorList_valid) {
         LOC_LOGV("%s:%d jammerIndicator is present len=%d",
                  __func__, __LINE__,
                  location_report_ptr->jammerIndicatorList_len);
