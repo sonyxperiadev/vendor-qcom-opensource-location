@@ -2561,11 +2561,11 @@ uint32_t LocationClientApiImpl::getAntennaInfo(AntennaInfoCallback* cb) {
 
     if (!mHalRegistered) {
         LOC_LOGe("Not registered yet");
-        return ANTENNA_INFO_ERROR_GENERIC;
+        return LOCATION_ERROR_GENERAL_FAILURE;
     }
     mpAntennaInfoCb = cb;
     mMsgTask.sendMsg(new (nothrow) GetAntennaInfoMsg(this));
-    return ANTENNA_INFO_SUCCESS;
+    return LOCATION_ERROR_SUCCESS;
 }
 
 void LocationClientApiImpl::processAntennaInfo(
