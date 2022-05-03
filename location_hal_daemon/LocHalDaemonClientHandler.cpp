@@ -732,6 +732,32 @@ void LocHalDaemonClientHandler::onGnssConfigCb(ELocMsgID configMsgId,
         }
         break;
 
+    case E_INTAPI_GET_XTRA_STATUS_REQ_MSG_ID:
+        if (gnssConfig.flags & GNSS_CONFIG_FLAGS_XTRA_STATUS_BIT)
+        {
+            LOC_LOGd("--< onGnssConfigCb, xtra status received, %d %d %d",
+                     gnssConfig.xtraStatus.featureEnabled,
+                     gnssConfig.xtraStatus.xtraDataStatus,
+                     gnssConfig.xtraStatus.xtraValidForHours);
+            LocConfigGetXtraStatusRespMsg msg(SERVICE_NAME,
+                                              XTRA_STATUS_UPDATE_UPON_QUERY,
+                                              gnssConfig.xtraStatus,
+                                              &mService->mPbufMsgConv);
+            msg.serializeToProtobuf(pbStr);
+        }
+        break;
+
+    case E_INTAPI_REGISTER_XTRA_STATUS_UPDATE_REQ_MSG_ID:
+        if (gnssConfig.flags & GNSS_CONFIG_FLAGS_XTRA_STATUS_BIT)
+        {
+            LocConfigGetXtraStatusRespMsg msg(SERVICE_NAME,
+                                              XTRA_STATUS_UPDATE_UPON_REGISTRATION,
+                                              gnssConfig.xtraStatus,
+                                              &mService->mPbufMsgConv);
+            msg.serializeToProtobuf(pbStr);
+        }
+        break;
+
     default:
         break;
     }
@@ -745,6 +771,24 @@ void LocHalDaemonClientHandler::onGnssConfigCb(ELocMsgID configMsgId,
         }
     } else {
         LOC_LOGe("mIpcSender or msgStream is null!!");
+    }
+}
+
+void LocHalDaemonClientHandler::onXtraStatusUpdateCb(const XtraStatus &xtraStatus) {
+    string pbStr;
+
+    LocConfigGetXtraStatusRespMsg msg(SERVICE_NAME, XTRA_STATUS_UPDATE_UPON_STATUS_CHANGE,
+                                      xtraStatus, &mService->mPbufMsgConv);
+    msg.serializeToProtobuf(pbStr);
+    if ((nullptr != mIpcSender) && (pbStr.size() != 0)) {
+        bool rc = sendMessage(pbStr.c_str(), pbStr.size(), E_INTAPI_GET_XTRA_STATUS_RESP_MSG_ID );
+        // purge this client if failed
+        if (!rc) {
+            LOC_LOGe("failed rc=%d purging client=%s", rc, mName.c_str());
+            mService->deleteClientbyName(mName);
+        }
+    } else {
+        LOC_LOGe("mIpcSender or msgStream is null!! size %d", pbStr.size());
     }
 }
 

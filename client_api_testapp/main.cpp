@@ -163,6 +163,9 @@ enum TrackingSessionType {
 #define INJECT_LOCATION            "injectLocation"
 #define GET_SINGLE_FUSED_FIX       "getSingleFusedFix"
 #define CANCEL_SINGLE_FUSED_FIX    "cancelSingleFusedFix"
+#define CONFIG_XTRA_PARAMS         "configXtraParams"
+#define GET_XTRA_STATUS             "getXtraStatus"
+#define REGISTER_XTRA_STATUS_UPDATE "registerXtraUpdateStatus"
 
 // debug utility
 static uint64_t getTimestampMs() {
@@ -452,6 +455,12 @@ static void onGetGnssEnergyConsumedCb(const GnssEnergyConsumedInfo& gnssEneryCon
             gnssEneryConsumed.totalEnergyConsumedSinceFirstBoot);
 }
 
+static void onGetXtraStatusCb(XtraStatusUpdateTrigger updateTrigger, const XtraStatus& xtraStatus) {
+    printf("<<< onXtraStatusCb, update trigger %d, enable %d, status %d, valid hours %d\n",
+           updateTrigger, xtraStatus.featureEnabled, xtraStatus.xtraDataStatus,
+           xtraStatus.xtraValidForHours);
+}
+
 static void printHelp() {
     printf("\n************* options *************\n");
     printf("e reprottype tbf: Concurrent engine report session with 100 ms interval\n");
@@ -494,6 +503,9 @@ static void printHelp() {
     printf("%s: inject location \n", INJECT_LOCATION);
     printf("%s: get single shot fix with qos and timeout \n", GET_SINGLE_FUSED_FIX );
     printf("%s: cancle single shot fix \n", CANCEL_SINGLE_FUSED_FIX );
+    printf("%s: config xtra params \n", CONFIG_XTRA_PARAMS);
+    printf("%s: get xtra status \n", GET_XTRA_STATUS);
+    printf("%s: register xtra status update \n", REGISTER_XTRA_STATUS_UPDATE);
 }
 
 void setRequiredPermToRunAsLocClient() {
@@ -798,6 +810,99 @@ void parseLocation(char* buf, location_client::Location& location) {
     }
     flags |= LOCATION_HAS_TIME_UNC_BIT;
     location.flags = (LocationFlagsMask) flags;
+}
+
+void parseXtraConfig(char* buf, bool &xtraEnabled, XtraConfigParams& oemConfig) {
+    static char *save = nullptr;
+    char* token = strtok_r(buf, " ", &save); // skip header
+
+    token = strtok_r(NULL, " ", &save);
+    if (token != NULL) {
+        xtraEnabled = atoi(token);
+    }
+
+    if (xtraEnabled) {
+        token = strtok_r(NULL, " ", &save);
+        if (token != NULL) {
+            oemConfig.xtraDownloadIntervalMinute = atoi(token);
+        }
+
+        token = strtok_r(NULL, " ", &save);
+        if (token != NULL) {
+            oemConfig.xtraDownloadTimeoutSec = atoi(token);
+        }
+
+        token = strtok_r(NULL, " ", &save);
+        if (token != NULL) {
+            oemConfig.xtraDownloadRetryIntervalMinute = atoi(token);
+        }
+
+        token = strtok_r(NULL, " ", &save);
+        if (token != NULL) {
+            oemConfig.xtraDownloadRetryAttempts = atoi(token);
+        }
+
+        token = strtok_r(NULL, " ", &save);
+        if (token != NULL) {
+            oemConfig.xtraCaPath = std::string(token);
+        }
+
+        uint32_t serverCnt = 0;
+        token = strtok_r(NULL, " ", &save);
+        if (token != NULL) {
+            serverCnt = atoi(token);
+        }
+
+        for (int i = 0; i < serverCnt; i++) {
+            token = strtok_r(NULL, " ", &save);
+            if (token != NULL) {
+                oemConfig.xtraServerURLs[i] = std::string(token);
+            }
+        }
+
+        serverCnt = 0;
+        token = strtok_r(NULL, " ", &save);
+        if (token != NULL) {
+            serverCnt = atoi(token);
+        }
+
+        for (int i = 0; i < serverCnt; i++) {
+            token = strtok_r(NULL, " ", &save);
+            if (token != NULL) {
+                oemConfig.ntpServerURLs[i] = std::string(token);
+            }
+        }
+
+        token = strtok_r(NULL, " ", &save);
+        if (token != NULL) {
+            oemConfig.xtraIntegrityDownloadEnable = ((atoi(token) == 0) ? false : true);
+        }
+
+        token = strtok_r(NULL, " ", &save);
+        if (token != NULL) {
+            oemConfig.xtraIntegrityDownloadIntervalMinute = atoi(token);
+        }
+
+        token = strtok_r(NULL, " ", &save);
+        if (token != NULL) {
+            oemConfig.xtraDaemonDebugLogLevel = (DebugLogLevel) atoi(token);
+        }
+
+        printf ("xtra config: enabled %d, %d %d %d %d ca path: %s, "
+                "xtra url: %s %s %s, ntp url: %s %s %s\n",
+                xtraEnabled, oemConfig.xtraDownloadIntervalMinute,
+                oemConfig.xtraDownloadTimeoutSec,
+                oemConfig.xtraDownloadRetryIntervalMinute,
+                oemConfig.xtraDownloadRetryAttempts,
+                oemConfig.xtraCaPath.c_str(),
+                oemConfig.xtraServerURLs[0].c_str(), oemConfig.xtraServerURLs[1].c_str(),
+                oemConfig.xtraServerURLs[2].c_str(), oemConfig.ntpServerURLs[0].c_str(),
+                oemConfig.ntpServerURLs[1].c_str(), oemConfig.ntpServerURLs[2].c_str());
+        printf("integerity download %d %d\n", oemConfig.xtraIntegrityDownloadEnable,
+               oemConfig.xtraIntegrityDownloadIntervalMinute);
+    } else {
+        printf("xtra disabled \n");
+    }
 }
 
 void getGtpWwanFixes (bool multipleFixes, char* buf) {
@@ -1473,6 +1578,27 @@ int main(int argc, char *argv[]) {
                 pLcaClient->getSinglePosition(0, 0, nullptr, onSingleShotResponseCb);
             }
             singleShotFixCnt = 0;
+        } else if (strncmp(buf, CONFIG_XTRA_PARAMS, strlen(CONFIG_XTRA_PARAMS)) == 0) {
+            bool enableXtra = false;;
+            XtraConfigParams xtraConfig = {};
+            parseXtraConfig(buf, enableXtra, xtraConfig);
+            bool retval = pIntClient->configXtraParams(enableXtra, &xtraConfig);
+            if (retval == false) {
+                printf("config xtra params failed\n");
+            }
+        } else if (strncmp(buf, GET_XTRA_STATUS, strlen(GET_XTRA_STATUS)) == 0) {
+            pIntClient->getXtraStatus();
+        } else if (strncmp(buf, REGISTER_XTRA_STATUS_UPDATE,
+                           strlen(REGISTER_XTRA_STATUS_UPDATE)) == 0) {
+            bool registerUpdate = false;;
+            static char *save = nullptr;
+            char* token = strtok_r(buf, " ", &save);
+            token = strtok_r(NULL, " ", &save);
+            if (token != NULL) {
+                registerUpdate = (atoi(token) != 0);
+            }
+            printf("register update %d\n", registerUpdate);
+            pIntClient->registerXtraStatusUpdate(registerUpdate);
         } else {
             int command = buf[0];
             switch(command) {

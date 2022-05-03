@@ -777,5 +777,183 @@ bool LocationIntegrationApi::injectLocation(const location_client::Location& lca
     }
 }
 
+::DebugLogLevel getHalLogLevel (DebugLogLevel logLevel) {
+    ::DebugLogLevel halLogLevel = ::DEBUG_LOG_LEVEL_NONE;
+    switch (logLevel) {
+    case DEBUG_LOG_LEVEL_ERROR:
+        halLogLevel = ::DEBUG_LOG_LEVEL_ERROR;
+        break;
+    case DEBUG_LOG_LEVEL_WARNING:
+        halLogLevel = ::DEBUG_LOG_LEVEL_WARNING;
+        break;
+    case DEBUG_LOG_LEVEL_INFO:
+        halLogLevel = ::DEBUG_LOG_LEVEL_INFO;
+        break;
+    case DEBUG_LOG_LEVEL_DEBUG:
+        halLogLevel = ::DEBUG_LOG_LEVEL_DEBUG;
+        break;
+    case DEBUG_LOG_LEVEL_VERBOSE:
+        halLogLevel = ::DEBUG_LOG_LEVEL_VERBOSE;
+        break;
+    default:
+        break;
+    }
+    return halLogLevel;
+}
+
+bool urlHasPortNum(const char* xtraServerURL, int length) {
+    int index = length-1;
+
+    // check for port number at the end of URL
+    do {
+        char c = xtraServerURL[index];
+        if (c >= '0' && c <= '9') {
+            index--;
+        } else {
+            break;
+        }
+    } while (index >= 0);
+
+    if ((index >= 5) && (index < (length-1)) && xtraServerURL[index] == ':') {
+        return true;
+    } else {
+        return false;
+    }
+}
+
+// sanity check whether XTRA server URL is valid or not
+// 1: start with "https://"
+// 2: end with a port number
+bool isValidXTRAServerURL(const char* xtraServerURL, int length) {
+    // minumum length: https://a.b.c:x
+    if (!xtraServerURL || length < 15) {
+        LOC_LOGe("null or length not valid: %d", length);
+        return false;
+    }
+
+    int retval = strncasecmp(xtraServerURL, "https://", sizeof("https://")-1);
+    if (retval != 0) {
+        LOC_LOGe("url %s does not start with https://", xtraServerURL);
+        return false;
+    } else if (urlHasPortNum(xtraServerURL, length)) {
+        return true;
+    } else {
+        LOC_LOGe("url %s does not have port number", xtraServerURL);
+        return false;
+    }
+}
+
+bool LocationIntegrationApi::configXtraParams(bool enable, XtraConfigParams* configParams) {
+    bool validparam = false;
+    ::XtraConfigParams halConfigParams = {};
+
+    do {
+        if (!mApiImpl) {
+            break;
+        } else if (enable == false) {
+            validparam = true;
+            break;
+        } else if (configParams == nullptr) {
+            LOC_LOGe("no valid param provided to enable xtra");
+            break;
+        }
+
+        LOC_LOGd("xtra params,enable %d, download:%d %d, retry %d %d, debug: %d"
+                 "ca path: %s, xtra server: %s %s %s, ntp server %s %s %s",
+                 enable, configParams->xtraDownloadIntervalMinute,
+                 configParams->xtraDownloadTimeoutSec,
+                 configParams->xtraDownloadRetryIntervalMinute,
+                 configParams->xtraDownloadRetryAttempts,
+                 configParams->xtraDaemonDebugLogLevel,
+                 configParams->xtraCaPath.c_str(),
+                 configParams->xtraServerURLs[0].c_str(), configParams->xtraServerURLs[1].c_str(),
+                 configParams->xtraServerURLs[2].c_str(), configParams->ntpServerURLs[0].c_str(),
+                 configParams->ntpServerURLs[1].c_str(), configParams->ntpServerURLs[2].c_str());
+
+        halConfigParams.xtraDownloadIntervalMinute =
+                configParams->xtraDownloadIntervalMinute;
+
+        halConfigParams.xtraDownloadTimeoutSec =
+                configParams->xtraDownloadTimeoutSec;
+
+        halConfigParams.xtraDownloadRetryIntervalMinute =
+                configParams->xtraDownloadRetryIntervalMinute;
+
+        halConfigParams.xtraDownloadRetryAttempts =
+                configParams->xtraDownloadRetryAttempts;
+
+        if ((halConfigParams.xtraDownloadRetryIntervalMinute == 0) ||
+                (halConfigParams.xtraDownloadRetryAttempts == 0)) {
+            halConfigParams.xtraDownloadRetryIntervalMinute = 0;
+            halConfigParams.xtraDownloadRetryAttempts = 0;
+        }
+
+        // CA path
+        strlcpy(halConfigParams.xtraCaPath, configParams->xtraCaPath.c_str(),
+                sizeof(halConfigParams.xtraCaPath));
+
+        uint32_t totalValidXtraServerURL = 0;
+        for (int index = 0; index < 3; index++) {
+            // check for valid server URL
+            const char * xtraServerURL = configParams->xtraServerURLs[index].c_str();
+            int length = configParams->xtraServerURLs[index].size();
+            if (isValidXTRAServerURL(xtraServerURL, length) == true) {
+                strlcpy(halConfigParams.xtraServerURLs[totalValidXtraServerURL++],
+                        configParams->xtraServerURLs[index].c_str(),
+                        sizeof(halConfigParams.xtraServerURLs[index]));
+            }
+        }
+        halConfigParams.xtraServerURLsCount = totalValidXtraServerURL;
+
+        uint32_t totalValidNtpServerURL = 0;
+        for (int index = 0; index < 3; index++) {
+            // check for valid server URL
+            const char * ntpServerURL = configParams->ntpServerURLs[index].c_str();
+            int length = configParams->ntpServerURLs[index].size();
+            if (urlHasPortNum(ntpServerURL, length) == true) {
+                strlcpy(halConfigParams.ntpServerURLs[totalValidNtpServerURL++],
+                        configParams->ntpServerURLs[index].c_str(),
+                        sizeof(halConfigParams.ntpServerURLs[index]));
+            }
+        }
+        halConfigParams.ntpServerURLsCount = totalValidNtpServerURL;
+
+        halConfigParams.xtraIntegrityDownloadEnable =
+                configParams->xtraIntegrityDownloadEnable;
+        if (halConfigParams.xtraIntegrityDownloadEnable == true) {
+            halConfigParams.xtraIntegrityDownloadIntervalMinute =
+                    configParams->xtraIntegrityDownloadIntervalMinute;
+        }
+        halConfigParams.xtraDaemonDebugLogLevel =
+                getHalLogLevel(configParams->xtraDaemonDebugLogLevel);
+
+        validparam = true;
+    } while (0);
+
+    if (validparam == true) {
+        return (mApiImpl->configXtraParams(enable, halConfigParams) == 0);
+    } else {
+        return false;
+    }
+}
+
+bool LocationIntegrationApi::getXtraStatus() {
+    if (mApiImpl) {
+        return (mApiImpl->getXtraStatus() == 0);
+    } else {
+        LOC_LOGe ("NULL mApiImpl");
+        return false;
+    }
+}
+
+bool LocationIntegrationApi::registerXtraStatusUpdate(bool registerUpdate) {
+    if (mApiImpl) {
+        return (mApiImpl->registerXtraStatusUpdate(registerUpdate) == 0);
+    } else {
+        LOC_LOGe ("NULL mApiImpl");
+        return false;
+    }
+}
+
 } // namespace location_integration
 

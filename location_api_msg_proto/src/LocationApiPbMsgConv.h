@@ -99,6 +99,11 @@ public:
     // DeadReckoningEngineConfig to PBDeadReckoningEngineConfig
     int convertDeadReckoningEngineConfigToPB(const DeadReckoningEngineConfig &drEngConfig,
             PBDeadReckoningEngineConfig *pbDrEngConfig) const;
+    // XtraConfigParams to PBXtraConfigParams
+    int convertXtraConfigParamsToPB(const XtraConfigParams& xtraParams,
+            PBXtraConfigParams* pbXtraParams) const;
+    int convertXtraStatusToPB(const XtraStatus& xtraStatus, PBXtraStatus* pbXtraStatus) const;
+
     // LocationOptions to PBLocationOptions
     int convertLocationOptionsToPB(const LocationOptions &locOpt,
             PBLocationOptions *pbLocOpt) const;
@@ -463,6 +468,15 @@ public:
         pbLocAPIAntennaInfoMsg.clear_mantennainformation();
     }
 
+    inline void freeUpPBLocConfigXtraReqMsg(PBLocConfigXtraReqMsg &pbLocConfMsg) const {
+        pbLocConfMsg.clear_xtraparams();
+    }
+
+    inline void freeUpPBLocConfigGetXtraStatusRespMsg(
+            PBLocConfigGetXtraStatusRespMsg &pbLocMsg) const {
+        pbLocMsg.clear_mxtrastatus();
+    }
+
     inline void freeUpPBLocAPIPingTestReqMsg(PBLocAPIPingTestReqMsg &pbLocApiPingTest) const {
         // repeated uint32 data = 2;
         pbLocApiPingTest.clear_data();
@@ -541,6 +555,10 @@ public:
     // PBAntennaInformation to AntennaInformation
     int pbConvertToAntennaInfo(const PBAntennaInformation& pbAntennaInfo,
             AntennaInformation& antennaInfo) const;
+    int pbConvertToXtraConfig(const PBXtraConfigParams &pbXtraParams,
+            XtraConfigParams& xtraParams) const;
+    int pbConvertToXtraStatus(const PBXtraStatus &pbXtraStatus,
+            XtraStatus& xtraStatus) const;
 
     // MASK CONVERSION
     // ***************
@@ -587,6 +605,15 @@ public:
     PBClientType getPBEnumForClientType(const ClientType &clientTyp) const;
     GnssDcReportType getDcReportTypeFromPB(const PBGnssDcReportType& pbDcReportType) const;
     PBGnssDcReportType getPBEnumForDcReportType(const GnssDcReportType& dcReportType) const;
+
+    DebugLogLevel getDebugLogLevelFromPB(const PBDebugLogLevel &pbLogLevel) const;
+    PBDebugLogLevel getPBEnumForDebugLogLevel(const DebugLogLevel &logLevel) const;
+    XtraStatusUpdateType getXtraStatusUpdateTypeFromPB(
+            const PBXtraStatusUpdateType &pbXtraStatusUpdateType) const;
+    PBXtraStatusUpdateType getPBEnumForXtraStatusUpdateType(
+            const XtraStatusUpdateType &xtraStatusUpdateType) const;
+    XtraDataStatus getXtraDataStatusFromPB(const PBXtraDataStatus &pbXtraDataStatus) const;
+    PBXtraDataStatus getPBEnumForXtraDataStatus(const XtraDataStatus &xtraDataStatus) const;
 
 private:
     bool mPbDebugLogEnabled;

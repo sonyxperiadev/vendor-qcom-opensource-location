@@ -262,6 +262,9 @@ ELocMsgID LocationApiPbMsgConv::getEnumForPBELocMsgID(const PBELocMsgID &pbLocMs
         case PB_E_INTAPI_CONFIG_ENGINE_INTEGRITY_RISK_MSG_ID:
             eLocMsgId = E_INTAPI_CONFIG_ENGINE_INTEGRITY_RISK_MSG_ID;
             break;
+        case PB_E_INTAPI_CONFIG_XTRA_PARAMS_MSG_ID:
+            eLocMsgId = E_INTAPI_CONFIG_XTRA_PARAMS_MSG_ID;
+            break;
         case PB_E_INTAPI_GET_ROBUST_LOCATION_CONFIG_REQ_MSG_ID:
             eLocMsgId = E_INTAPI_GET_ROBUST_LOCATION_CONFIG_REQ_MSG_ID;
             break;
@@ -300,6 +303,18 @@ ELocMsgID LocationApiPbMsgConv::getEnumForPBELocMsgID(const PBELocMsgID &pbLocMs
             break;
         case PB_E_LOCAPI_ANTENNA_INFO_MSG_ID:
             eLocMsgId = E_LOCAPI_ANTENNA_INFO_MSG_ID;
+            break;
+        case PB_E_INTAPI_GET_XTRA_STATUS_REQ_MSG_ID:
+            eLocMsgId = E_INTAPI_GET_XTRA_STATUS_REQ_MSG_ID;
+            break;
+        case PB_E_INTAPI_GET_XTRA_STATUS_RESP_MSG_ID:
+            eLocMsgId = E_INTAPI_GET_XTRA_STATUS_RESP_MSG_ID;
+            break;
+        case PB_E_INTAPI_REGISTER_XTRA_STATUS_UPDATE_REQ_MSG_ID:
+            eLocMsgId = E_INTAPI_REGISTER_XTRA_STATUS_UPDATE_REQ_MSG_ID;
+            break;
+        case PB_E_INTAPI_DEREGISTER_XTRA_STATUS_UPDATE_REQ_MSG_ID:
+            eLocMsgId = E_INTAPI_DEREGISTER_XTRA_STATUS_UPDATE_REQ_MSG_ID;
             break;
         default:
             break;
@@ -720,6 +735,140 @@ PBGnssDcReportType LocationApiPbMsgConv::getPBEnumForDcReportType(
     return pbDcReportType;
 }
 
+// PBDebugLogLevel to DebugLogLevel
+DebugLogLevel LocationApiPbMsgConv::getDebugLogLevelFromPB (
+        const PBDebugLogLevel &pbLogLevel) const {
+    DebugLogLevel logLevel = DEBUG_LOG_LEVEL_NONE;
+    switch (pbLogLevel) {
+    case PB_DEBUG_LOG_LEVEL_ERROR:
+        logLevel = DEBUG_LOG_LEVEL_ERROR;
+        break;
+    case PB_DEBUG_LOG_LEVEL_WARNING:
+        logLevel = DEBUG_LOG_LEVEL_WARNING;
+        break;
+    case PB_DEBUG_LOG_LEVEL_INFO:
+        logLevel = DEBUG_LOG_LEVEL_INFO;
+        break;
+    case PB_DEBUG_LOG_LEVEL_DEBUG:
+        logLevel = DEBUG_LOG_LEVEL_DEBUG;
+        break;
+    case PB_DEBUG_LOG_LEVEL_VERBOSE:
+        logLevel = DEBUG_LOG_LEVEL_VERBOSE;
+        break;
+    default:
+        break;
+    }
+    return logLevel;
+}
+
+// DebugLogLevel to PBDebugLogLevel
+PBDebugLogLevel LocationApiPbMsgConv::getPBEnumForDebugLogLevel(
+        const DebugLogLevel &logLevel) const {
+
+    PBDebugLogLevel pbLogLevel = PB_DEBUG_LOG_LEVEL_NONE;
+    switch (logLevel) {
+    case DEBUG_LOG_LEVEL_ERROR:
+        pbLogLevel = PB_DEBUG_LOG_LEVEL_ERROR;
+        break;
+    case DEBUG_LOG_LEVEL_WARNING:
+        pbLogLevel = PB_DEBUG_LOG_LEVEL_WARNING;
+        break;
+    case DEBUG_LOG_LEVEL_INFO:
+        pbLogLevel = PB_DEBUG_LOG_LEVEL_INFO;
+        break;
+    case DEBUG_LOG_LEVEL_DEBUG:
+        pbLogLevel = PB_DEBUG_LOG_LEVEL_DEBUG;
+        break;
+    case DEBUG_LOG_LEVEL_VERBOSE:
+        pbLogLevel = PB_DEBUG_LOG_LEVEL_VERBOSE;
+        break;
+    default:
+        break;
+    }
+    return pbLogLevel;
+}
+
+XtraStatusUpdateType LocationApiPbMsgConv::getXtraStatusUpdateTypeFromPB(
+        const PBXtraStatusUpdateType &pbUpdateType) const {
+    XtraStatusUpdateType updateType = XTRA_STATUS_UPDATE_UNDEFINED;
+
+    switch (pbUpdateType) {
+    case PB_XTRA_STATUS_UPDATE_UPON_QUERY:
+        updateType = XTRA_STATUS_UPDATE_UPON_QUERY;
+        break;
+    case PB_XTRA_STATUS_UPDATE_UPON_REGISTRATION:
+        updateType = XTRA_STATUS_UPDATE_UPON_REGISTRATION;
+        break;
+    case PB_XTRA_STATUS_UPDATE_UPON_STATUS_CHANGE:
+        updateType = XTRA_STATUS_UPDATE_UPON_STATUS_CHANGE;
+        break;
+    default:
+        break;
+    }
+
+    return updateType;
+}
+
+XtraDataStatus LocationApiPbMsgConv::getXtraDataStatusFromPB(
+        const PBXtraDataStatus &pbXtraDataStatus) const {
+    XtraDataStatus status = XTRA_DATA_STATUS_UNKNOWN;
+    switch (pbXtraDataStatus) {
+    case PB_XTRA_DATA_STATUS_NOT_AVAIL:
+        status = XTRA_DATA_STATUS_NOT_AVAIL;
+        break;
+    case PB_XTRA_DATA_STATUS_NOT_VALID:
+        status = XTRA_DATA_STATUS_NOT_VALID;
+        break;
+    case PB_XTRA_DATA_STATUS_VALID:
+        status = XTRA_DATA_STATUS_VALID;
+        break;
+    default:
+        break;
+    }
+    return status;
+}
+
+PBXtraDataStatus LocationApiPbMsgConv::getPBEnumForXtraDataStatus(
+        const XtraDataStatus &xtraDataStatus) const{
+    PBXtraDataStatus pbStatus = PB_XTRA_DATA_STATUS_UNKNOWN;
+    switch (xtraDataStatus) {
+    case XTRA_DATA_STATUS_NOT_AVAIL:
+        pbStatus = PB_XTRA_DATA_STATUS_NOT_AVAIL;
+        break;
+    case XTRA_DATA_STATUS_NOT_VALID:
+        pbStatus = PB_XTRA_DATA_STATUS_NOT_VALID;
+        break;
+    case XTRA_DATA_STATUS_VALID:
+        pbStatus = PB_XTRA_DATA_STATUS_VALID;
+        break;
+    default:
+        break;
+    }
+    return pbStatus;
+}
+
+PBXtraStatusUpdateType LocationApiPbMsgConv::getPBEnumForXtraStatusUpdateType(
+        const XtraStatusUpdateType &updateType) const {
+
+    PBXtraStatusUpdateType pbUpdateType = PB_XTRA_STATUS_UPDATE_UNDEFINED;
+
+    switch (updateType) {
+    case XTRA_STATUS_UPDATE_UPON_QUERY:
+        pbUpdateType = PB_XTRA_STATUS_UPDATE_UPON_QUERY;
+        break;
+    case XTRA_STATUS_UPDATE_UPON_REGISTRATION:
+        pbUpdateType = PB_XTRA_STATUS_UPDATE_UPON_REGISTRATION;
+        break;
+    case XTRA_STATUS_UPDATE_UPON_STATUS_CHANGE:
+        pbUpdateType = PB_XTRA_STATUS_UPDATE_UPON_STATUS_CHANGE;
+        break;
+    default:
+        break;
+    }
+
+    return pbUpdateType;
+}
+
 // **** helper function for enum conversion to protobuf enums
 PBELocMsgID LocationApiPbMsgConv::getPBEnumForELocMsgID(const ELocMsgID &eLocMsgId) const {
     PBELocMsgID pbLocMsgId = PB_E_LOCAPI_UNDEFINED_MSG_ID;
@@ -874,6 +1023,9 @@ PBELocMsgID LocationApiPbMsgConv::getPBEnumForELocMsgID(const ELocMsgID &eLocMsg
         case E_INTAPI_CONFIG_ENGINE_INTEGRITY_RISK_MSG_ID:
             pbLocMsgId = PB_E_INTAPI_CONFIG_ENGINE_INTEGRITY_RISK_MSG_ID;
             break;
+        case E_INTAPI_CONFIG_XTRA_PARAMS_MSG_ID:
+            pbLocMsgId = PB_E_INTAPI_CONFIG_XTRA_PARAMS_MSG_ID;
+            break;
         case E_INTAPI_GET_ROBUST_LOCATION_CONFIG_REQ_MSG_ID:
             pbLocMsgId = PB_E_INTAPI_GET_ROBUST_LOCATION_CONFIG_REQ_MSG_ID;
             break;
@@ -912,6 +1064,18 @@ PBELocMsgID LocationApiPbMsgConv::getPBEnumForELocMsgID(const ELocMsgID &eLocMsg
             break;
         case E_LOCAPI_ANTENNA_INFO_MSG_ID:
             pbLocMsgId = PB_E_LOCAPI_ANTENNA_INFO_MSG_ID;
+            break;
+        case E_INTAPI_GET_XTRA_STATUS_REQ_MSG_ID:
+            pbLocMsgId = PB_E_INTAPI_GET_XTRA_STATUS_REQ_MSG_ID;
+            break;
+        case E_INTAPI_GET_XTRA_STATUS_RESP_MSG_ID:
+            pbLocMsgId = PB_E_INTAPI_GET_XTRA_STATUS_RESP_MSG_ID;
+            break;
+        case E_INTAPI_REGISTER_XTRA_STATUS_UPDATE_REQ_MSG_ID:
+            pbLocMsgId = PB_E_INTAPI_REGISTER_XTRA_STATUS_UPDATE_REQ_MSG_ID;
+            break;
+        case E_INTAPI_DEREGISTER_XTRA_STATUS_UPDATE_REQ_MSG_ID:
+            pbLocMsgId = PB_E_INTAPI_DEREGISTER_XTRA_STATUS_UPDATE_REQ_MSG_ID;
             break;
         default:
             break;
@@ -3307,6 +3471,88 @@ int LocationApiPbMsgConv::convertDeadReckoningEngineConfigToPB(
             " VehSpeedScaleUnc: %f, GyroScale: %f, GyroScaleUnc: %f", drEngConfig.validMask,
             drEngConfig.vehicleSpeedScaleFactor, drEngConfig.vehicleSpeedScaleFactorUnc,
             drEngConfig.gyroScaleFactor, drEngConfig.gyroScaleFactorUnc);
+    return 0;
+}
+
+int LocationApiPbMsgConv::convertXtraConfigParamsToPB(
+        const XtraConfigParams& xtraParams, PBXtraConfigParams* pbXtraParams) const {
+    pbXtraParams->set_xtradownloadintervalminute(xtraParams.xtraDownloadIntervalMinute);
+    pbXtraParams->set_xtradownloadtimeoutsec(xtraParams.xtraDownloadTimeoutSec);
+    pbXtraParams->set_xtradownloadretryintervalminute(xtraParams.xtraDownloadRetryIntervalMinute);
+    pbXtraParams->set_xtradownloadretryattempts(xtraParams.xtraDownloadRetryAttempts);
+    pbXtraParams->set_xtracapath(xtraParams.xtraCaPath);
+    for (int index = 0; index < xtraParams.xtraServerURLsCount; index++) {
+        pbXtraParams->add_xtraserverurls(xtraParams.xtraServerURLs[index]);
+        LOC_LOGv("add %s", xtraParams.xtraServerURLs[index]);
+    }
+    for (int index = 0; index < xtraParams.ntpServerURLsCount; index++) {
+        pbXtraParams->add_ntpserverurls(xtraParams.ntpServerURLs[index]);
+        LOC_LOGv("add %s", xtraParams.ntpServerURLs[index]);
+    }
+
+    // conversion routine for debug level
+    pbXtraParams->set_xtradaemondebugloglevel(
+            getPBEnumForDebugLogLevel(xtraParams.xtraDaemonDebugLogLevel));
+
+    pbXtraParams->set_xtraintegritydownloadenable(
+            xtraParams.xtraIntegrityDownloadEnable);
+    pbXtraParams->set_xtraintegritydownloadintervalminute(
+            xtraParams.xtraIntegrityDownloadIntervalMinute);
+    return 0;
+}
+
+int LocationApiPbMsgConv::pbConvertToXtraConfig(const PBXtraConfigParams &pbXtraParams,
+            XtraConfigParams& xtraParams) const {
+    xtraParams.xtraDownloadIntervalMinute = pbXtraParams.xtradownloadintervalminute();
+    xtraParams.xtraDownloadTimeoutSec = pbXtraParams.xtradownloadtimeoutsec();
+
+    xtraParams.xtraDownloadRetryIntervalMinute =
+            pbXtraParams.xtradownloadretryintervalminute();
+    xtraParams.xtraDownloadRetryAttempts = pbXtraParams.xtradownloadretryattempts();
+
+    strlcpy(xtraParams.xtraCaPath, pbXtraParams.xtracapath().c_str(),
+            sizeof(xtraParams.xtraCaPath));
+
+    for (int index = 0; index < pbXtraParams.xtraserverurls_size(); index++) {
+        strlcpy(xtraParams.xtraServerURLs[index], pbXtraParams.xtraserverurls(index).c_str(),
+                sizeof(xtraParams.xtraServerURLs[index]));
+        LOC_LOGv("xtra server url: %d %s", index, xtraParams.xtraServerURLs[index]);
+    }
+    xtraParams.xtraServerURLsCount = pbXtraParams.xtraserverurls_size();
+
+    for (int index = 0; index < pbXtraParams.ntpserverurls_size(); index++) {
+        strlcpy(xtraParams.ntpServerURLs[index], pbXtraParams.ntpserverurls(index).c_str(),
+                sizeof(xtraParams.ntpServerURLs[index]));
+        LOC_LOGv("ntp server url: %d %s", index, xtraParams.ntpServerURLs[index]);
+    }
+    xtraParams.ntpServerURLsCount = pbXtraParams.ntpserverurls_size();
+
+    xtraParams.xtraDaemonDebugLogLevel =
+            getDebugLogLevelFromPB(pbXtraParams.xtradaemondebugloglevel());
+
+    xtraParams.xtraIntegrityDownloadEnable = pbXtraParams.xtraintegritydownloadenable();
+    xtraParams.xtraIntegrityDownloadIntervalMinute =
+            pbXtraParams.xtraintegritydownloadintervalminute();
+    return 0;
+}
+
+int LocationApiPbMsgConv::convertXtraStatusToPB(
+        const XtraStatus& xtraStatus, PBXtraStatus* pbXtraStatus) const {
+    pbXtraStatus->set_featureenabled(xtraStatus.featureEnabled);
+    if (xtraStatus.featureEnabled == true) {
+        pbXtraStatus->set_xtradatastatus(getPBEnumForXtraDataStatus(xtraStatus.xtraDataStatus));
+        pbXtraStatus->set_xtravalidforhours(xtraStatus.xtraValidForHours);
+    }
+    LOC_LOGv("pb xtra status %d %d %d", pbXtraStatus->featureenabled(),
+             pbXtraStatus->xtradatastatus(), pbXtraStatus->xtravalidforhours());
+    return 0;
+}
+
+int LocationApiPbMsgConv::pbConvertToXtraStatus(
+        const PBXtraStatus &pbXtraStatus, XtraStatus& xtraStatus) const {
+    xtraStatus.featureEnabled = pbXtraStatus.featureenabled();
+    xtraStatus.xtraDataStatus = getXtraDataStatusFromPB(pbXtraStatus.xtradatastatus());
+    xtraStatus.xtraValidForHours = pbXtraStatus.xtravalidforhours();
     return 0;
 }
 
