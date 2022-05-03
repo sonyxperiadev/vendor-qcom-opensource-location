@@ -708,6 +708,11 @@ locClientEventMaskType LocApiV02 :: adjustLocClientEventMask(locClientEventMaskT
                                            QMI_LOC_EVENT_MASK_NEXT_LS_INFO_REPORT_V02 |
                                            QMI_LOC_EVENT_MASK_LATENCY_INFORMATION_REPORT_V02 |
                                            QMI_LOC_EVENT_MASK_ENGINE_DEBUG_DATA_REPORT_V02;
+        // clear GNSS_EVENT_REPORT mask because QMI_LOC_EVENT_MASK_FEATURE_STATUS_V02 is set
+        // when LOC_SUPPORTED_FEATURE_DYNAMIC_FEATURE_STATUS is supported
+        if (ContextBase::isFeatureSupported(LOC_SUPPORTED_FEATURE_DYNAMIC_FEATURE_STATUS)) {
+            clearMask |= QMI_LOC_EVENT_MASK_GNSS_EVENT_REPORT_V02;
+        }
         qmiMask = qmiMask & ~clearMask;
     } else if (!mEngineOn) {
         locClientEventMaskType clearMask = QMI_LOC_EVENT_MASK_NMEA_V02;
@@ -2712,6 +2717,9 @@ locClientEventMaskType LocApiV02 :: convertLocClientEventMask(
      eventMask |= QMI_LOC_EVENT_MASK_ENGINE_LOCK_STATE_V02;
   }
 
+  if (mask & LOC_API_ADAPTER_BIT_FEATURE_STATUS_UPDATE) {
+      eventMask |= QMI_LOC_EVENT_MASK_FEATURE_STATUS_V02;
+  }
 
   return eventMask;
 }
