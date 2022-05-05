@@ -460,9 +460,6 @@ public:
                locClientErrorEnumType errorId);
 
   // Tracking
-  virtual void startFix(const LocPosMode& posMode, LocApiResponse *adapterResponse);
-  virtual void stopFix(LocApiResponse *adapterResponse);
-
   void startTimeBasedTracking(const TrackingOptions& options, LocApiResponse* adapterResponse);
   void stopTimeBasedTracking(LocApiResponse* adapterResponse);
   void startDistanceBasedTracking(uint32_t sessionId, const LocationOptions& options,
