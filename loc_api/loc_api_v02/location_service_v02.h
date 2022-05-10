@@ -25,7 +25,6 @@
  * OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN
  * IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
 /*
 Changes from Qualcomm Innovation Center are provided under the following license:
 
@@ -61,7 +60,6 @@ IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
 OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN
 IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
-
 #ifndef LOC_SERVICE_02_H
 #define LOC_SERVICE_02_H
 /**
@@ -99,8 +97,8 @@ IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *THIS IS AN AUTO GENERATED FILE. DO NOT ALTER IN ANY WAY
  *====*====*====*====*====*====*====*====*====*====*====*====*====*====*====*/
 
-/* This file was generated with Tool version 6.14.9
-   It was generated on: Mon Apr  4 2022 (Spin 1)
+/* This file was generated with Tool version 6.14.7
+   It was generated on: Tue May  3 2022 (Spin 0)
    From IDL File: location_service_v02.idl */
 
 /** @defgroup loc_qmi_consts Constant values defined in the IDL */
@@ -126,7 +124,7 @@ extern "C" {
 /** Major Version Number of the IDL used to generate this file */
 #define LOC_V02_IDL_MAJOR_VERS 0x02
 /** Revision Number of the IDL used to generate this file */
-#define LOC_V02_IDL_MINOR_VERS 0x98
+#define LOC_V02_IDL_MINOR_VERS 0x99
 /** Major Version Number of the qmi_idl_compiler used to generate this file */
 #define LOC_V02_IDL_TOOL_VERS 0x06
 /** Maximum Defined Message ID */
@@ -767,6 +765,7 @@ typedef uint64_t qmiLocEventRegMaskT_v02;
 #define QMI_LOC_EVENT_MASK_LATENCY_INFORMATION_REPORT_V02 ((qmiLocEventRegMaskT_v02)0x800000000000ull) /**<  QMI_LOC_LATENCY_INFORMATION indication.       */
 #define QMI_LOC_EVENT_MASK_PLATFORM_POWER_STATE_CHANGED_V02 ((qmiLocEventRegMaskT_v02)0x0001000000000000ull) /**<  QMI_LOC_EVENT_PLATFORM_POWER_STATE_CHANGED indication.  */
 #define QMI_LOC_EVENT_MASK_ENGINE_DEBUG_DATA_REPORT_V02 ((qmiLocEventRegMaskT_v02)0x0002000000000000ull) /**<  QMI_LOC_ENGINE_DEBUG_DATA indication.  */
+#define QMI_LOC_EVENT_MASK_FEATURE_STATUS_V02 ((qmiLocEventRegMaskT_v02)0x0004000000000000ull) /**<  QMI_LOC_EVENT_REPORT indication when featureStatusReport is valid  */
 /** @addtogroup loc_qmi_enums
     @{
   */
@@ -880,6 +879,7 @@ typedef struct {
       - QMI_LOC_EVENT_MASK_LATENCY_INFORMATION_REPORT (0x800000000000) --  QMI_LOC_LATENCY_INFORMATION indication.
       - QMI_LOC_EVENT_MASK_PLATFORM_POWER_STATE_CHANGED (0x0001000000000000) --  QMI_LOC_EVENT_PLATFORM_POWER_STATE_CHANGED indication.
       - QMI_LOC_EVENT_MASK_ENGINE_DEBUG_DATA_REPORT (0x0002000000000000) --  QMI_LOC_ENGINE_DEBUG_DATA indication.
+      - QMI_LOC_EVENT_MASK_FEATURE_STATUS (0x0004000000000000) --  QMI_LOC_EVENT_REPORT indication when featureStatusReport is valid
 
  Multiple events can be registered by ORing the individual masks and
  sending them in this TLV. Set all unused bits in this mask to 0.
@@ -3584,12 +3584,12 @@ typedef struct {
        - 0x00 (FALSE) -- Civic Address is not needed \n
        - 0x01 (TRUE) -- Civic Address is needed
 
-	NOTE: If the civic address is available with the AP, the AP Shall inject
-	the same using the new QMI API QMI_LOC_INJECT_LOCATION_CIVIC_ADDRESS.
+    NOTE: If the civic address is available with the AP, the AP Shall inject
+    the same using the new QMI API QMI_LOC_INJECT_LOCATION_CIVIC_ADDRESS.
 
-        If the civic address is not available, the AP shall NOT use the new QMI API
-	QMI_LOC_INJECT_LOCATION_CIVIC_ADDRESS. The existing DBH injection API should
-        be used to inject hybrid location is available.
+    If the civic address is not available, the AP shall NOT use the new QMI API
+    QMI_LOC_INJECT_LOCATION_CIVIC_ADDRESS. The existing DBH injection API should
+    be used to inject hybrid location is available.
   */
 }qmiLocEventWifiReqIndMsgT_v02;  /* Message */
 /**
@@ -7677,6 +7677,7 @@ typedef struct {
       - QMI_LOC_EVENT_MASK_LATENCY_INFORMATION_REPORT (0x800000000000) --  QMI_LOC_LATENCY_INFORMATION indication.
       - QMI_LOC_EVENT_MASK_PLATFORM_POWER_STATE_CHANGED (0x0001000000000000) --  QMI_LOC_EVENT_PLATFORM_POWER_STATE_CHANGED indication.
       - QMI_LOC_EVENT_MASK_ENGINE_DEBUG_DATA_REPORT (0x0002000000000000) --  QMI_LOC_ENGINE_DEBUG_DATA indication.
+      - QMI_LOC_EVENT_MASK_FEATURE_STATUS (0x0004000000000000) --  QMI_LOC_EVENT_REPORT indication when featureStatusReport is valid
  */
 }qmiLocGetRegisteredEventsIndMsgT_v02;  /* Message */
 /**
@@ -13194,7 +13195,7 @@ typedef struct {
        - 0x01 (TRUE) -- GPS engine is in E911 mode \n
        - 0x00 (FALSE) -- GPS engine is not in E911 mode
 
-	   Note: e911Mode shall be set as TRUE for Non-E911 Wifi Ap injections.
+       Note: e911Mode shall be set as TRUE for Non-E911 Wifi Ap injections.
     */
 }qmiLocEventInjectWifiApDataReqIndMsgT_v02;  /* Message */
 /**
@@ -18432,6 +18433,7 @@ typedef enum {
   eQMI_LOC_SUPPORTED_FEATURE_MULTIPLE_ATTRIBUTION_APPS_V02 = 16, /**<  Support the Multiple Attribution Apps(UTH clients Lock control) feature    */
   eQMI_LOC_SUPPORTED_FEATURE_FLP_NLP_SOURCE_V02 = 17, /**<  Support the FLP, NLP Z-Source provider feature  */
   eQMI_LOC_SUPPORTED_FEATURE_ENGINE_DEBUG_DATA_V02 = 18, /**<  Support the feature to report engine debug data  */
+  eQMI_LOC_SUPPORTED_FEATURE_DYNAMIC_FEATURE_STATUS_V02 = 19, /**<  Support the feature to dynamically report feature status on update */
   QMILOCSUPPORTEDFEATUREENUMT_MAX_ENUM_VAL_V02 = 2147483647 /**< To force a 32 bit signed enum.  Do not change or use*/
 }qmiLocSupportedFeatureEnumT_v02;
 /**
@@ -19230,6 +19232,16 @@ typedef struct {
   /*  SIM MCC(Mobile Country Code) Value */
   uint8_t mccTertiarySimSlot_valid;  /**< Must be set to true if mccTertiarySimSlot is being passed */
   uint16_t mccTertiarySimSlot;
+
+  /* Optional */
+  /*  XTRA File Generation Time */
+  uint8_t xtraFileGenerationTime_valid;  /**< Must be set to true if xtraFileGenerationTime is being passed */
+  uint64_t xtraFileGenerationTime;
+
+  /* Optional */
+  /*  XTRA Remaining Valid Age in Minutes */
+  uint8_t xtraRemValidDuration_valid;  /**< Must be set to true if xtraRemValidDuration is being passed */
+  uint32_t xtraRemValidDuration;
 }qmiLocQueryXtraInfoIndMsgT_v02;  /* Message */
 /**
     @}
@@ -22847,6 +22859,16 @@ typedef struct {
   /*  SIM MCC(Mobile Country Code) Value */
   uint8_t mccTertiarySimSlot_valid;  /**< Must be set to true if mccTertiarySimSlot is being passed */
   uint16_t mccTertiarySimSlot;
+
+  /* Optional */
+  /*  XTRA File Generation Time */
+  uint8_t xtraFileGenerationTime_valid;  /**< Must be set to true if xtraFileGenerationTime is being passed */
+  uint64_t xtraFileGenerationTime;
+
+  /* Optional */
+  /*  XTRA Remaining Valid Age in Minutes */
+  uint8_t xtraRemValidDuration_valid;  /**< Must be set to true if xtraRemValidDuration is being passed */
+  uint32_t xtraRemValidDuration;
 }qmiLocEventQueryXtraInfoReqIndMsgT_v02;  /* Message */
 /**
     @}
@@ -23638,8 +23660,8 @@ typedef struct {
         - Units -- Degrees \n
         - Range -- -90.0 to 90.0 \n
 
-		Note: Positive values indicate northern latitude,
-		Negative values indicate southern latitude
+        Note: Positive values indicate northern latitude,
+        Negative values indicate southern latitude
    */
 
   /* Optional */
@@ -23650,8 +23672,8 @@ typedef struct {
         - Units -- Degrees \n
         - Range -- -180.0 to 180.0 \n
 
-		Note: Positive values indicate eastern longitude,
-		Negative values indicate western longitude
+        Note: Positive values indicate eastern longitude,
+        Negative values indicate western longitude
    */
 
   /* Optional */
@@ -23671,7 +23693,7 @@ typedef struct {
         - 0, 101 to 255 -- invalid value\n
         - If 100 is received, reinterpret to 99 \n
 
-		Note: This field must be specified together with horizontal uncertainty.
+        Note: This field must be specified together with horizontal uncertainty.
         If not specified when horUncCircular is set, the default value is 50.
    */
 
@@ -23681,8 +23703,8 @@ typedef struct {
   float altitudeWrtEllipsoid;
   /**<   Altitude with respect to the WGS84 ellipsoid.\n
         - Units -- Meters
-		- Positive = height
-		- Negative = depth
+        - Positive = height
+        - Negative = depth
    */
 
   /* Optional */
@@ -23708,13 +23730,13 @@ typedef struct {
   uint8_t vertConfidence;
   /**<   Vertical confidence, as defined by ETSI TS 101 109. \n
         - Units -- Percent (0-99)\n
-		- 0 -- invalid value \n
-		- 100 to 256 -- not used \n
-		- If 100 is received, reinterpret to 99 \n
+        - 0 -- invalid value \n
+        - 100 to 256 -- not used \n
+        - If 100 is received, reinterpret to 99 \n
 
-		Note: This field must be specified together with the vertical uncertainty.
+        Note: This field must be specified together with the vertical uncertainty.
         If not specified, the default value is 50.
-	*/
+    */
 
   /* Optional */
   /*  Altitude Source */

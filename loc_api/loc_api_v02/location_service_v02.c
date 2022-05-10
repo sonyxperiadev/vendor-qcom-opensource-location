@@ -25,7 +25,6 @@
  * OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN
  * IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
 /*
 Changes from Qualcomm Innovation Center are provided under the following license:
 
@@ -61,13 +60,12 @@ IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
 OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN
 IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
-
 /*====*====*====*====*====*====*====*====*====*====*====*====*====*====*====*
  *THIS IS AN AUTO GENERATED FILE. DO NOT ALTER IN ANY WAY
  *====*====*====*====*====*====*====*====*====*====*====*====*====*====*====*/
 
-/* This file was generated with Tool version 6.14.9
-   It was generated on: Mon Apr  4 2022 (Spin 1)
+/* This file was generated with Tool version 6.14.7
+   It was generated on: Tue May  3 2022 (Spin 0)
    From IDL File: location_service_v02.idl */
 
 #include "stdint.h"
@@ -7239,10 +7237,20 @@ static const uint8_t qmiLocQueryXtraInfoIndMsgT_data_v02[] = {
    QMI_IDL_FLAGS_OFFSET_IS_16 | QMI_IDL_GENERIC_2_BYTE,
   QMI_IDL_OFFSET16ARRAY(qmiLocQueryXtraInfoIndMsgT_v02, mccSecondarySimSlot),
 
-  QMI_IDL_TLV_FLAGS_LAST_TLV | QMI_IDL_TLV_FLAGS_OPTIONAL | (QMI_IDL_OFFSET16RELATIVE(qmiLocQueryXtraInfoIndMsgT_v02, mccTertiarySimSlot) - QMI_IDL_OFFSET16RELATIVE(qmiLocQueryXtraInfoIndMsgT_v02, mccTertiarySimSlot_valid)),
+  QMI_IDL_TLV_FLAGS_OPTIONAL | (QMI_IDL_OFFSET16RELATIVE(qmiLocQueryXtraInfoIndMsgT_v02, mccTertiarySimSlot) - QMI_IDL_OFFSET16RELATIVE(qmiLocQueryXtraInfoIndMsgT_v02, mccTertiarySimSlot_valid)),
   0x17,
    QMI_IDL_FLAGS_OFFSET_IS_16 | QMI_IDL_GENERIC_2_BYTE,
-  QMI_IDL_OFFSET16ARRAY(qmiLocQueryXtraInfoIndMsgT_v02, mccTertiarySimSlot)
+  QMI_IDL_OFFSET16ARRAY(qmiLocQueryXtraInfoIndMsgT_v02, mccTertiarySimSlot),
+
+  QMI_IDL_TLV_FLAGS_OPTIONAL | (QMI_IDL_OFFSET16RELATIVE(qmiLocQueryXtraInfoIndMsgT_v02, xtraFileGenerationTime) - QMI_IDL_OFFSET16RELATIVE(qmiLocQueryXtraInfoIndMsgT_v02, xtraFileGenerationTime_valid)),
+  0x18,
+   QMI_IDL_FLAGS_OFFSET_IS_16 | QMI_IDL_GENERIC_8_BYTE,
+  QMI_IDL_OFFSET16ARRAY(qmiLocQueryXtraInfoIndMsgT_v02, xtraFileGenerationTime),
+
+  QMI_IDL_TLV_FLAGS_LAST_TLV | QMI_IDL_TLV_FLAGS_OPTIONAL | (QMI_IDL_OFFSET16RELATIVE(qmiLocQueryXtraInfoIndMsgT_v02, xtraRemValidDuration) - QMI_IDL_OFFSET16RELATIVE(qmiLocQueryXtraInfoIndMsgT_v02, xtraRemValidDuration_valid)),
+  0x19,
+   QMI_IDL_FLAGS_OFFSET_IS_16 | QMI_IDL_GENERIC_4_BYTE,
+  QMI_IDL_OFFSET16ARRAY(qmiLocQueryXtraInfoIndMsgT_v02, xtraRemValidDuration)
 };
 
 static const uint8_t qmiLocStartOutdoorTripBatchingReqMsgT_data_v02[] = {
@@ -8476,10 +8484,20 @@ static const uint8_t qmiLocEventQueryXtraInfoReqIndMsgT_data_v02[] = {
    QMI_IDL_GENERIC_2_BYTE,
   QMI_IDL_OFFSET8(qmiLocEventQueryXtraInfoReqIndMsgT_v02, mccSecondarySimSlot),
 
-  QMI_IDL_TLV_FLAGS_LAST_TLV | QMI_IDL_TLV_FLAGS_OPTIONAL | (QMI_IDL_OFFSET8(qmiLocEventQueryXtraInfoReqIndMsgT_v02, mccTertiarySimSlot) - QMI_IDL_OFFSET8(qmiLocEventQueryXtraInfoReqIndMsgT_v02, mccTertiarySimSlot_valid)),
+  QMI_IDL_TLV_FLAGS_OPTIONAL | (QMI_IDL_OFFSET8(qmiLocEventQueryXtraInfoReqIndMsgT_v02, mccTertiarySimSlot) - QMI_IDL_OFFSET8(qmiLocEventQueryXtraInfoReqIndMsgT_v02, mccTertiarySimSlot_valid)),
   0x16,
    QMI_IDL_GENERIC_2_BYTE,
-  QMI_IDL_OFFSET8(qmiLocEventQueryXtraInfoReqIndMsgT_v02, mccTertiarySimSlot)
+  QMI_IDL_OFFSET8(qmiLocEventQueryXtraInfoReqIndMsgT_v02, mccTertiarySimSlot),
+
+  QMI_IDL_TLV_FLAGS_OPTIONAL | (QMI_IDL_OFFSET8(qmiLocEventQueryXtraInfoReqIndMsgT_v02, xtraFileGenerationTime) - QMI_IDL_OFFSET8(qmiLocEventQueryXtraInfoReqIndMsgT_v02, xtraFileGenerationTime_valid)),
+  0x17,
+   QMI_IDL_GENERIC_8_BYTE,
+  QMI_IDL_OFFSET8(qmiLocEventQueryXtraInfoReqIndMsgT_v02, xtraFileGenerationTime),
+
+  QMI_IDL_TLV_FLAGS_LAST_TLV | QMI_IDL_TLV_FLAGS_OPTIONAL | (QMI_IDL_OFFSET8(qmiLocEventQueryXtraInfoReqIndMsgT_v02, xtraRemValidDuration) - QMI_IDL_OFFSET8(qmiLocEventQueryXtraInfoReqIndMsgT_v02, xtraRemValidDuration_valid)),
+  0x18,
+   QMI_IDL_GENERIC_4_BYTE,
+  QMI_IDL_OFFSET8(qmiLocEventQueryXtraInfoReqIndMsgT_v02, xtraRemValidDuration)
 };
 
 static const uint8_t qmiLocSetParameterReqMsgT_data_v02[] = {
@@ -10354,7 +10372,7 @@ static const qmi_idl_service_message_table_entry loc_service_indication_messages
   {QMI_LOC_EVENT_INJECT_SRN_AP_DATA_REQ_IND_V02, QMI_IDL_TYPE16(0, 241), 22},
   {QMI_LOC_INJECT_SRN_AP_DATA_IND_V02, QMI_IDL_TYPE16(0, 243), 7},
   {QMI_LOC_CROWDSOURCE_MANAGER_CONTROL_IND_V02, QMI_IDL_TYPE16(0, 245), 540},
-  {QMI_LOC_QUERY_XTRA_INFO_IND_V02, QMI_IDL_TYPE16(0, 248), 1620},
+  {QMI_LOC_QUERY_XTRA_INFO_IND_V02, QMI_IDL_TYPE16(0, 248), 1638},
   {QMI_LOC_START_OUTDOOR_TRIP_BATCHING_IND_V02, QMI_IDL_TYPE16(0, 250), 7},
   {QMI_LOC_QUERY_OTB_ACCUMULATED_DISTANCE_IND_V02, QMI_IDL_TYPE16(0, 252), 21},
   {QMI_LOC_EVENT_FDCL_SERVICE_REQ_IND_V02, QMI_IDL_TYPE16(0, 253), 618},
@@ -10390,7 +10408,7 @@ static const qmi_idl_service_message_table_entry loc_service_indication_messages
   {QMI_LOC_INJECT_ENV_AIDING_IND_V02, QMI_IDL_TYPE16(0, 2), 7},
   {QMI_LOC_SET_MIN_GPS_WEEK_NUMBER_IND_V02, QMI_IDL_TYPE16(0, 2), 7},
   {QMI_LOC_GET_MIN_GPS_WEEK_NUMBER_IND_V02, QMI_IDL_TYPE16(0, 297), 12},
-  {QMI_LOC_EVENT_QUERY_XTRA_INFO_REQ_IND_V02, QMI_IDL_TYPE16(0, 299), 46},
+  {QMI_LOC_EVENT_QUERY_XTRA_INFO_REQ_IND_V02, QMI_IDL_TYPE16(0, 299), 64},
   {QMI_LOC_SET_PARAMETER_IND_V02, QMI_IDL_TYPE16(0, 2), 7},
   {QMI_LOC_GET_PARAMETER_IND_V02, QMI_IDL_TYPE16(0, 302), 29},
   {QMI_LOC_SET_STATISTICS_CONFIG_IND_V02, QMI_IDL_TYPE16(0, 2), 7},
@@ -10422,7 +10440,7 @@ struct qmi_idl_service_object loc_qmi_idl_service_object_v02 = {
     sizeof(loc_service_indication_messages_v02)/sizeof(qmi_idl_service_message_table_entry) },
   { loc_service_command_messages_v02, loc_service_response_messages_v02, loc_service_indication_messages_v02},
   &loc_qmi_idl_type_table_object_v02,
-  0x98,
+  0x99,
   NULL
 };
 
