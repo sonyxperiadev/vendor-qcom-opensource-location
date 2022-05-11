@@ -758,239 +758,6 @@ enum loc_api_adapter_err LocApiV02 :: close()
   return rtv;
 }
 
-
-/* start positioning session */
-void LocApiV02 :: startFix(const LocPosMode& fixCriteria, LocApiResponse *adapterResponse)
-{
-  sendMsg(new LocApiMsg([this, fixCriteria, adapterResponse] () {
-
-  locClientStatusEnumType status;
-  locClientReqUnionType req_union;
-
-  qmiLocStartReqMsgT_v02 start_msg;
-
-  qmiLocSetOperationModeReqMsgT_v02 set_mode_msg;
-  qmiLocSetOperationModeIndMsgT_v02 set_mode_ind;
-
-    // clear all fields, validity masks
-  memset (&start_msg, 0, sizeof(start_msg));
-  memset (&set_mode_msg, 0, sizeof(set_mode_msg));
-  memset (&set_mode_ind, 0, sizeof(set_mode_ind));
-
-  LOC_LOGV("%s:%d]: start \n", __func__, __LINE__);
-  // BOOT KPI marker, print only once for a session
-  if (false == mInSession) {
-      loc_boot_kpi_marker("L - LocApiV02 startFix, tbf %d", fixCriteria.min_interval);
-  }
-  fixCriteria.logv();
-
-  mInSession = true;
-  mMeasurementsStarted = true;
-  registerEventMask();
-
-  // fill in the start request
-  switch(fixCriteria.mode)
-  {
-    case LOC_POSITION_MODE_MS_BASED:
-      set_mode_msg.operationMode = eQMI_LOC_OPER_MODE_MSB_V02;
-      break;
-
-    case LOC_POSITION_MODE_MS_ASSISTED:
-      set_mode_msg.operationMode = eQMI_LOC_OPER_MODE_MSA_V02;
-      break;
-
-    case LOC_POSITION_MODE_RESERVED_4:
-      set_mode_msg.operationMode = eQMI_LOC_OPER_MODE_CELL_ID_V02;
-        break;
-
-    case LOC_POSITION_MODE_RESERVED_5:
-      set_mode_msg.operationMode = eQMI_LOC_OPER_MODE_WWAN_V02;
-        break;
-
-    default:
-      set_mode_msg.operationMode = eQMI_LOC_OPER_MODE_STANDALONE_V02;
-      break;
-  }
-
-  req_union.pSetOperationModeReq = &set_mode_msg;
-
-  // send the mode first, before the start message.
-  status = locSyncSendReq(QMI_LOC_SET_OPERATION_MODE_REQ_V02,
-                          req_union, LOC_ENGINE_SYNC_REQUEST_TIMEOUT,
-                          QMI_LOC_SET_OPERATION_MODE_IND_V02,
-                          &set_mode_ind); // NULL?
-   //When locSyncSendReq status is time out, more likely the response was lost.
-   //startFix will continue as though it is succeeded.
-  if ((status != eLOC_CLIENT_SUCCESS && status != eLOC_CLIENT_FAILURE_TIMEOUT) ||
-       eQMI_LOC_SUCCESS_V02 != set_mode_ind.status)
-  {
-    LOC_LOGE ("%s:%d]: set opertion mode failed status = %s, "
-                   "ind..status = %s\n", __func__, __LINE__,
-              loc_get_v02_client_status_name(status),
-              loc_get_v02_qmi_status_name(set_mode_ind.status));
-  } else {
-      if (status == eLOC_CLIENT_FAILURE_TIMEOUT)
-      {
-          LOC_LOGE ("%s:%d]: set operation mode timed out\n", __func__, __LINE__);
-      }
-      start_msg.minInterval_valid = 1;
-      start_msg.minInterval = fixCriteria.min_interval;
-      mMinInterval = start_msg.minInterval;
-
-      start_msg.horizontalAccuracyLevel_valid = 1;
-
-      if (fixCriteria.preferred_accuracy <= 100)
-      {
-          // fix needs high accuracy
-          start_msg.horizontalAccuracyLevel =  eQMI_LOC_ACCURACY_HIGH_V02;
-      }
-      else if (fixCriteria.preferred_accuracy <= 1000)
-      {
-          //fix needs med accuracy
-          start_msg.horizontalAccuracyLevel =  eQMI_LOC_ACCURACY_MED_V02;
-      }
-      else
-      {
-          //fix needs low accuracy
-          start_msg.horizontalAccuracyLevel =  eQMI_LOC_ACCURACY_LOW_V02;
-          // limit the scanning max time to 1 min and TBF to 10 min
-          // this is to control the power cost for gps for LOW accuracy
-          start_msg.positionReportTimeout_valid = 1;
-          start_msg.positionReportTimeout = 60000;
-          if (start_msg.minInterval < 600000) {
-              start_msg.minInterval = 600000;
-          }
-      }
-
-      start_msg.fixRecurrence_valid = 1;
-      if(LOC_GPS_POSITION_RECURRENCE_SINGLE == fixCriteria.recurrence)
-      {
-          start_msg.fixRecurrence = eQMI_LOC_RECURRENCE_SINGLE_V02;
-      }
-      else
-      {
-          start_msg.fixRecurrence = eQMI_LOC_RECURRENCE_PERIODIC_V02;
-      }
-
-      //dummy session id
-      // TBD: store session ID, check for session id in pos reports.
-      start_msg.sessionId = LOC_API_V02_DEF_SESSION_ID;
-
-      //Set whether position report can be shared with other LOC clients
-      start_msg.sharePosition_valid = 1;
-      start_msg.sharePosition = fixCriteria.share_position;
-
-      if (fixCriteria.credentials[0] != 0) {
-          int size1 = sizeof(start_msg.applicationId.applicationName);
-          int size2 = sizeof(fixCriteria.credentials);
-          int len = ((size1 < size2) ? size1 : size2) - 1;
-          memcpy(start_msg.applicationId.applicationName,
-                 fixCriteria.credentials,
-                 len);
-
-          size1 = sizeof(start_msg.applicationId.applicationProvider);
-          size2 = sizeof(fixCriteria.provider);
-          len = ((size1 < size2) ? size1 : size2) - 1;
-          memcpy(start_msg.applicationId.applicationProvider,
-                 fixCriteria.provider,
-                 len);
-
-          start_msg.applicationId_valid = 1;
-      }
-
-      // config Altitude Assumed
-      start_msg.configAltitudeAssumed_valid = 1;
-      start_msg.configAltitudeAssumed = eQMI_LOC_ALTITUDE_ASSUMED_IN_GNSS_SV_INFO_DISABLED_V02;
-
-      // set power mode details
-      mPowerMode = fixCriteria.powerMode;
-      if (GNSS_POWER_MODE_INVALID != fixCriteria.powerMode) {
-          start_msg.powerMode_valid = 1;
-          start_msg.powerMode.powerMode = convertPowerMode(fixCriteria.powerMode);
-          start_msg.powerMode.timeBetweenMeasurement =
-                  fixCriteria.timeBetweenMeasurements;
-          // Force low accuracy for background power modes
-          if (GNSS_POWER_MODE_M3 == fixCriteria.powerMode ||
-                  GNSS_POWER_MODE_M4 == fixCriteria.powerMode ||
-                  GNSS_POWER_MODE_M5 == fixCriteria.powerMode) {
-              start_msg.horizontalAccuracyLevel =  eQMI_LOC_ACCURACY_LOW_V02;
-          }
-          // Force TBM = TBF for power mode M4
-          if (GNSS_POWER_MODE_M4 == fixCriteria.powerMode) {
-              start_msg.powerMode.timeBetweenMeasurement = start_msg.minInterval;
-          }
-      }
-
-      req_union.pStartReq = &start_msg;
-
-      status = locClientSendReq(QMI_LOC_START_REQ_V02, req_union);
-  }
-
-  LocationError err = LOCATION_ERROR_GENERAL_FAILURE;
-  if (eLOC_CLIENT_SUCCESS == status) {
-      err = LOCATION_ERROR_SUCCESS;
-  }
-
-  if (adapterResponse != NULL) {
-      adapterResponse->returnToSender(err);
-  }
-  }));
-
-}
-
-/* stop a positioning session */
-void LocApiV02 :: stopFix(LocApiResponse *adapterResponse)
-{
-  sendMsg(new LocApiMsg([this, adapterResponse] () {
-
-  locClientStatusEnumType status;
-  locClientReqUnionType req_union;
-
-  qmiLocStopReqMsgT_v02 stop_msg;
-
-  LOC_LOGD(" %s:%d]: stop called \n", __func__, __LINE__);
-  loc_boot_kpi_marker("L - LocApiV02 stop Fix session");
-
-  memset(&stop_msg, 0, sizeof(stop_msg));
-
-  // dummy session id
-  stop_msg.sessionId = LOC_API_V02_DEF_SESSION_ID;
-
-  req_union.pStopReq = &stop_msg;
-
-  status = locClientSendReq(QMI_LOC_STOP_REQ_V02, req_union);
-
-  mIsFirstFinalFixReported = false;
-  mInSession = false;
-  mPowerMode = GNSS_POWER_MODE_INVALID;
-
-  // deregister events when session is stopped
-  registerEventMask();
-
-  // free the memory used to assemble SV measurement from
-  // different constellations and bands
-  if (!mGnssMeasurements) {
-      free(mGnssMeasurements);
-      mGnssMeasurements = nullptr;
-  }
-
-  if( eLOC_CLIENT_SUCCESS != status)
-  {
-      LOC_LOGE("%s:%d]: error = %s\n",__func__, __LINE__,
-               loc_get_v02_client_status_name(status));
-  }
-
-  LocationError err = LOCATION_ERROR_GENERAL_FAILURE;
-  if (eLOC_CLIENT_SUCCESS == status) {
-      err = LOCATION_ERROR_SUCCESS;
-  }
-
-  if (adapterResponse != NULL) {
-      adapterResponse->returnToSender(err);
-  }
-  }));
-}
-
 /* inject time into the position engine */
 void LocApiV02 ::
     setTime(LocGpsUtcTime time, int64_t timeReference, int uncertainty)
@@ -10717,6 +10484,12 @@ LocApiV02::startTimeBasedTracking(const TrackingOptions& options, LocApiResponse
     start_msg.configAltitudeAssumed =
         eQMI_LOC_ALTITUDE_ASSUMED_IN_GNSS_SV_INFO_DISABLED_V02;
 
+    //Enable intermediate report only when client shows interest, i.e. HW FLP or automotive client
+    if (QUALITY_HIGH_ACCU_FIX_ONLY == options.qualityLevelAccepted) {
+        start_msg.intermediateReportState_valid = 1;
+        start_msg.intermediateReportState = eQMI_LOC_INTERMEDIATE_REPORTS_OFF_V02;
+    }
+
     // power mode
     if (GNSS_POWER_MODE_INVALID != options.powerMode) {
         start_msg.powerMode_valid = 1;
@@ -10985,7 +10758,7 @@ LocApiV02::stopTimeBasedTracking(LocApiResponse* adapterResponse)
     locClientReqUnionType req_union;
     qmiLocStopReqMsgT_v02 stop_msg;
     memset(&stop_msg, 0, sizeof(stop_msg));
-    stop_msg.sessionId = 1; // dummy session id
+    stop_msg.sessionId = LOC_API_V02_DEF_SESSION_ID; // dummy session id
     req_union.pStopReq = &stop_msg;
 
     status = locClientSendReq(QMI_LOC_STOP_REQ_V02, req_union);
@@ -10994,9 +10767,16 @@ LocApiV02::stopTimeBasedTracking(LocApiResponse* adapterResponse)
                   __func__, status);
         err = LOCATION_ERROR_GENERAL_FAILURE;
     } else {
+        mIsFirstFinalFixReported = false;
         mInSession = false;
         mPowerMode = GNSS_POWER_MODE_INVALID;
         registerEventMask();
+        // free the memory used to assemble SV measurement from
+        // different constellations and bands
+        if (!mGnssMeasurements) {
+            free(mGnssMeasurements);
+            mGnssMeasurements = nullptr;
+        }
     }
 
     if (adapterResponse != NULL) {
