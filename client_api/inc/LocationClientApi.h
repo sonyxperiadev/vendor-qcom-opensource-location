@@ -440,6 +440,8 @@ enum LocationResponse {
     LOCATION_RESPONSE_REQUEST_ALREADY_IN_PROGRESS = 5,
     /** System is not ready, e.g.: hal daemon is not yet ready. */
     LOCATION_RESPONSE_SYSTEM_NOT_READY = 6,
+    /** LCA doesn't support simultaneous tracking and batching session. Other session is ongoing*/
+    LOCATION_RESPONSE_EXCLUSIVE_SESSION_IN_PROGRESS = 7,
 };
 
 /** Specify the SV constellation type in GnssSv
@@ -1897,16 +1899,25 @@ enum TerrestrialTechnologyMask {
     TERRESTRIAL_TECH_GTP_WWAN = 1 << 0,
 };
 
+/** Specify the batching status in BatchingCb. <br/> */
 enum BatchingStatus {
+    /** service is unable to compute positions for batching; */
     BATCHING_STATUS_INACTIVE    = 0,
+    /** service is able to compute positions for batching. */
     BATCHING_STATUS_ACTIVE      = 1,
+    /** trip distance has been traversed for TripBatching */
     BATCHING_STATUS_DONE        = 2
 };
 
+/** Specifies the Geofence breach/dwell event in GeofenceBreachCb. <br/> */
 enum GeofenceBreachTypeMask {
+    /** Indicates that a client entered the Geofence */
     GEOFENCE_BREACH_ENTER_BIT     = (1<<0),
+    /** Indicates that a client left the Geofence */
     GEOFENCE_BREACH_EXIT_BIT      = (1<<1),
+    /** Indicates that a client dwelled inside the Geofence */
     GEOFENCE_BREACH_DWELL_IN_BIT  = (1<<2),
+    /** Indicates that a client dwelled outside the Geofence */
     GEOFENCE_BREACH_DWELL_OUT_BIT = (1<<3),
 };
 
@@ -2768,7 +2779,8 @@ public:
     /* ================================== BATCHING ================================== */
 
     /** @brief starts an outdoor trip mode batching session with specified parameters.
-        Trip mode batching completes on its own when trip distance is covered.
+        Client gets callback of batched locations only after the trip distance is covered
+        or the batch buffer is full, whichever occurs first
 
         Calling this function when idle, or calling this function
         after another the previous position/batching/geofence
@@ -2789,7 +2801,11 @@ public:
         callback will be updated. parameters / callback will be
         updated, and the session continues but with the new set of
         parameters / callback. locations are reported on the
-        batchingCallback in batches when batch is full.
+        batchingCallback in batches when batch is full or trip distance has been reached.
+
+        By design, LCA doesn't support simultaneous tracking and batching session.
+        If there is tracking session ongoing, routine batching session request will
+        receive error code of LOCATION_RESPONSE_EXCLUSIVE_SESSION_IN_PROGRESS. vice versa.
         @param minInterval
         Time between fixes, or TBF, in milliseconds. The actual
         interval of reports recieved will be no larger than
@@ -2818,6 +2834,7 @@ public:
                                   BatchingCb batchingCallback, ResponseCb responseCallback);
 
     /** @brief starts a routine mode batching session with specified parameters.
+        Client gets callback of batched locations when batching buffer is full
 
         Calling this function when idle, or calling this function
         after another the previous position/batching/geofence
@@ -2832,6 +2849,10 @@ public:
         responseCallback, this API will receive an error code of
         LOCATION_RESPONSE_REQUEST_ALREADY_IN_PROGRESS via its
         responseCallback.
+
+        By design, LCA doesn't support simultaneous tracking and batching session.
+        If there is tracking session ongoing, routine batching session request will
+        receive error code of LOCATION_RESPONSE_EXCLUSIVE_SESSION_IN_PROGRESS. vice versa.
 
         If called during on-going session after the responseCb has
         been received for the on-going session, parameters /

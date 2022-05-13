@@ -1369,7 +1369,8 @@ int LocAPIBatchingIndMsg::serializeToProtobuf(string& protoStr) {
         LOC_LOGe("mutable_batchnotification failed");
         return 0;
     }
-
+    // PBBatchingMode batchingMode = 2;
+    pbLocApiBatchInd.set_batchingmode(pLocApiPbMsgConv->getPBEnumForBatchingMode(batchingMode));
     string pbStr;
     if (!pbLocApiBatchInd.SerializeToString(&pbStr)) {
         LOC_LOGe("SerializeToString on pbLocApiBatchInd failed!");
@@ -3622,6 +3623,9 @@ LocAPIBatchingIndMsg::LocAPIBatchingIndMsg(const char* name,
     // PBLocAPIBatchNotification batchNotification = 1;
     pLocApiPbMsgConv->pbConvertToLocAPIBatchNotification(
             pbLocApiBatchingIndMsg.batchnotification(), batchNotification);
+    // PBBatchingMode batchingMode = 2;
+    batchingMode = pLocApiPbMsgConv->getEnumForPBBatchingMode(
+            pbLocApiBatchingIndMsg.batchingmode());
 }
 
 // Decode PBLocAPIGeofenceBreachIndMsg -> LocAPIGeofenceBreachIndMsg

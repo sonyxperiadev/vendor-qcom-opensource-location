@@ -100,9 +100,13 @@ void LocHalDaemonClientHandler::updateSubscription(uint32_t mask) {
 
     // update optional callback - following four callbacks can be controlable
     // tracking
-    mCallbacks.trackingCb = [this](Location location) {
-        onTrackingCb(location);
-    };
+    if (mSubscriptionMask & E_LOC_CB_TRACKING_BIT) {
+        mCallbacks.trackingCb = [this](Location location) {
+            onTrackingCb(location);
+        };
+    } else {
+        mCallbacks.trackingCb = nullptr;
+    }
 
     // batching
     if (mSubscriptionMask & E_LOC_CB_BATCHING_BIT) {
@@ -846,6 +850,7 @@ void LocHalDaemonClientHandler::onBatchingCb(size_t count, Location* location,
         LocAPIBatchingIndMsg msg(SERVICE_NAME, &mService->mPbufMsgConv);
         LOC_LOGd("Batch count: %ul", (uint32_t)count);
         msg.batchNotification.status = BATCHING_STATUS_POSITION_AVAILABE;
+        msg.batchingMode = batchOptions.batchingMode;
         for (int i = 0; i < count; i++) {
             msg.batchNotification.location.push_back(location[i]);
         }
@@ -875,7 +880,7 @@ void LocHalDaemonClientHandler::onBatchingStatusCb(BatchingStatusInfo batchingSt
         LocAPIBatchNotification batchNotif = {};
         batchNotif.status = BATCHING_STATUS_TRIP_COMPLETED;
         string pbStr;
-        LocAPIBatchingIndMsg msg(SERVICE_NAME, batchNotif, &mService->mPbufMsgConv);
+        LocAPIBatchingIndMsg msg(SERVICE_NAME, batchNotif, mBatchingMode, &mService->mPbufMsgConv);
         if (msg.serializeToProtobuf(pbStr)) {
             bool rc = sendMessage(pbStr.c_str(), pbStr.size(), msg.msgId);
             // purge this client if failed

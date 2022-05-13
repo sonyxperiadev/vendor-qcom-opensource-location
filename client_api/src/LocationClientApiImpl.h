@@ -261,6 +261,8 @@ public:
     void stopTrackingAndClearSubscriptions(uint32_t id);
     void clearSubscriptions(LocationCallbackType cbTypeToClear);
     void stopTrackingSync(bool clearSubscriptions);
+    bool isInTracking() { return mSessionId != LOCATION_CLIENT_SESSION_ID_INVALID; }
+    bool isInBatching() { return mBatchingId != LOCATION_CLIENT_SESSION_ID_INVALID; }
 
 private:
     ~LocationClientApiImpl();
