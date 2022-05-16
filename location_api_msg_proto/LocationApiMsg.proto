@@ -82,8 +82,8 @@ enum LocationApiMsgVersion {
     LOCAPI_MSG_VER_MAJOR = 1;
     // Minor - New features / API addition, new message/elemtent addition.
     // Bump the last byte of version i.e. x.2 to x.3
-    // Minor version 15: Add LCA API for single shot fix request with timeout and QoS
-    LOCAPI_MSG_VER_MINOR = 15;
+    // Minor version 16: Add batching mode in LocAPIBatchingIndMsg
+    LOCAPI_MSG_VER_MINOR = 16;
 }
 
 // ============================================================================
@@ -458,6 +458,7 @@ message PBLocAPILocationIndMsg {
 // defintion for message with msg id of PB_E_LOCAPI_BATCHING_MSG_ID
 message PBLocAPIBatchingIndMsg {
     PBLocAPIBatchNotification batchNotification = 1;
+    PBBatchingMode batchingMode = 2;
 }
 
 // defintion for message with msg id of PB_E_LOCAPI_GEOFENCE_BREACH_MSG_ID
