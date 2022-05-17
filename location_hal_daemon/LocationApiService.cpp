@@ -1662,7 +1662,7 @@ void LocationApiService::onControlResponseCallback(LocationError err, uint32_t s
         mConfigReqs.erase(configReqData);
         LOC_LOGd("--< map size %d", mConfigReqs.size());
     } else {
-        LOC_LOGe("--< client not found for session id %d", sessionId);
+        LOC_LOGw("--< client not found for session id %d", sessionId);
     }
 }
 
@@ -1689,7 +1689,7 @@ void LocationApiService::onControlCollectiveResponseCallback(
         mConfigReqs.erase(configReqData);
         LOC_LOGd("--< map size %d", mConfigReqs.size());
     } else {
-        LOC_LOGe("--< client not found for session id %d", sessionId);
+        LOC_LOGw("--< client not found for session id %d", sessionId);
     }
 }
 
