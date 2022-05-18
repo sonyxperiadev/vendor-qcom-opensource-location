@@ -4105,6 +4105,8 @@ void LocApiV02::reportLocEvent(const qmiLocEventReportIndMsgT_v02 *event_report_
             case eQMI_LOC_SV_SYSTEM_QZSS_V02:
                 klobucharIonoModel.gnssConstellation = GNSS_LOC_SV_SYSTEM_QZSS;
                 break;
+            default:
+                break;
         }
 
         klobucharIonoModel.alpha0 = event_report_ptr->klobucharIonoModel.alpha0;
@@ -4273,6 +4275,8 @@ void LocApiV02::populateCommonEphemeris(const qmiLocEphGnssDataStructT_v02 &rece
         case eQMI_LOC_DELETE_EPH_SRC_OTA_V02:
             ephToFill.updateAction = GNSS_EPH_ACTION_DELETE_SRC_OTA_V02;
             break;
+        default:
+            break;
     }
 
     ephToFill.IODE = receivedEph.IODE;
@@ -4368,6 +4372,8 @@ void LocApiV02::populateGlonassEphemeris(const qmiLocGloEphemerisReportIndMsgT_v
             case eQMI_LOC_DELETE_EPH_SRC_OTA_V02:
                 gloEphemerisToFill.updateAction = GNSS_EPH_ACTION_DELETE_SRC_OTA_V02;
                 break;
+            default:
+                break;
         }
 
         gloEphemerisToFill.bnHealth = receivedGloEphemeris.bnHealth;
@@ -4453,6 +4459,9 @@ void LocApiV02::populateGalEphemeris(const qmiLocGalEphemerisReportIndMsgT_v02 *
                 break;
             case eQMI_LOC_GAL_EPH_SIGNAL_SRC_E5B_V02:
                 galEphemerisToFill.dataSourceSignal = GAL_EPH_SIGNAL_SRC_E5B_V02;
+                break;
+            default:
+                break;
         }
 
         galEphemerisToFill.sisIndex = receivedGalEphemeris.sisIndex;
@@ -4647,6 +4656,8 @@ void LocApiV02::reportLocationRequestNotification(
         break;
     case eQMI_LOC_ACCEPTED_LOCATION_PROVIDED_V02:
         notification.responseType = GNSS_NFW_ACCEPTED_LOCATION_PROVIDED;
+        break;
+    default:
         break;
     }
     notification.inEmergencyMode = (bool)loc_req_notif->inEmergencyMode;

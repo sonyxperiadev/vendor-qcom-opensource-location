@@ -695,6 +695,8 @@ GnssSystemTime LocationClientApiImpl::parseSystemTime(const ::GnssSystemTime &ha
            systemTime.gnssSystemTimeSrc = GNSS_LOC_SV_SYSTEM_NAVIC;
            systemTime.u.navicSystemTime = parseGnssTime(halSystemTime.u.navicSystemTime);
            break;
+        default:
+           break;
     }
 
     return systemTime;
@@ -1186,6 +1188,8 @@ GnssDcReport LocationClientApiImpl::parseDcReport(const::GnssDcReportInfo &halDc
             break;
         case ::QZSS_NON_JMA_DISASTER_PREVENTION_INFO:
             dcReport.dcReportType = QZSS_NON_JMA_DISASTER_PREVENTION_INFO;
+            break;
+        default:
             break;
     }
     dcReport.numValidBits = halDcReport.numValidBits;
