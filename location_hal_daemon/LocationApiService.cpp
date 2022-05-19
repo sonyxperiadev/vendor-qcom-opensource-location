@@ -190,7 +190,11 @@ LocationApiService::LocationApiService(const configParamToRead & configParamRead
     mMaintTimer(this),
     mGtpWwanSsLocationApi(nullptr),
     mOptInTerrestrialService(-1),
-    mGtpWwanSsLocationApiCallbacks{}
+    mGtpWwanSsLocationApiCallbacks{},
+    mSingleFixLocationApi(nullptr),
+    mSingleFixTrackingSessionId(0),
+    mSingleFixLocationApiCallbacks{},
+    mSingleFixLastLocation{}
 #ifdef POWERMANAGER_ENABLED
     ,mPowerEventObserver(nullptr)
 #endif
@@ -504,6 +508,16 @@ void LocationApiService::processClientMsg(const char* data, uint32_t length) {
             getSingleTerrestrialPos(&msg);
             break;
         }
+        case E_LOCAPI_GET_SINGLE_POS_REQ_MSG_ID: {
+            PBLocAPIGetSinglePosReqMsg pbMsg;
+            if (0 == pbMsg.ParseFromString(pbLocApiMsg.payload())) {
+                LOC_LOGe("Failed to parse PBLocAPIGetSinglePosReqMsg from payload!!");
+                return;
+            }
+            LocAPIGetSinglePosReqMsg msg(sockName.c_str(), pbMsg, &mPbufMsgConv);
+            getSinglePos(&msg);
+            break;
+        }
         case E_LOCAPI_PINGTEST_MSG_ID: {
             PBLocAPIPingTestReqMsg pbLocApiPingTestMsg;
             if (0 == pbLocApiPingTestMsg.ParseFromString(pbLocApiMsg.payload())) {
@@ -723,6 +737,11 @@ void LocationApiService::processClientMsg(const char* data, uint32_t length) {
             break;
         }
 
+        case E_LOCAPI_GET_ANTENNA_INFO_MSG_ID: {
+            getAntennaInfo((const LocAPIGetAntennaInfoMsg*)&locApiMsg);
+            break;
+        }
+
         default: {
             LOC_LOGe("Unknown message with id: %d ", eLocMsgid);
             break;
@@ -740,14 +759,13 @@ void LocationApiService::newClient(LocAPIClientRegisterReqMsg *pMsg) {
 
     // if this name is already used, we inform client of the capability
     // to allow callflow to continue on client side
-    if (mClients.find(clientname) != mClients.end()) {
+    LocHalDaemonClientHandler* pClient = getClient(clientname);
+    if (pClient) {
         LOC_LOGi("client=%s already exists, send capability", clientname.c_str());
-        LocHalDaemonClientHandler* pClient = getClient(clientname);
         pClient->sendCapabilitiesMsg();
     } else {
         // store it in client property database
-        LocHalDaemonClientHandler *pClient =
-                new LocHalDaemonClientHandler(this, clientname, pMsg->mClientType);
+        pClient = new LocHalDaemonClientHandler(this, clientname, pMsg->mClientType);
         if (!pClient) {
             LOC_LOGe("failed to register client=%s", clientname.c_str());
             return;
@@ -776,7 +794,17 @@ void LocationApiService::deleteClientbyName(const std::string clientname) {
         return;
     }
     mClients.erase(clientname);
-    mTerrestrialFixReqs.erase(clientname);
+
+    // if client is requesting terrestrial fix, stop it
+    mTerrestrialFixTimeoutMap.erase(clientname);
+    if (mTerrestrialFixTimeoutMap.size() == 0) {
+        mGtpWwanSsLocationApi->stopNetworkLocation(&mGtpWwanPosCallback);
+    }
+
+    // if client is requesting single shot fix, stop it
+    mSingleFixReqMap.erase(clientname);
+    stopTrackingSessionForSingleFixes();
+
     pClient->cleanup();
 }
 
@@ -833,10 +861,18 @@ void LocationApiService::stopTracking(LocAPIStopTrackingReqMsg *pMsg) {
 void LocationApiService::suspendAllTrackingSessions() {
     LOC_LOGi("--> enter");
     for (auto client : mClients) {
-        // stop session if running
+        // pause session if running
         if (client.second) {
             client.second->pauseTracking();
         }
+    }
+
+    // pause the tracking session started by single shot api
+    if (mSingleFixLocationApi && mSingleFixTrackingSessionId) {
+        LOC_LOGi("pause tracking session %d for single shot fix clients",
+                 mSingleFixTrackingSessionId);
+        mSingleFixLocationApi->stopTracking(mSingleFixTrackingSessionId);
+        mSingleFixTrackingSessionId = 0;
     }
 }
 
@@ -849,6 +885,15 @@ void LocationApiService::resumeAllTrackingSessions() {
             // resume session with preserved options
             client.second->resumeTracking();
         }
+    }
+
+    // resume the tracking session started by single shot api
+    if (mSingleFixReqMap.size() > 0) {
+        TrackingOptions options = {};
+        options.size = sizeof(options);
+        options.minInterval = 1000;
+        options.minDistance = 0;
+        mSingleFixTrackingSessionId = mSingleFixLocationApi->startTracking(options);
     }
 }
 
@@ -959,13 +1004,24 @@ void LocationApiService::getConstellationSecondaryBandConfig(
 
 void LocationApiService::getDebugReport(
         const LocAPIGetDebugReqMsg* pReqMsg) {
-
     LOC_LOGi(">--getDebugReport from %s", pReqMsg->mSocketName);
+    std::lock_guard<std::recursive_mutex> lock(mMutex);
     LocHalDaemonClientHandler* pClient = getClient(pReqMsg->mSocketName);
     if (pClient) {
         pClient->getDebugReport();
     } else {
         LOC_LOGe(">-- invalid client=%s", pReqMsg->mSocketName);
+    }
+}
+
+void LocationApiService::getAntennaInfo(const LocAPIGetAntennaInfoMsg* pMsg) {
+    LOC_LOGi(">--getAntennaInfo from %s", pMsg->mSocketName);
+    std::lock_guard<std::recursive_mutex> lock(mMutex);
+    LocHalDaemonClientHandler* pClient = getClient(pMsg->mSocketName);
+    if (pClient) {
+        pClient->getAntennaInfo();
+    } else {
+        LOC_LOGe(">-- invalid client=%s", pMsg->mSocketName);
     }
 }
 
@@ -1358,7 +1414,7 @@ void LocationApiService::configUserConsentTerrestrialPositioning(
              pMsg->mSocketName, mOptInTerrestrialService, pMsg->mUserConsent);
 
     mOptInTerrestrialService = pMsg->mUserConsent;
-    if ((mOptInTerrestrialService == true) && (mGtpWwanSsLocationApi == nullptr)) {
+    if ((mOptInTerrestrialService == 1) && (mGtpWwanSsLocationApi == nullptr)) {
         // set callback functions for Location API
         mGtpWwanSsLocationApiCallbacks.size = sizeof(mGtpWwanSsLocationApiCallbacks);
 
@@ -1565,19 +1621,51 @@ void LocationApiService::onGtpWwanTrackingCallback(Location location) {
     LOC_LOGd("--< onGtpWwanTrackingCallback optIn=%u loc flags=0x%x", mOptInTerrestrialService,
             location.flags);
 
-    if ((mTerrestrialFixReqs.size() != 0) &&
+    if ((mTerrestrialFixTimeoutMap.size() != 0) &&
             (location.flags & LOCATION_HAS_LAT_LONG_BIT) && (mOptInTerrestrialService == 1)) {
 
-        for (auto it = mTerrestrialFixReqs.begin(); it != mTerrestrialFixReqs.end();) {
+        for (auto it = mTerrestrialFixTimeoutMap.begin(); it != mTerrestrialFixTimeoutMap.end();) {
             LocHalDaemonClientHandler* pClient = getClient(it->first);
             if (pClient) {
                 pClient->sendTerrestrialFix(LOCATION_ERROR_SUCCESS, location);
+            } else {
+                ++it;
             }
-            ++it;
         }
-        mTerrestrialFixReqs.clear();
+        mTerrestrialFixTimeoutMap.clear();
         mGtpWwanSsLocationApi->stopNetworkLocation(&mGtpWwanPosCallback);
     }
+}
+
+// LCA client will get intermediate fixes as well
+void LocationApiService::onGnssLocationInfoCb(GnssLocationInfoNotification notification) {
+    std::lock_guard<std::recursive_mutex> lock(mMutex);
+
+    Location &location = notification.location;
+    mSingleFixLastLocation = location;
+    LOC_LOGd("--< onGnssLocationInfoCb loc flags=0x%x, accracy %f, request cnt %d",
+             location.flags, location.accuracy, mSingleFixReqMap.size());
+
+    if ((location.timestamp != 0) && (location.flags & LOCATION_HAS_LAT_LONG_BIT) &&
+            (location.flags & LOCATION_HAS_ACCURACY_BIT)) {
+        for (auto it = mSingleFixReqMap.begin(); it != mSingleFixReqMap.end();) {
+            float horQoS = it->second.horQoS;
+            if (location.accuracy < horQoS) {
+                LocHalDaemonClientHandler* pClient = getClient(it->first);
+                if (pClient) {
+                    LOC_LOGd("send single fix to client %s", it->first.c_str());
+                    pClient->sendSingleFusedFix(LOCATION_ERROR_SUCCESS, location);
+                }
+                it = mSingleFixReqMap.erase(it);
+            } else {
+                ++it;
+            }
+        }
+    }
+
+    // check whether all requests have been filled or not, if so,
+    // stop the tracking session
+    stopTrackingSessionForSingleFixes();
 }
 
 /******************************************************************************
@@ -1717,7 +1805,6 @@ void LocationApiService::getSingleTerrestrialPos(
         LocAPIGetSingleTerrestrialPosReqMsg* pReqMsg) {
 
     std::string clientName(pReqMsg->mSocketName);
-
     LOC_LOGd(">--getSingleTerrestrialPos, timeout msec %d, tech mask 0x%x, horQoS %f",
              pReqMsg->mTimeoutMsec, pReqMsg->mTechMask, pReqMsg->mHorQoS);
 
@@ -1731,20 +1818,17 @@ void LocationApiService::getSingleTerrestrialPos(
             pClient->sendTerrestrialFix(LOCATION_ERROR_NOT_SUPPORTED, location);
         }
     } else {
-        bool terrestrialSessionStarted = (mTerrestrialFixReqs.size() != 0);
+        bool terrestrialSessionStarted = (mTerrestrialFixTimeoutMap.size() != 0);
 
         // if the request for the client is already pending
         // remove the request first
-        auto it = mTerrestrialFixReqs.find(clientName);
-        if (it != mTerrestrialFixReqs.end()) {
-            mTerrestrialFixReqs.erase(clientName);
-        }
+        mTerrestrialFixTimeoutMap.erase(clientName);
 
-        mTerrestrialFixReqs.emplace(std::piecewise_construct,
-                                    std::forward_as_tuple(clientName),
-                                    std::forward_as_tuple(this, clientName));
-        it = mTerrestrialFixReqs.find(clientName);
-        if (it != mTerrestrialFixReqs.end()) {
+        mTerrestrialFixTimeoutMap.emplace(
+                std::piecewise_construct, std::forward_as_tuple(clientName),
+                std::forward_as_tuple(this, clientName, SINGLE_SHOT_FIX_TIMER_FUSED));
+        auto it = mTerrestrialFixTimeoutMap.find(clientName);
+        if (it != mTerrestrialFixTimeoutMap.end()) {
             it->second.start(pReqMsg->mTimeoutMsec, false);
         }
 
@@ -1758,38 +1842,146 @@ void LocationApiService::gtpFixRequestTimeout(const std::string& clientName) {
     std::lock_guard<std::recursive_mutex> lock(LocationApiService::mMutex);
 
     LOC_LOGd("timer out processing for client %s", clientName.c_str());
-    auto it = mTerrestrialFixReqs.find(clientName);
-    if (it != mTerrestrialFixReqs.end()) {
+    auto it = mTerrestrialFixTimeoutMap.find(clientName);
+    if (it != mTerrestrialFixTimeoutMap.end()) {
         LocHalDaemonClientHandler* pClient = getClient(clientName);
         if (pClient) {
             // inform client of timeout
             Location location = {};
             pClient->sendTerrestrialFix(LOCATION_ERROR_TIMEOUT, location);
         }
-        mTerrestrialFixReqs.erase(clientName);
+        mTerrestrialFixTimeoutMap.erase(clientName);
         // stop tracking if there is no more request
-        if (mTerrestrialFixReqs.size() == 1) {
+        if (mTerrestrialFixTimeoutMap.size() == 0) {
             mGtpWwanSsLocationApi->stopNetworkLocation(&mGtpWwanPosCallback);
         }
     }
 }
 
-void SingleTerrestrialFixTimer::timeOutCallback() {
-    LOC_LOGd("SingleTerrestrialFix timeout timer fired");
+/******************************************************************************
+LocationApiService - Single Shot Fused fix from SPE and GTP
+******************************************************************************/
+void LocationApiService::getSinglePos(LocAPIGetSinglePosReqMsg* pReqMsg) {
 
-    struct SingleTerrestrialFixTimeoutReq : public LocMsg {
-        SingleTerrestrialFixTimeoutReq(LocationApiService* locationApiService,
-                                       const std::string &clientName) :
+    std::string clientName(pReqMsg->mSocketName);
+    LOC_LOGd(">-- timeout msec %d, horQoS %f, gtp opt in %d",
+             pReqMsg->mTimeoutMsec, pReqMsg->mHorQoS, mOptInTerrestrialService);
+
+    std::lock_guard<std::recursive_mutex> lock(mMutex);
+    if (mSingleFixLocationApi == nullptr) {
+        // set callback functions for Location API
+        mSingleFixLocationApiCallbacks.size = sizeof(mSingleFixLocationApiCallbacks);
+
+        // mandatory callback
+        mSingleFixLocationApiCallbacks.capabilitiesCb = [this](LocationCapabilitiesMask mask) {
+            onCapabilitiesCallback(mask);
+        };
+        mSingleFixLocationApiCallbacks.responseCb = [this](LocationError err, uint32_t id) {
+            onResponseCb(err, id);
+        };
+        mSingleFixLocationApiCallbacks.collectiveResponseCb =
+                [this](size_t count, LocationError* errs, uint32_t* ids) {
+            onCollectiveResponseCallback(count, errs, ids);
+        };
+        mSingleFixLocationApiCallbacks.gnssLocationInfoCb =
+                [this](GnssLocationInfoNotification notification) {
+            onGnssLocationInfoCb(notification);
+        };
+
+        mSingleFixLocationApi = LocationAPI::createInstance(mSingleFixLocationApiCallbacks);
+
+        if (!mSingleFixLocationApi) {
+            LOC_LOGe("failed to create LocationAPI to serve single shot fix requests");
+            return;
+        }
+        mSingleFixLocationApi->enableNetworkProvider();
+    }
+
+    mSingleFixReqMap.erase(clientName);
+
+    if (pReqMsg->mHorQoS != 0.0 && pReqMsg->mTimeoutMsec != 0) {
+        SingleFixReqInfo reqInfo(pReqMsg->mHorQoS,
+                                 new SingleFixTimer(this, clientName, SINGLE_SHOT_FIX_TIMER_FUSED));
+        mSingleFixReqMap.emplace(clientName, std::move(reqInfo));
+
+        auto it = mSingleFixReqMap.find(clientName);
+        if (it != mSingleFixReqMap.end()) {
+            it->second.timeoutTimer->start(pReqMsg->mTimeoutMsec, false);
+        }
+
+        // start tracking with TBF of 1 second
+        if (mSingleFixLocationApi && !mSingleFixTrackingSessionId) {
+            TrackingOptions options = {};
+            options.size = sizeof(options);
+            options.minInterval = 1000;
+            options.minDistance = 0;
+            mSingleFixTrackingSessionId = mSingleFixLocationApi->startTracking(options);
+        }
+    } else {
+        LOC_LOGd("cancelling single shot fix reqeust, stop tracking session if no more requests");
+        // client stopped the request
+        // if this is the last client, stop the tracking session
+        stopTrackingSessionForSingleFixes();
+    }
+}
+
+void LocationApiService::stopTrackingSessionForSingleFixes() {
+    // stop tracking if there is no more request
+    if (mSingleFixReqMap.size() == 0) {
+        mSingleFixLastLocation = {};
+        if (mSingleFixLocationApi && mSingleFixTrackingSessionId) {
+            LOC_LOGd("no more single shot client, stop tracking session %d",
+                     mSingleFixTrackingSessionId);
+            mSingleFixLocationApi->stopTracking(mSingleFixTrackingSessionId);
+            mSingleFixTrackingSessionId = 0;
+        } else {
+            LOC_LOGe("no tracking session started to service single shot fix");
+        }
+    }
+}
+
+void LocationApiService::singleFixRequestTimeout(const std::string& clientName) {
+    std::lock_guard<std::recursive_mutex> lock(mMutex);
+
+    LOC_LOGd("timer out processing for client %s", clientName.c_str());
+    auto it = mSingleFixReqMap.find(clientName);
+    if (it != mSingleFixReqMap.end()) {
+        LocHalDaemonClientHandler* pClient = getClient(clientName);
+        if (pClient) {
+            LOC_LOGd("send out timer out to client %s", clientName.c_str());
+            // inform client of timeout and send in the latest received location
+            pClient->sendSingleFusedFix(LOCATION_ERROR_TIMEOUT, mSingleFixLastLocation);
+        }
+        mSingleFixReqMap.erase(clientName);
+
+        // stop tracking if there is no more request
+        stopTrackingSessionForSingleFixes();
+    }
+}
+
+void SingleFixTimer::timeOutCallback() {
+    LOC_LOGe("SingleFixTimer timeout timer fired");
+
+    struct SingleFixTimeoutReq : public LocMsg {
+        SingleFixTimeoutReq(LocationApiService* locationApiService,
+                            const std::string &clientName,
+                            SingleShotTimerType timerType) :
                 mLocationApiService(locationApiService),
-                mClientName(clientName) {}
-        virtual ~SingleTerrestrialFixTimeoutReq() {}
+                mClientName(clientName),
+                mTimerType(timerType) {}
+        virtual ~SingleFixTimeoutReq() {}
         void proc() const {
-            mLocationApiService->gtpFixRequestTimeout(mClientName);
+            if (mTimerType == SINGLE_SHOT_FIX_TIMER_TERRESTRIAL) {
+                mLocationApiService->gtpFixRequestTimeout(mClientName);
+            } else if (mTimerType == SINGLE_SHOT_FIX_TIMER_FUSED) {
+                mLocationApiService->singleFixRequestTimeout(mClientName);
+            }
         }
         LocationApiService* mLocationApiService;
         std::string         mClientName;
+        SingleShotTimerType mTimerType;
     };
 
-    mLocationApiService->getMsgTask().sendMsg(new SingleTerrestrialFixTimeoutReq(
-                mLocationApiService, mClientName));
+    mLocationApiService->getMsgTask().sendMsg(new SingleFixTimeoutReq(
+                mLocationApiService, mClientName, mTimerType));
 }

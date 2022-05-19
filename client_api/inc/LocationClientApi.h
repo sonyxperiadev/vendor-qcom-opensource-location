@@ -2438,15 +2438,17 @@ public:
         specified terrestrial technologies. <br/>
 
         For this phase, only TERRESTRIAL_TECH_GTP_WWAN will be
-        supported and this will return cell-based position. <br/.
+        supported and this will return cell-based position. <br/>.
 
         This API can be invoked with on-going tracking session
-        initiated via startPositionSession(). <br/
+        initiated via startPositionSession() and/or single shot
+        terrestrial fix request initiated via getSinglePosition().
+        <br/>
 
         If this API is invoked with single-shot terrestrial position
         already in progress, the request will fail and the
         responseCallback will get invoked with
-        LOCATION_RESPONSE_REQUEST_ALREADY_IN_PROGRESS. <br/
+        LOCATION_RESPONSE_REQUEST_ALREADY_IN_PROGRESS. <br/>
 
         @param timeoutMsec
         The amount of time that user is willing to wait for
@@ -2479,18 +2481,18 @@ public:
         available. <br/>
 
         This callback will only be invoked when
-        responseCallback is invoked with ResponseCb with processing
-        status set to LOCATION_RESPONSE_SUCCESS. <br/>
+        responseCallback is invoked with processing status set to
+        LOCATION_RESPONSE_SUCCESS. <br/>
 
         Null terrestrialPositionCallback will cancel the current
-        request. If responseCallback is none-null,
+        request. If responseCallback is non-null,
         LOCATION_RESPONSE_SUCCESS will be delivered. <br/>
 
         @param responseCallback
         Callback to receive processing status, e.g.: success or
         failure code: e.g.: timeout. If null responseCallback is
-        passed, client will not be informed of processing status,
-        e.g.:LOCATION_RESPONSE_PARAM_INVALID. <br/>
+        passed, client will not be informed of processing status.
+        <br/>
 
         When the processing status is LOCATION_RESPONSE_SUCCESS, the
         terrestrialPositionCallback will be invoked to deliver the
@@ -2511,6 +2513,75 @@ public:
                                       float horQos,
                                       LocationCb terrestrialPositionCallback,
                                       ResponseCb responseCallback);
+
+    /** @brief
+        Retrieve single-shot position using the position
+        technologies supported and enabled on the device. <br/>
+
+        This API can be invoked with on-going tracking session
+        initiated via startPositionSession() and single shot
+        terrestrial fix request initiated via
+        getSingleTerrestrialPosition(). <br/>
+
+        @param timeoutMsec
+        The amount of time that user is willing to wait for
+        the the position to meet the QoS requirement. When
+        timeoutMsec has passed, the latest position received will be
+        delivered to the client and responseCallback is invoked with
+        processing status set to LOCATION_RESPONSE_TIMEOUT. If
+        timeoutMsec is set to 0, responseCallback will get invoked
+        with LOCATION_RESPONSE_PARAM_INVALID. <br/>
+
+        @param horQoS
+        horizontal accuracy requirement for the terrestrial fix. If
+        horQoS is set to 0, responseCallback will get invoked with
+        LOCATION_RESPONSE_PARAM_INVALID. <br/>
+
+        @param positionCallback
+        callback to receive the position fix. Some fields in
+        LocationClientApi::Location, e.g.: speed, bearing and their
+        uncertainty may not be available, e.g.: when the position is
+        produced with terrestria position technology. Please check
+        Location::flags for the fields that are available. <br/>
+
+        This callback will only be invoked when
+        responseCallback is invoked with processing status set to
+        LOCATION_RESPONSE_SUCCESS or LOCATION_RESPONSE_TIMEOUT.
+        <br/>
+
+        Null positionCallback will cancel the current request. If
+        responseCallback is non-null, LOCATION_RESPONSE_SUCCESS
+        will be delivered. <br/>
+
+        @param responseCallback
+        Callback to receive processing status, e.g.: success or
+        failure code: e.g.: timeout. If null responseCallback is
+        passed, client will not be informed of processing status.
+        <br/>
+
+        When the processing status is LOCATION_RESPONSE_SUCCESS, the
+        positionCallback will be invoked to deliver the
+        single-shot position report that meets the QoS requirement.
+        When timeoutMsec has passed, the latest position received
+        will be delivered to the client and responseCallback is
+        invoked with processing status set to
+        LOCATION_RESPONSE_TIMEOUT. Please note that the position
+        received for timeout scenarion may not be fresh and it will
+        not satisfy the QoS requirement. <br/>
+
+        If this API is invoked with invalid parameter, e.g.: 0
+        milli-seconds timeout, or horQoS set to zero value, the
+        responseCallback will get invoked with
+        LOCATION_RESPONSE_PARAM_INVALID. <br/>
+
+        If this API is invoked with single-shot position
+        already in progress, the request will fail and the
+        responseCallback will get invoked with
+        LOCATION_RESPONSE_REQUEST_ALREADY_IN_PROGRESS. <br/> */
+    void getSinglePosition(uint32_t timeoutMsec,
+                           float horQos,
+                           LocationCb positionCallback,
+                           ResponseCb responseCallback);
 
     /** @example example1:testDetailedGnssReportApi
     *

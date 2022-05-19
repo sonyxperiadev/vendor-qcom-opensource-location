@@ -98,7 +98,8 @@ class TrackingSessCbHandler {
                     GnssLocation gnssLocation =
                             LocationClientApiImpl::parseLocationInfo(n);
                     gnssLocCb(gnssLocation);
-                    pClientApiImpl->logLocation(gnssLocation);
+                    pClientApiImpl->logLocation(gnssLocation,
+                                                LOC_REPORT_TRIGGER_DETAILED_TRACKING_SESSION);
                 };
             }
 
@@ -127,7 +128,8 @@ class TrackingSessCbHandler {
                             LocationClientApiImpl::parseLocationInfo(
                                     engineLocationInfoNotification[i]);
                         engLocationsVector.push_back(gnssLocation);
-                        pClientApiImpl->logLocation(gnssLocation);
+                        pClientApiImpl->logLocation(gnssLocation,
+                                                    LOC_REPORT_TRIGGER_ENGINE_TRACKING_SESSION);
                     }
                     engineLocCb(engLocationsVector);
                 };
@@ -164,10 +166,12 @@ void TrackingSessCbHandler::initializeCommonCbs(LocationClientApiImpl *pClientAp
         GnssMeasurementsCb gnssNHzMeasurementsCallback,
         GnssDcReportCb gnssDcReportCallback, uint32_t intervalInMs) {
     // callback masks
-    mCallbackOptions.responseCb = [rspCb](::LocationError err, uint32_t id) {
-        LocationResponse response = LocationClientApiImpl::parseLocationError(err);
-        rspCb(response);
-    };
+    if (rspCb) {
+        mCallbackOptions.responseCb = [rspCb](::LocationError err, uint32_t id) {
+            LocationResponse response = LocationClientApiImpl::parseLocationError(err);
+            rspCb(response);
+        };
+    }
 
     if (gnssSvCallback) {
         mCallbackOptions.gnssSvCb =
@@ -280,31 +284,19 @@ bool LocationClientApi::startPositionSession(
 
     // callback masks
     LocationCallbacks callbacksOption = {};
-    callbacksOption.responseCb = [responseCallback](::LocationError err, uint32_t id) {
-        LocationResponse response = LocationClientApiImpl::parseLocationError(err);
-        responseCallback(response);
-    };
+    callbacksOption.size =  sizeof(LocationCallbacks);
+
+    if (responseCallback) {
+        callbacksOption.responseCb = [responseCallback](::LocationError err, uint32_t id) {
+            LocationResponse response = LocationClientApiImpl::parseLocationError(err);
+            responseCallback(response);
+        };
+    }
+
     callbacksOption.trackingCb = [this, locationCallback](::Location loc) {
         Location location = LocationClientApiImpl::parseLocation(loc);
         locationCallback(location);
-
-        // copy location info over to gnsslocaiton so we can use existing routine
-        // to log the packet
-        GnssLocation gnssLocation = {};
-        gnssLocation.flags              = location.flags;
-        gnssLocation.timestamp          = location.timestamp;
-        gnssLocation.latitude           = location.latitude;
-        gnssLocation.longitude          = location.longitude;
-        gnssLocation.altitude           = location.altitude;
-        gnssLocation.speed              = location.speed;
-        gnssLocation.bearing            = location.bearing;
-        gnssLocation.horizontalAccuracy = location.horizontalAccuracy;
-        gnssLocation.verticalAccuracy   = location.verticalAccuracy;
-        gnssLocation.speedAccuracy      = location.speedAccuracy;
-        gnssLocation.bearingAccuracy    = location.bearingAccuracy;
-        gnssLocation.techMask           = location.techMask;
-
-        mApiImpl->logLocation(gnssLocation);
+        mApiImpl->logLocation(location, LOC_REPORT_TRIGGER_SIMPLE_TRACKING_SESSION);
     };
 
     // options
@@ -396,10 +388,14 @@ bool LocationClientApi::startTripBatchingSession(uint32_t minInterval, uint32_t 
 
     // callback masks
     LocationCallbacks callbacksOption = {};
-    callbacksOption.responseCb = [rspCb] (::LocationError err, uint32_t id) {
-        LocationResponse response = LocationClientApiImpl::parseLocationError(err);
-        rspCb(response);
-    };
+    callbacksOption.size = sizeof(LocationCallbacks);
+
+    if (rspCb) {
+        callbacksOption.responseCb = [rspCb] (::LocationError err, uint32_t id) {
+                LocationResponse response = LocationClientApiImpl::parseLocationError(err);
+                rspCb(response);
+        };
+    }
 
     callbacksOption.batchingCb = [batchingCb] (size_t count, ::Location* location,
             BatchingOptions batchingOptions) {
@@ -452,10 +448,14 @@ bool LocationClientApi::startRoutineBatchingSession(uint32_t minInterval, uint32
 
     // callback masks
     LocationCallbacks callbacksOption = {};
-    callbacksOption.responseCb = [rspCb](::LocationError err, uint32_t id) {
-        LocationResponse response = LocationClientApiImpl::parseLocationError(err);
-        rspCb(response);
-    };
+    callbacksOption.size =  sizeof(LocationCallbacks);
+
+    if (rspCb) {
+        callbacksOption.responseCb = [rspCb](::LocationError err, uint32_t id) {
+            LocationResponse response = LocationClientApiImpl::parseLocationError(err);
+            rspCb(response);
+        };
+    }
 
     callbacksOption.batchingCb = [batchingCb](size_t count, ::Location* location,
             BatchingOptions batchingOptions) {
@@ -507,20 +507,24 @@ void LocationClientApi::addGeofences(std::vector<Geofence>& geofences,
 
     // callback masks
     LocationCallbacks callbacksOption = {};
+    callbacksOption.size =  sizeof(LocationCallbacks);
+
     callbacksOption.responseCb = [](LocationError err, uint32_t id) {};
 
-    callbacksOption.collectiveResponseCb = [this, collRspCb](size_t count,
-            LocationError* errs, uint32_t* ids) {
-        std::vector<pair<Geofence, LocationResponse>> responses;
-        LOC_LOGd("CollectiveRes Pload count: %zu", count);
-        for (int i=0; i < count; i++) {
-            responses.push_back(make_pair(
-                    mApiImpl->getMappedGeofence(ids[i]),
-                    LocationClientApiImpl::parseLocationError(errs[i])));
-        }
+    if (collRspCb) {
+        callbacksOption.collectiveResponseCb = [this, collRspCb](size_t count,
+                LocationError* errs, uint32_t* ids) {
+                std::vector<pair<Geofence, LocationResponse>> responses;
+                LOC_LOGd("CollectiveRes Pload count: %zu", count);
+                for (int i=0; i < count; i++) {
+                    responses.push_back(make_pair(
+                            mApiImpl->getMappedGeofence(ids[i]),
+                            LocationClientApiImpl::parseLocationError(errs[i])));
+                }
 
-        collRspCb(responses);
-    };
+                collRspCb(responses);
+        };
+    }
 
     callbacksOption.geofenceBreachCb =
             [this, gfBreachCb](GeofenceBreachNotification geofenceBreachNotification) {
@@ -684,10 +688,15 @@ void LocationClientApi::getGnssEnergyConsumed(
             responseCb(LOCATION_RESPONSE_PARAM_INVALID);
         }
     } else if (mApiImpl) {
-        responseCallback responseCbFn = [responseCb](::LocationError err, uint32_t id) {
-            LocationResponse response = LocationClientApiImpl::parseLocationError(err);
-            responseCb(response);
-        };
+        responseCallback responseCbFn = nullptr;
+
+        if (responseCb) {
+            responseCbFn = [responseCb](::LocationError err, uint32_t id) {
+                LocationResponse response = LocationClientApiImpl::parseLocationError(err);
+                responseCb(response);
+            };
+        }
+
         gnssEnergyConsumedCallback gnssEnergyConsumedCbFn = [this, gnssEnergyConsumedCb] (
                 const ::GnssEnergyConsumedInfo& gnssEnergyConsumed) {
             GnssEnergyConsumedInfo gnssEnergyConsumedInfo =
@@ -706,20 +715,25 @@ void LocationClientApi::updateLocationSystemInfoListener(
     ResponseCb responseCb) {
 
     if (mApiImpl) {
-        responseCallback responseCbFn = [responseCb](::LocationError err, uint32_t id) {
-            LocationResponse response = LocationClientApiImpl::parseLocationError(err);
-            responseCb(response);
-        };
+        responseCallback responseCbFn = nullptr;
+        locationSystemInfoCallback locSystemInfoCbFn = nullptr;
 
-        locationSystemInfoCallback locSystemInfoCbFn =
-                [locSystemInfoCb] (::LocationSystemInfo locationSystem) {
-            LocationSystemInfo locationSystemInfo =
-                    LocationClientApiImpl::parseLocationSystemInfo(locationSystem);
-            locSystemInfoCb(locationSystemInfo);
-        };
+        if (responseCb) {
+            responseCbFn = [responseCb](::LocationError err, uint32_t id) {
+                LocationResponse response = LocationClientApiImpl::parseLocationError(err);
+                responseCb(response);
+            };
+        }
 
-        mApiImpl->updateLocationSystemInfoListener(
-            locSystemInfoCbFn, responseCbFn);
+        if (locSystemInfoCb) {
+            locSystemInfoCbFn = [locSystemInfoCb] (::LocationSystemInfo locationSystem) {
+                LocationSystemInfo locationSystemInfo =
+                        LocationClientApiImpl::parseLocationSystemInfo(locationSystem);
+                locSystemInfoCb(locationSystemInfo);
+            };
+        }
+
+        mApiImpl->updateLocationSystemInfoListener(locSystemInfoCbFn, responseCbFn);
     } else {
         LOC_LOGe ("NULL mApiImpl");
     }
@@ -744,6 +758,7 @@ void LocationClientApi::getSingleTerrestrialPosition(
     LOC_LOGd("timeout msec = %u, horQoS = %f,"
              "techMask = 0x%x", timeoutMsec, horQoS, techMask);
 
+    // null terrestrialPositionCallback means cancelling request
     if ((terrestrialPositionCb != nullptr) &&
             ((timeoutMsec == 0) || (techMask != TERRESTRIAL_TECH_GTP_WWAN) ||
              (horQoS != 0.0))) {
@@ -753,17 +768,77 @@ void LocationClientApi::getSingleTerrestrialPosition(
             responseCb(LOCATION_RESPONSE_PARAM_INVALID);
         }
     } else if (mApiImpl) {
-        responseCallback responseCbFn = [responseCb](::LocationError err, uint32_t id) {
-            LocationResponse response = LocationClientApiImpl::parseLocationError(err);
-            responseCb(response);
-        };
-        trackingCallback trackingCbFn = [this, terrestrialPositionCb](::Location loc) {
-            Location location = LocationClientApiImpl::parseLocation(loc);
-            terrestrialPositionCb(location);
-        };
+        responseCallback responseCbFn = nullptr;
+        trackingCallback trackingCbFn = nullptr;
+
+        if (responseCb) {
+            responseCbFn = [responseCb](::LocationError err, uint32_t id) {
+                LocationResponse response = LocationClientApiImpl::parseLocationError(err);
+                responseCb(response);
+            };
+        }
+
+        if (terrestrialPositionCb) {
+            trackingCbFn = [this, terrestrialPositionCb](::Location loc) {
+                Location location = LocationClientApiImpl::parseLocation(loc);
+                terrestrialPositionCb(location);
+                mApiImpl->logLocation(location, LOC_REPORT_TRIGGER_SINGLE_TERRESTRIAL_FIX);
+            };
+        }
 
         mApiImpl->getSingleTerrestrialPos(timeoutMsec, ::TERRESTRIAL_TECH_GTP_WWAN, horQoS,
-                                          trackingCbFn, responseCbFn);
+                trackingCbFn, responseCbFn);
+    } else {
+        LOC_LOGe ("NULL mApiImpl");
+    }
+}
+
+void LocationClientApi::getSinglePosition(uint32_t timeoutMsec,
+                                          float horQoS,
+                                          LocationCb positionCb,
+                                          ResponseCb responseCb) {
+
+    LOC_LOGd("timeout msec = %u, horQoS = %f", timeoutMsec, horQoS);
+
+    if (positionCb != nullptr) {
+        if ((timeoutMsec == 0) || (horQoS == 0)) {
+            LOC_LOGd("invalid parameter to request single shot fix:"
+                     "timeout %d msec, horQoS %f", timeoutMsec, horQoS);
+            if (responseCb) {
+                responseCb(LOCATION_RESPONSE_PARAM_INVALID);
+            }
+            return;
+        }
+    } else {
+        LOC_LOGd("null pos cb, cancel the requeset");
+        // null positionCallback means cancelling callback
+        // set below two parameters to zero when cancelling the request
+        timeoutMsec = 0;
+        horQoS = 0;
+    }
+
+    if (mApiImpl) {
+        responseCallback responseCbFn = [responseCb](::LocationError err, uint32_t id) {
+            LocationResponse response = LocationClientApiImpl::parseLocationError(err);
+            if (responseCb){
+                responseCb(response);
+            }
+        };
+
+        if (positionCb) {
+            trackingCallback trackingCbFn = [this, positionCb](::Location loc) {
+                Location location = LocationClientApiImpl::parseLocation(loc);
+                positionCb(location);
+
+                // log the location
+                mApiImpl->logLocation(location, LOC_REPORT_TRIGGER_SINGLE_FIX);
+            };
+            mApiImpl->getSinglePos(timeoutMsec, horQoS,
+                                   trackingCbFn, responseCbFn);
+        } else {
+            mApiImpl->getSinglePos(timeoutMsec, horQoS,
+                                   nullptr, responseCbFn);
+        }
     } else {
         LOC_LOGe ("NULL mApiImpl");
     }

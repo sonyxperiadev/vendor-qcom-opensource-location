@@ -115,10 +115,9 @@ LCAReportLoggerUtil::LCAReportLoggerUtil():
 }
 
 void LCAReportLoggerUtil::log(const GnssLocation& gnssLocation,
-                              const LocationCapabilitiesMask& capMask,
-                              uint64_t sessionStartBootTimestampNs) {
+                              const DiagLocationInfoExt& diagInfoExt) {
     if (mLogLocation != nullptr) {
-        mLogLocation(gnssLocation, capMask, sessionStartBootTimestampNs);
+        mLogLocation(gnssLocation, diagInfoExt);
     }
 }
 

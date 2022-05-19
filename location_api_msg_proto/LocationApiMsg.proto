@@ -82,8 +82,8 @@ enum LocationApiMsgVersion {
     LOCAPI_MSG_VER_MAJOR = 1;
     // Minor - New features / API addition, new message/elemtent addition.
     // Bump the last byte of version i.e. x.2 to x.3
-    // Minor version 14: Add LIA location injection
-    LOCAPI_MSG_VER_MINOR = 14;
+    // Minor version 15: Add LCA API for single shot fix request with timeout and QoS
+    LOCAPI_MSG_VER_MINOR = 15;
 }
 
 // ============================================================================
@@ -162,6 +162,10 @@ enum PBELocMsgID {
     // Antenna Info
     PB_E_LOCAPI_GET_ANTENNA_INFO_MSG_ID = 36;
     PB_E_LOCAPI_ANTENNA_INFO_MSG_ID = 37;
+
+    // Single shot fix request/response msg
+    PB_E_LOCAPI_GET_SINGLE_POS_REQ_MSG_ID = 38;
+    PB_E_LOCAPI_GET_SINGLE_POS_RESP_MSG_ID = 39;
 
     // ping
     PB_E_LOCAPI_PINGTEST_MSG_ID = 99;
@@ -517,6 +521,19 @@ message PBLocAPIGetSingleTerrestrialPosReqMsg {
 };
 
 message PBLocAPIGetSingleTerrestrialPosRespMsg {
+    PBLocationError errorCode = 1;
+    PBLocation      location = 2;
+};
+
+//*******************************************************************
+// IPC message structure - Single-shot fix
+//*******************************************************************
+message PBLocAPIGetSinglePosReqMsg {
+    uint32 timeoutMsec = 1;
+    float  horQoS = 2;
+};
+
+message PBLocAPIGetSinglePosRespMsg {
     PBLocationError errorCode = 1;
     PBLocation      location = 2;
 };

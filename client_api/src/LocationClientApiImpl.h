@@ -69,6 +69,7 @@ IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <loc_pla.h>
 #include <LocIpc.h>
+#include <LocationDataTypes.h>
 #include <ILocationAPI.h>
 #include <MsgTask.h>
 #include <LocationApiMsg.h>
@@ -180,6 +181,8 @@ public:
 
     virtual void getDebugReport(GnssDebugReport& reports) override;
 
+    virtual uint32_t getAntennaInfo(AntennaInfoCallback* cb) override;
+
     // other interface
     void startPositionSession(const LocationCallbacks& callbacksOption,
                               const TrackingOptions& trackingOptions);
@@ -209,6 +212,9 @@ public:
     void getSingleTerrestrialPos(uint32_t timeoutMsec, TerrestrialTechMask techMask,
                                  float horQoS, trackingCallback terrestrialPositionCallback,
                                  responseCallback responseCallback);
+    void getSinglePos(uint32_t timeoutMsec, float horQoS,
+                      trackingCallback positionCb,
+                      responseCallback responseCb);
 
     void pingTest(PingTestCb pingTestCallback);
 
@@ -243,7 +249,11 @@ public:
     static GnssEnergyConsumedInfo parseGnssConsumedInfo(::GnssEnergyConsumedInfo);
     static GnssDcReport parseDcReport(const::GnssDcReportInfo &halDcReport);
 
-    void logLocation(const GnssLocation &gnssLocation);
+    void logLocation(const Location &location,
+                     LocReportTriggerType reportTriggerType);
+    void logLocation(const GnssLocation &gnssLocation,
+                     LocReportTriggerType reportTriggerType);
+
     LCAReportLoggerUtil & getLogger() {
         return mLogger;
     }
@@ -271,6 +281,7 @@ private:
     void invokePositionSessionResponseCb(LocationError errCode);
     void diagLogGnssLocation(const GnssLocation &gnssLocation);
     void processGetDebugRespCb(const LocAPIGetDebugRespMsg* pRespMsg);
+    void processAntennaInfo(const LocAPIAntennaInfoMsg* pAntennaInfoMsg);
 
     // protobuf conversion util class
     LocationApiPbMsgConv mPbufMsgConv;
@@ -299,6 +310,7 @@ private:
     bool                       mPositionSessionResponseCbPending;
     uint64_t                   mSessionStartBootTimestampNs;
     GnssDebugReport*           mpDebugReport;
+    AntennaInfoCallback*       mpAntennaInfoCb;
 
     // callbacks
     LocationCallbacks       mLocationCbs;
@@ -317,6 +329,10 @@ private:
     trackingCallback              mSingleTerrestrialPosCb;
     responseCallback              mSingleTerrestrialPosRespCb;
 
+    // Single fix callback
+    trackingCallback           mSinglePosCb;
+    responseCallback           mSinglePosRespCb;
+
     MsgTask                    mMsgTask;
 
     LocIpc                     mIpc;
@@ -327,7 +343,6 @@ private:
     std::unordered_map<uint32_t, Geofence> mGeofenceMap;
 
     LCAReportLoggerUtil        mLogger;
-
 };
 
 } // namespace location_client

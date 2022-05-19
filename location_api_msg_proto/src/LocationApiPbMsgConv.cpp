@@ -211,6 +211,12 @@ ELocMsgID LocationApiPbMsgConv::getEnumForPBELocMsgID(const PBELocMsgID &pbLocMs
         case PB_E_LOCAPI_DC_REPORT_MSG_ID:
             eLocMsgId = E_LOCAPI_DC_REPORT_MSG_ID;
             break;
+        case PB_E_LOCAPI_GET_SINGLE_POS_REQ_MSG_ID:
+            eLocMsgId = E_LOCAPI_GET_SINGLE_POS_REQ_MSG_ID;
+            break;
+        case PB_E_LOCAPI_GET_SINGLE_POS_RESP_MSG_ID:
+            eLocMsgId = E_LOCAPI_GET_SINGLE_POS_RESP_MSG_ID;
+            break;
         case PB_E_LOCAPI_PINGTEST_MSG_ID:
             eLocMsgId = E_LOCAPI_PINGTEST_MSG_ID;
             break;
@@ -288,6 +294,12 @@ ELocMsgID LocationApiPbMsgConv::getEnumForPBELocMsgID(const PBELocMsgID &pbLocMs
             break;
         case PB_E_INTAPI_INJECT_LOCATION_MSG_ID:
             eLocMsgId = E_INTAPI_INJECT_LOCATION_MSG_ID;
+            break;
+        case PB_E_LOCAPI_GET_ANTENNA_INFO_MSG_ID:
+            eLocMsgId = E_LOCAPI_GET_ANTENNA_INFO_MSG_ID;
+            break;
+        case PB_E_LOCAPI_ANTENNA_INFO_MSG_ID:
+            eLocMsgId = E_LOCAPI_ANTENNA_INFO_MSG_ID;
             break;
         default:
             break;
@@ -811,6 +823,12 @@ PBELocMsgID LocationApiPbMsgConv::getPBEnumForELocMsgID(const ELocMsgID &eLocMsg
         case E_LOCAPI_DC_REPORT_MSG_ID:
             pbLocMsgId = PB_E_LOCAPI_DC_REPORT_MSG_ID;
             break;
+        case E_LOCAPI_GET_SINGLE_POS_REQ_MSG_ID:
+            pbLocMsgId = PB_E_LOCAPI_GET_SINGLE_POS_REQ_MSG_ID;
+            break;
+        case E_LOCAPI_GET_SINGLE_POS_RESP_MSG_ID:
+            pbLocMsgId = PB_E_LOCAPI_GET_SINGLE_POS_RESP_MSG_ID;
+            break;
         case E_LOCAPI_PINGTEST_MSG_ID:
             pbLocMsgId = PB_E_LOCAPI_PINGTEST_MSG_ID;
             break;
@@ -888,6 +906,12 @@ PBELocMsgID LocationApiPbMsgConv::getPBEnumForELocMsgID(const ELocMsgID &eLocMsg
             break;
         case E_INTAPI_INJECT_LOCATION_MSG_ID:
             pbLocMsgId = PB_E_INTAPI_INJECT_LOCATION_MSG_ID;
+            break;
+        case E_LOCAPI_GET_ANTENNA_INFO_MSG_ID:
+            pbLocMsgId = PB_E_LOCAPI_GET_ANTENNA_INFO_MSG_ID;
+            break;
+        case E_LOCAPI_ANTENNA_INFO_MSG_ID:
+            pbLocMsgId = PB_E_LOCAPI_ANTENNA_INFO_MSG_ID;
             break;
         default:
             break;
@@ -1247,6 +1271,13 @@ uint64_t LocationApiPbMsgConv::getPBMaskForLocationCapabilitiesMask(
     }
     if (locCapabMask & LOCATION_CAPABILITIES_QWES_QDR3) {
         pbLocCapabMask |= PB_LOCATION_CAPS_QWES_QDR3;
+    }
+    if (locCapabMask & LOCATION_CAPABILITIES_QWES_DGNSS) {
+        pbLocCapabMask |= PB_LOCATION_CAPS_QWES_DGNSS;
+    }
+    if (locCapabMask & LOCATION_CAPABILITIES_ANTENNA_INFO) {
+        pbLocCapabMask |= PB_LOCATION_CAPS_ANTENNA_INFO;
+        LOC_LOGi("PB_LOCATION_CAPS_ANTENNA_INFO");
     }
     LOC_LOGi("LocApiPB: locCapabMask:0x%" PRIx64", pbLocCapabMask:0x%" PRIx64,
             locCapabMask, pbLocCapabMask);
@@ -2171,6 +2202,13 @@ uint64_t LocationApiPbMsgConv::getLocationCapabilitiesMaskFromPB(
     }
     if (pbLocCapabMask & PB_LOCATION_CAPS_QWES_QDR3) {
         locCapabMask |= LOCATION_CAPABILITIES_QWES_QDR3;
+    }
+    if (pbLocCapabMask & PB_LOCATION_CAPS_QWES_DGNSS) {
+        locCapabMask |= LOCATION_CAPABILITIES_QWES_DGNSS;
+    }
+    if (pbLocCapabMask & PB_LOCATION_CAPS_ANTENNA_INFO) {
+        locCapabMask |= LOCATION_CAPABILITIES_ANTENNA_INFO;
+        LOC_LOGi("LOCATION_CAPABILITIES_ANTENNA_INFO");
     }
     LOC_LOGi("LocApiPB: pbLocCapabMask:0x%" PRIx64", locCapabMask:0x%" PRIx64,
             pbLocCapabMask, locCapabMask);
@@ -3820,7 +3858,7 @@ int LocationApiPbMsgConv::convertGnssDcReportToPB(
         LOC_LOGe("pbDcReportInfo is NULL!, return");
         return 1;
     }
-    LOC_LOGv("LocApiPB: dc type %d, num bits %d, num bytes %d",
+    LOC_LOGv("LocApiPB: dc type %d, num bits %d, num bytes %zu",
              dcReportInfo.dcReportType, dcReportInfo.numValidBits,
              dcReportInfo.dcReportData.size());
 
@@ -5983,6 +6021,7 @@ int LocationApiPbMsgConv::pbConvertToGnssTimespec(const PBTimespec& pbTimespec,
 
 int LocationApiPbMsgConv::pbConvertToGnssDebugTime(const PBGnssDebugTime& pbDebugTime,
         GnssDebugTime debugTime) const {
+    debugTime.size = sizeof(GnssDebugTime);
     //bool valid = 1;
     debugTime.mValid = pbDebugTime.valid();
     //int64 timeEstimate = 2;
@@ -5997,6 +6036,7 @@ int LocationApiPbMsgConv::pbConvertToGnssDebugTime(const PBGnssDebugTime& pbDebu
 int LocationApiPbMsgConv::pbConvertToGnssDebugLocation(
         const PBGnssDebugLocation& pbDebugLocation,
         GnssDebugLocation& debugLocation) const {
+    debugLocation.size = sizeof(GnssDebugLocation);
     //bool valid = 1;
     debugLocation.mValid = pbDebugLocation.valid();
     //PBLocation location = 2;
@@ -6084,6 +6124,7 @@ GnssEphemerisHealth LocationApiPbMsgConv::getEnumForPBGnssEphemerisHealth(
 int LocationApiPbMsgConv::pbConvertToGnssDebugSatelliteInfo(
         const PBGnssDebugSatelliteInfo& pbSatelliteInfo,
         GnssDebugSatelliteInfo& satelliteInfo) const {
+    satelliteInfo.size = sizeof(GnssDebugSatelliteInfo);
     //uint32 svid = 1;
     satelliteInfo.svid = pbSatelliteInfo.svid();
     //PBLocApiGnss_LocSvSystemEnumType constellation = 2;
@@ -6121,6 +6162,249 @@ int LocationApiPbMsgConv::pbConvertToGnssDebugReport(
         GnssDebugSatelliteInfo satelliteInfo;
         pbConvertToGnssDebugSatelliteInfo(pbGnssDebugReport.satelliteinfo(i), satelliteInfo);
         gnssDebugReport.mSatelliteInfo.push_back(satelliteInfo);
+    }
+    gnssDebugReport.size = sizeof(GnssDebugReport);
+    return 0;
+}
+
+// AntennaInformation to PBAntennaInformation
+int LocationApiPbMsgConv::convertAntennaInfoToPB(const AntennaInformation& antennaInfo,
+        PBAntennaInformation* pbAntennaInfo) const {
+    if (nullptr == pbAntennaInfo) {
+        LOC_LOGe("pbAntennaInfo is NULL!, return");
+        return 1;
+    }
+
+    //repeated PBGnssAntennaInformation antennaInfos = 1;
+    int count = antennaInfo.antennaInfos.size();
+    for (int i = 0; i < count; i++) {
+        PBGnssAntennaInformation* pbGnssAntennaInfo = pbAntennaInfo->add_antennainfos();
+        if (nullptr != pbGnssAntennaInfo) {
+            if (convertGnssAntennaInformationToPB(
+                    antennaInfo.antennaInfos[i], pbGnssAntennaInfo)) {
+                LOC_LOGe("convertGnssAntennaInformationToPB failed");
+                free(pbAntennaInfo);
+                return 1;
+            }
+        } else {
+            LOC_LOGe("add_antennainfos failed");
+            return 1;
+        }
+    }
+    return 0;
+}
+
+int LocationApiPbMsgConv::convertGnssAntennaInformationToPB(
+        const GnssAntennaInformation& gnssAntennaInfo,
+        PBGnssAntennaInformation* pbGnssAntennaInfo) const {
+    if (nullptr == pbGnssAntennaInfo) {
+        LOC_LOGe("pbGnssAntennaInfo is NULL!, return");
+        return 1;
+    }
+    //double carrierFrequencyMHz = 1;
+    pbGnssAntennaInfo->set_carrierfrequencymhz(gnssAntennaInfo.carrierFrequencyMHz);
+    //PBGnssCoordinate phaseCenterOffsetCoordinateMillimeters = 2;
+    PBGnssCoordinate* pbGnssCoordinate =
+            pbGnssAntennaInfo->mutable_phasecenteroffsetcoordinatemillimeters();
+    if (nullptr != pbGnssCoordinate) {
+        if (convertGnssCoordinateToPB(
+                gnssAntennaInfo.phaseCenterOffsetCoordinateMillimeters, pbGnssCoordinate)) {
+            LOC_LOGe("convertGnssCoordinateToPB failed");
+            free(pbGnssCoordinate);
+            return 1;
+        }
+    } else {
+        LOC_LOGe("mutable_phasecenteroffsetcoordinatemillimeters failed");
+    }
+
+    //PB2DimensionDoubleVector phaseCenterVariationCorrectionMillimeters = 3;
+    PB2DimensionDoubleVector* pPhaseCenterVariationCorrectionMillimeters =
+        pbGnssAntennaInfo->mutable_phasecentervariationcorrectionmillimeters();
+    if (nullptr != pPhaseCenterVariationCorrectionMillimeters) {
+        if (convert2DimensionDoubleVectorToPB(
+            gnssAntennaInfo.phaseCenterVariationCorrectionMillimeters,
+            pPhaseCenterVariationCorrectionMillimeters)) {
+            LOC_LOGe("convert phaseCenterVariationCorrectionMillimeters ToPB failed");
+            free(pPhaseCenterVariationCorrectionMillimeters);
+            return 1;
+        }
+    } else {
+        LOC_LOGe("mutable_phasecentervariationcorrectionmillimeters failed");
+        return 1;
+    }
+
+    //PB2DimensionDoubleVector phaseCenterVariationCorrectionUncertaintyMillimeters = 4;
+    PB2DimensionDoubleVector* pPhaseCenterVariationCorrectionUncertaintyMillimeters =
+        pbGnssAntennaInfo->mutable_phasecentervariationcorrectionuncertaintymillimeters();
+    if (nullptr != pPhaseCenterVariationCorrectionUncertaintyMillimeters) {
+        if (convert2DimensionDoubleVectorToPB(
+            gnssAntennaInfo.phaseCenterVariationCorrectionUncertaintyMillimeters,
+            pPhaseCenterVariationCorrectionUncertaintyMillimeters)) {
+            LOC_LOGe("convert phaseCenterVariationCorrectionUncertaintyMillimeters ToPB failed");
+            free(pPhaseCenterVariationCorrectionUncertaintyMillimeters);
+            return 1;
+        }
+    } else {
+        LOC_LOGe("mutable_phasecentervariationcorrectionuncertaintymillimeters failed");
+        return 1;
+    }
+
+    //PB2DimensionDoubleVector signalGainCorrectionDbi = 5;
+    PB2DimensionDoubleVector* pSignalGainCorrectionDbi =
+        pbGnssAntennaInfo->mutable_signalgaincorrectiondbi();
+    if (nullptr != pSignalGainCorrectionDbi) {
+        if (convert2DimensionDoubleVectorToPB(
+                gnssAntennaInfo.signalGainCorrectionDbi,
+                pSignalGainCorrectionDbi)) {
+            LOC_LOGe("convert signalGainCorrectionDbi ToPB failed");
+            free(pSignalGainCorrectionDbi);
+            return 1;
+        }
+    } else {
+        LOC_LOGe("mutable_signalgaincorrectiondbi failed");
+        return 1;
+    }
+
+    //PB2DimensionDoubleVector signalGainCorrectionUncertaintyDbi = 6;
+    PB2DimensionDoubleVector* pSignalGainCorrectionUncertaintyDbi =
+        pbGnssAntennaInfo->mutable_signalgaincorrectionuncertaintydbi();
+    if (nullptr != pSignalGainCorrectionUncertaintyDbi) {
+        if (convert2DimensionDoubleVectorToPB(
+                gnssAntennaInfo.signalGainCorrectionUncertaintyDbi,
+                pSignalGainCorrectionUncertaintyDbi)) {
+            LOC_LOGe("convert signalGainCorrectionUncertaintyDbi ToPB failed");
+            free(pSignalGainCorrectionUncertaintyDbi);
+            return 1;
+        }
+    } else {
+        LOC_LOGe("mutable_signalgaincorrectionuncertaintydbi failed");
+    }
+    return 0;
+}
+
+int LocationApiPbMsgConv::convertGnssCoordinateToPB(
+        const GnssCoordinate& gnssCoordinate,
+        PBGnssCoordinate* pbGnssCoordinate) const {
+    if (nullptr == pbGnssCoordinate) {
+        LOC_LOGe("pbGnssCoordinate is NULL!, return");
+        return 1;
+    }
+    //double x = 1;
+    pbGnssCoordinate->set_x(gnssCoordinate.x);
+    //double xUncertainty = 2;
+    pbGnssCoordinate->set_xuncertainty(gnssCoordinate.xUncertainty);
+    //double y = 3;
+    pbGnssCoordinate->set_y(gnssCoordinate.y);
+    //double yUncertainty = 4;
+    pbGnssCoordinate->set_yuncertainty(gnssCoordinate.yUncertainty);
+    //double z = 5;
+    pbGnssCoordinate->set_z(gnssCoordinate.z);
+    //double zUncertainty = 6;
+    pbGnssCoordinate->set_zuncertainty(gnssCoordinate.zUncertainty);
+    return 0;
+}
+
+int LocationApiPbMsgConv::convert2DimensionDoubleVectorToPB(
+        const std::vector<std::vector<double>>& doubleArrays,
+        PB2DimensionDoubleVector* pbDoubleArrarys) const {
+    if (nullptr == pbDoubleArrarys) {
+        LOC_LOGe("pbDoubleArrarys is NULL!, return");
+        return 1;
+    }
+    //uint32 row = 1;
+    uint32_t row = doubleArrays.size();
+    pbDoubleArrarys->set_row(row);
+
+    //uint32 column = 2;
+    uint32_t column = 0;
+    //repeated double value = 3;
+    for (uint32_t i = 0; i < row; i++) {
+        column = doubleArrays[i].size();
+        for (uint32_t j = 0; j < column; j++) {
+            pbDoubleArrarys->add_value(doubleArrays[i][j]);
+        }
+    }
+    pbDoubleArrarys->set_column(column);
+    return 0;
+}
+
+// PBAntennaInformation to AntennaInformation
+int LocationApiPbMsgConv::pbConvertToAntennaInfo(
+        const PBAntennaInformation& pbAntennaInfo,
+        AntennaInformation& antennaInfo) const {
+    //repeated PBGnssAntennaInformation antennaInfos = 1;
+    int count = pbAntennaInfo.antennainfos_size();
+    for (int i = 0; i < count; i++) {
+        GnssAntennaInformation gnssAntennaInfo;
+        pbConvertToGnssAntennaInformaiton(pbAntennaInfo.antennainfos(i), gnssAntennaInfo);
+        antennaInfo.antennaInfos.push_back(std::move(gnssAntennaInfo));
+    }
+    return 0;
+}
+
+int LocationApiPbMsgConv::pbConvertToGnssAntennaInformaiton(
+        const PBGnssAntennaInformation& pbGnssAntennaInfo,
+        GnssAntennaInformation& gnssAntennaInfo) const {
+    gnssAntennaInfo.size = sizeof(GnssAntennaInformation);
+    //double carrierFrequencyMHz = 1;
+    gnssAntennaInfo.carrierFrequencyMHz = pbGnssAntennaInfo.carrierfrequencymhz();
+    //PBGnssCoordinate phaseCenterOffsetCoordinateMillimeters = 2;
+    pbConvertToGnssCoordinate(
+        pbGnssAntennaInfo.phasecenteroffsetcoordinatemillimeters(),
+        gnssAntennaInfo.phaseCenterOffsetCoordinateMillimeters);
+    //PB2DimensionDoubleVector phaseCenterVariationCorrectionMillimeters = 3;
+    pbConvertTo2DimensionDoubleVector(
+        pbGnssAntennaInfo.phasecentervariationcorrectionmillimeters(),
+        gnssAntennaInfo.phaseCenterVariationCorrectionMillimeters);
+    //PB2DimensionDoubleVector phaseCenterVariationCorrectionUncertaintyMillimeters = 4;
+    pbConvertTo2DimensionDoubleVector(
+        pbGnssAntennaInfo.phasecentervariationcorrectionuncertaintymillimeters(),
+        gnssAntennaInfo.phaseCenterVariationCorrectionUncertaintyMillimeters);
+    //PB2DimensionDoubleVector signalGainCorrectionDbi = 5;
+    pbConvertTo2DimensionDoubleVector(
+        pbGnssAntennaInfo.signalgaincorrectiondbi(),
+        gnssAntennaInfo.signalGainCorrectionDbi);
+    //PB2DimensionDoubleVector signalGainCorrectionUncertaintyDbi = 6;
+    pbConvertTo2DimensionDoubleVector(
+        pbGnssAntennaInfo.signalgaincorrectionuncertaintydbi(),
+        gnssAntennaInfo.signalGainCorrectionUncertaintyDbi);
+    return 0;
+}
+
+int LocationApiPbMsgConv::pbConvertToGnssCoordinate(
+        const PBGnssCoordinate& pbGnssCoordinate,
+        GnssCoordinate& gnssCoordinate) const {
+    gnssCoordinate.size = sizeof(GnssCoordinate);
+    //double x = 1;
+    gnssCoordinate.x = pbGnssCoordinate.x();
+    //double xUncertainty = 2;
+    gnssCoordinate.xUncertainty = pbGnssCoordinate.xuncertainty();
+    //double y = 3;
+    gnssCoordinate.y = pbGnssCoordinate.y();
+    //double yUncertainty = 4;
+    gnssCoordinate.yUncertainty = pbGnssCoordinate.yuncertainty();
+    //double z = 5;
+    gnssCoordinate.z = pbGnssCoordinate.z();
+    //double zUncertainty = 6;
+    gnssCoordinate.zUncertainty = pbGnssCoordinate.zuncertainty();
+    return 0;
+}
+
+int LocationApiPbMsgConv::pbConvertTo2DimensionDoubleVector(
+        const PB2DimensionDoubleVector& pbDoubleArrays,
+        std::vector<std::vector<double>>& doubleArrays) const {
+    //uint32 row = 1;
+    uint32_t row = pbDoubleArrays.row();
+    //uint32 column = 2;
+    uint32_t column = pbDoubleArrays.column();
+    //repeated double value = 3;
+    for (uint32_t i = 0; i < row; i++) {
+        std::vector<double> dVector;
+        dVector.clear();
+        for (uint32_t j = 0; j < column; j++) {
+            dVector.push_back(pbDoubleArrays.value(i * column + j));
+        }
+        doubleArrays.push_back(std::move(dVector));
     }
     return 0;
 }

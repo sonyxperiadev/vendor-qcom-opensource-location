@@ -147,6 +147,9 @@ public:
     // GnssDcReportInfo to PBGnssDcReportInfo
     int convertGnssDcReportToPB(const GnssDcReportInfo &dcReportInfo,
             PBGnssDcReportInfo *pbDcReportInfo) const;
+    // AntennaInformation to PBAntennaInformation
+    int convertAntennaInfoToPB(const AntennaInformation& antennaInfo,
+            PBAntennaInformation* pbAntennaInfo) const;
 
     // Memory cleanup - Free up memory after PB conversion and serializing data
     inline void freeUpPBLocAPIStartTrackingReqMsg(PBLocAPIStartTrackingReqMsg &pbLocApiStartTrack)
@@ -452,6 +455,14 @@ public:
         pbLocAPIGetDebugRespMsg.clear_mdebugreport();
     }
 
+    inline void freeupPBAntennaInfoMsg(
+            PBLocAPIAntennaInfoMsg& pbLocAPIAntennaInfoMsg) const {
+        // PBAntennaInformation mAntennaInformation = 1;
+        PBAntennaInformation antennaInformation = pbLocAPIAntennaInfoMsg.mantennainformation();
+        antennaInformation.clear_antennainfos();
+        pbLocAPIAntennaInfoMsg.clear_mantennainformation();
+    }
+
     inline void freeUpPBLocAPIPingTestReqMsg(PBLocAPIPingTestReqMsg &pbLocApiPingTest) const {
         // repeated uint32 data = 2;
         pbLocApiPingTest.clear_data();
@@ -527,6 +538,9 @@ public:
             GnssDebugReport &gnssDebugReport) const;
     int pbConvertToDcReport(const PBGnssDcReportInfo & pbDcReportInfo,
                             GnssDcReportInfo & dcReporInfo) const;
+    // PBAntennaInformation to AntennaInformation
+    int pbConvertToAntennaInfo(const PBAntennaInformation& pbAntennaInfo,
+            AntennaInformation& antennaInfo) const;
 
     // MASK CONVERSION
     // ***************
@@ -641,6 +655,15 @@ private:
     int convertGnssDebugSatelliteInfoToPB(
             const GnssDebugSatelliteInfo& satelliteInfo,
             PBGnssDebugSatelliteInfo* pbSatelliteInfo) const;
+    int convertGnssAntennaInformationToPB(
+            const GnssAntennaInformation& gnssAntennaInfo,
+            PBGnssAntennaInformation* pbGnssAntennaInfo) const;
+    int convertGnssCoordinateToPB(
+            const GnssCoordinate& gnssCoordinate,
+            PBGnssCoordinate* pbGnssCoordinate) const;
+    int convert2DimensionDoubleVectorToPB(
+            const std::vector<std::vector<double>>& doubleArrays,
+            PB2DimensionDoubleVector* pbDoubleArrarys) const;
 
     // **** helper function for mask conversion to protobuf masks
     // LeverArmTypeMask to PBLIALeverArmTypeMask
@@ -877,6 +900,16 @@ private:
     int pbConvertToGnssDebugSatelliteInfo(
             const PBGnssDebugSatelliteInfo &pbSatelliteInfo,
             GnssDebugSatelliteInfo &satelliteInfo) const;
+    // Helper function of AntennaInfo
+    int pbConvertToGnssAntennaInformaiton(
+            const PBGnssAntennaInformation& pbGnssAntennaInfo,
+            GnssAntennaInformation& gnssAntennaInfo) const;
+    int pbConvertToGnssCoordinate(
+            const PBGnssCoordinate& pbGnssCoordinate,
+            GnssCoordinate& gnssCoordinate) const;
+    int pbConvertTo2DimensionDoubleVector(
+            const PB2DimensionDoubleVector& pbDoubleArrarys,
+            std::vector<std::vector<double>>& doubleArrays) const;
 };
 
 #endif /* LOCATION_API_PBMSGCONV_H */
