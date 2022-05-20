@@ -884,46 +884,6 @@ void LocationApiService::stopTracking(LocAPIStopTrackingReqMsg *pMsg) {
     LOC_LOGi(">-- stopping session");
 }
 
-// no need to hold the lock as lock has been held on calling functions
-void LocationApiService::suspendAllTrackingSessions() {
-    LOC_LOGi("--> enter");
-    for (auto client : mClients) {
-        // pause session if running
-        if (client.second) {
-            client.second->pauseTracking();
-        }
-    }
-
-    // pause the tracking session started by single shot api
-    if (mSingleFixLocationApi && mSingleFixTrackingSessionId) {
-        LOC_LOGi("pause tracking session %d for single shot fix clients",
-                 mSingleFixTrackingSessionId);
-        mSingleFixLocationApi->stopTracking(mSingleFixTrackingSessionId);
-        mSingleFixTrackingSessionId = 0;
-    }
-}
-
-// no need to hold the lock as lock has been held on calling functions
-void LocationApiService::resumeAllTrackingSessions() {
-    LOC_LOGi("--> enter");
-    for (auto client : mClients) {
-        // start session if not running
-        if (client.second) {
-            // resume session with preserved options
-            client.second->resumeTracking();
-        }
-    }
-
-    // resume the tracking session started by single shot api
-    if (mSingleFixReqMap.size() > 0) {
-        TrackingOptions options = {};
-        options.size = sizeof(options);
-        options.minInterval = 1000;
-        options.minDistance = 0;
-        mSingleFixTrackingSessionId = mSingleFixLocationApi->startTracking(options);
-    }
-}
-
 void LocationApiService::updateSubscription(LocAPIUpdateCallbacksReqMsg *pMsg) {
 
     std::lock_guard<std::recursive_mutex> lock(mMutex);
@@ -1409,23 +1369,8 @@ void LocationApiService::configAidingDataDeletion(LocConfigAidingDataDeletionReq
     LOC_LOGi(">-- client %s, deleteAll %d",
              pMsg->mSocketName, pMsg->mAidingData.deleteAll);
 
-    // suspend all sessions before calling delete
-    suspendAllTrackingSessions();
-
     uint32_t sessionId = mLocationControlApi->gnssDeleteAidingData(pMsg->mAidingData);
     addConfigRequestToMap(sessionId, pMsg);
-
-#ifdef POWERMANAGER_ENABLED
-    // We do not need to resume the session if device is suspend/shutdown state
-    // as sessions will resumed when power state changes to resume
-    if ((POWER_STATE_SUSPEND == mPowerState) ||
-        (POWER_STATE_SHUTDOWN == mPowerState)) {
-        return;
-    }
-#endif
-
-    // resume all sessions after calling aiding data deletion
-    resumeAllTrackingSessions();
 }
 
 void LocationApiService::configLeverArm(const LocConfigLeverArmReqMsg* pMsg){
