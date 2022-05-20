@@ -5320,8 +5320,7 @@ void LocApiV02::reportGnssMeasurementData(
                     gnssAgc[mGnssMeasurements->gnssMeasNotification.agcCount].agcLevelDb, temp);
     convertSvType(gnss_measurement_report_ptr,
                   mGnssMeasurements->gnssMeasNotification.
-                            gnssAgc[mGnssMeasurements->gnssMeasNotification.agcCount].svType,
-                  temp);
+                            gnssAgc[mGnssMeasurements->gnssMeasNotification.agcCount].svType);
 
     if (gnss_measurement_report_ptr.gnssSignalType_valid) {
         LOC_LOGd("sigType=%" PRIu64, gnss_measurement_report_ptr.gnssSignalType);
@@ -5689,10 +5688,7 @@ bool LocApiV02::convertJammerIndicator(
 
 void LocApiV02::convertSvType(
         const qmiLocEventGnssSvMeasInfoIndMsgT_v02& gnss_measurement_report_ptr,
-        GnssSvType& svType,
-        GnssMeasurementsDataFlagsMask& flags,
-        uint16_t  gloFrequency,
-        bool updateFlags) {
+        GnssSvType& svType) {
     switch (gnss_measurement_report_ptr.system)
     {
     case eQMI_LOC_SV_SYSTEM_GPS_V02:
@@ -5709,10 +5705,6 @@ void LocApiV02::convertSvType(
 
     case eQMI_LOC_SV_SYSTEM_GLONASS_V02:
         svType = GNSS_SV_TYPE_GLONASS;
-        if (updateFlags) {
-            gloFrequency = gloFrequency;
-            flags |= GNSS_MEASUREMENTS_DATA_GLO_FREQUENCY_BIT;
-        }
         break;
 
     case eQMI_LOC_SV_SYSTEM_BDS_V02:
@@ -6480,11 +6472,13 @@ bool LocApiV02 :: convertGnssMeasurements(
     measurementData.flags |= GNSS_MEASUREMENTS_DATA_SV_ID_BIT | GNSS_MEASUREMENTS_DATA_SV_TYPE_BIT;
 
     // constellation
-    convertSvType(gnss_measurement_report_ptr,
-                  measurementData.svType,
-                  measurementData.flags,
-                  measurementData.gloFrequency,
-                  true);
+    convertSvType(gnss_measurement_report_ptr, measurementData.svType);
+
+    if (GNSS_SV_TYPE_GLONASS == measurementData.svType) {
+        measurementData.gloFrequency = gnss_measurement_info.gloFrequency;
+        measurementData.flags |= GNSS_MEASUREMENTS_DATA_GLO_FREQUENCY_BIT;
+    }
+
     // time_offset_ns
     if (0 != gnss_measurement_info.measLatency)
     {

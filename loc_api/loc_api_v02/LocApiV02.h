@@ -379,10 +379,7 @@ private:
 
   void convertSvType(
         const qmiLocEventGnssSvMeasInfoIndMsgT_v02& gnss_measurement_report_ptr,
-        GnssSvType& svType,
-        GnssMeasurementsDataFlagsMask& flags,
-        uint16_t  gloFrequency = 0,
-        bool updateFlags = false);
+        GnssSvType& svType);
 
   void setGnssBiases();
 
