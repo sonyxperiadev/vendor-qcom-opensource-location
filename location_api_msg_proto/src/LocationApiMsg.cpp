@@ -2567,6 +2567,213 @@ LocConfigEngineIntegrityRiskReqMsg::LocConfigEngineIntegrityRiskReqMsg(
     LOC_LOGd("LocApiPB: eng type %d, integrity risk %d", mEngType, mIntegrityRisk);
 }
 
+/************************** XTRA *****************************************/
+// Convert LocConfigXtraReqMsg ->
+// PBLocConfigEngineIntegrityRiskReqMsg
+int LocConfigXtraReqMsg::serializeToProtobuf(string& protoStr) {
+    PBLocAPIMsgHeader pLocApiMsgHdr;
+    PBLocConfigXtraReqMsg pbLocConfMsg;
+
+    if (nullptr == pLocApiPbMsgConv) {
+        LOC_LOGe("pLocApiPbMsgConv is null!");
+        return 0;
+    }
+    // string      mSocketName = 1;
+    pLocApiMsgHdr.set_msocketname(mSocketName);
+    // PBELocMsgID  msgId = 2;
+    pLocApiMsgHdr.set_msgid(pLocApiPbMsgConv->getPBEnumForELocMsgID(msgId));
+    // uint32   msgVersion = 3;
+    pLocApiMsgHdr.set_msgversion(msgVersion);
+    // bool enable = 1;
+    pbLocConfMsg.set_enable(mEnable);
+    // PBXtraConfigParams xtraParams = 2
+    PBXtraConfigParams* pbXtraParams = pbLocConfMsg.mutable_xtraparams();
+    if (nullptr != pbXtraParams) {
+        if (pLocApiPbMsgConv->convertXtraConfigParamsToPB(mXtraParams, pbXtraParams)) {
+            LOC_LOGe("convertXtraConfigParamsToPB failed");
+            free(pbXtraParams);
+            return 0;
+        }
+    } else {
+        LOC_LOGe("mutable_xtraparams failed");
+        return 0;
+    }
+
+    string pbStr;
+    if (!pbLocConfMsg.SerializeToString(&pbStr)) {
+        LOC_LOGe("SerializeToString on PBLocConfigEngineIntegrityRiskReqMsg failed!");
+        return 0;
+    }
+    // bytes       payload = 4;
+    pLocApiMsgHdr.set_payload(pbStr);
+
+    // uint32   payloadSize = 5;
+    pLocApiMsgHdr.set_payloadsize(sizeof(LocConfigXtraReqMsg));
+
+    if (!pLocApiMsgHdr.SerializeToString(&protoStr)) {
+        LOC_LOGe("SerializeToString on pLocApiMsgHdr failed!");
+        return 0;
+    }
+
+    // free memory
+    pLocApiPbMsgConv->freeUpPBLocConfigXtraReqMsg(pbLocConfMsg);
+    return protoStr.size();
+}
+
+// Convert LocConfigGetXtraStatusReqMsg -> PBLocConfigGetXtraStatusReqMsg
+int LocConfigGetXtraStatusReqMsg::serializeToProtobuf(string& protoStr) {
+    PBLocAPIMsgHeader pLocApiMsgHdr;
+
+    if (nullptr == pLocApiPbMsgConv) {
+        LOC_LOGe("pLocApiPbMsgConv is null!");
+        return 0;
+    }
+    // string      mSocketName = 1;
+    pLocApiMsgHdr.set_msocketname(mSocketName);
+    // PBELocMsgID  msgId = 2;
+    pLocApiMsgHdr.set_msgid(pLocApiPbMsgConv->getPBEnumForELocMsgID(msgId));
+    // uint32   msgVersion = 3;
+    pLocApiMsgHdr.set_msgversion(msgVersion);
+    // bytes       payload = 4;
+    // LocConfigGetXtraStatusReqMsg - no struct member. No payload to send
+    // uint32   payloadSize = 5;
+    pLocApiMsgHdr.set_payloadsize(sizeof(LocConfigGetXtraStatusReqMsg));
+
+    if (!pLocApiMsgHdr.SerializeToString(&protoStr)) {
+        LOC_LOGe("SerializeToString on pLocApiMsgHdr failed!");
+        return 0;
+    }
+    return protoStr.size();
+}
+
+// Decode PBLocConfigXtraReqMsg -> LocConfigXtraReqMsg
+LocConfigXtraReqMsg::LocConfigXtraReqMsg(
+        const char* name, const PBLocConfigXtraReqMsg &pbLocConfMsg,
+        const LocationApiPbMsgConv *pbMsgConv):
+    LocAPIMsgHeader(name, E_INTAPI_CONFIG_XTRA_PARAMS_MSG_ID, pbMsgConv) {
+    mEnable = pbLocConfMsg.enable();
+
+    memset(&mXtraParams, 0, sizeof(mXtraParams));
+    if (pbLocConfMsg.has_xtraparams()) {
+        // >>>> PBLocConfigEngineRunStateReqMsg conversion
+        pLocApiPbMsgConv->pbConvertToXtraConfig(pbLocConfMsg.xtraparams(), mXtraParams);
+    }
+}
+
+int LocConfigGetXtraStatusRespMsg::serializeToProtobuf(string& protoStr) {
+
+    PBLocAPIMsgHeader pLocApiMsgHdr;
+    PBLocConfigGetXtraStatusRespMsg pbLocMsg;
+
+    if (nullptr == pLocApiPbMsgConv) {
+        LOC_LOGe("pLocApiPbMsgConv is null!");
+        return 0;
+    }
+    // string      mSocketName = 1;
+    pLocApiMsgHdr.set_msocketname(mSocketName);
+    // PBELocMsgID  msgId = 2;
+    pLocApiMsgHdr.set_msgid(pLocApiPbMsgConv->getPBEnumForELocMsgID(msgId));
+    // uint32   msgVersion = 3;
+    pLocApiMsgHdr.set_msgversion(msgVersion);
+    // XtraStatusUpdateType mUpdateType
+    pbLocMsg.set_mupdatetype(pLocApiPbMsgConv->getPBEnumForXtraStatusUpdateType(mUpdateType));
+
+    // PBXtraConfigParams xtraParams = 2
+    PBXtraStatus* pbXtraStatus = pbLocMsg.mutable_mxtrastatus();
+    if (nullptr != pbXtraStatus) {
+        if (pLocApiPbMsgConv->convertXtraStatusToPB(mXtraStatus, pbXtraStatus)) {
+            LOC_LOGe("convertXtraStatusToPB failed");
+            free(pbXtraStatus);
+            return 0;
+        }
+    } else {
+        LOC_LOGe("mutable_xtraparams failed");
+        return 0;
+
+    }
+
+    string pbStr;
+    if (!pbLocMsg.SerializeToString(&pbStr)) {
+        LOC_LOGe("SerializeToString failed!");
+        return 0;
+    }
+    // bytes       payload = 4;
+    pLocApiMsgHdr.set_payload(pbStr);
+
+    // uint32   payloadSize = 5;
+    pLocApiMsgHdr.set_payloadsize(sizeof(LocConfigGetXtraStatusRespMsg));
+        LOC_LOGe("enter 7");
+    if (!pLocApiMsgHdr.SerializeToString(&protoStr)) {
+        LOC_LOGe("SerializeToString on pLocApiMsgHdr failed!");
+        return 0;
+    }
+
+    // free memory
+    pLocApiPbMsgConv->freeUpPBLocConfigGetXtraStatusRespMsg(pbLocMsg);
+    return protoStr.size();
+}
+
+LocConfigGetXtraStatusRespMsg::LocConfigGetXtraStatusRespMsg(
+        const char* name, const PBLocConfigGetXtraStatusRespMsg &pbMsg,
+        const LocationApiPbMsgConv *pbMsgConv) :
+    LocAPIMsgHeader(name, E_INTAPI_GET_XTRA_STATUS_RESP_MSG_ID, pbMsgConv) {
+
+    mUpdateType = pLocApiPbMsgConv->getXtraStatusUpdateTypeFromPB(pbMsg.mupdatetype());
+    if (pbMsg.has_mxtrastatus()) {
+        pLocApiPbMsgConv->pbConvertToXtraStatus(pbMsg.mxtrastatus(), mXtraStatus);
+    }
+}
+
+int LocConfigRegisterXtraStatusUpdateReqMsg::serializeToProtobuf(string& protoStr) {
+    PBLocAPIMsgHeader pLocApiMsgHdr;
+
+    if (nullptr == pLocApiPbMsgConv) {
+        LOC_LOGe("pLocApiPbMsgConv is null!");
+        return 0;
+    }
+    // string      mSocketName = 1;
+    pLocApiMsgHdr.set_msocketname(mSocketName);
+    // PBELocMsgID  msgId = 2;
+    pLocApiMsgHdr.set_msgid(pLocApiPbMsgConv->getPBEnumForELocMsgID(msgId));
+    // uint32   msgVersion = 3;
+    pLocApiMsgHdr.set_msgversion(msgVersion);
+    // bytes       payload = 4;
+    // LocConfigRegisterXtraStatusUpdateReqMsg - no struct member. No payload to send
+    // uint32   payloadSize = 5;
+    pLocApiMsgHdr.set_payloadsize(sizeof(LocConfigRegisterXtraStatusUpdateReqMsg));
+
+    if (!pLocApiMsgHdr.SerializeToString(&protoStr)) {
+        LOC_LOGe("SerializeToString on pLocApiMsgHdr failed!");
+        return 0;
+    }
+    return protoStr.size();
+}
+
+int LocConfigDeregisterXtraStatusUpdateReqMsg::serializeToProtobuf(string& protoStr) {
+    PBLocAPIMsgHeader pLocApiMsgHdr;
+
+    if (nullptr == pLocApiPbMsgConv) {
+        LOC_LOGe("pLocApiPbMsgConv is null!");
+        return 0;
+    }
+    // string      mSocketName = 1;
+    pLocApiMsgHdr.set_msocketname(mSocketName);
+    // PBELocMsgID  msgId = 2;
+    pLocApiMsgHdr.set_msgid(pLocApiPbMsgConv->getPBEnumForELocMsgID(msgId));
+    // uint32   msgVersion = 3;
+    pLocApiMsgHdr.set_msgversion(msgVersion);
+    // bytes       payload = 4;
+    // LocConfigRegisterXtraStatusUpdateReqMsg - no struct member. No payload to send
+    // uint32   payloadSize = 5;
+    pLocApiMsgHdr.set_payloadsize(sizeof(LocConfigDeregisterXtraStatusUpdateReqMsg));
+
+    if (!pLocApiMsgHdr.SerializeToString(&protoStr)) {
+        LOC_LOGe("SerializeToString on pLocApiMsgHdr failed!");
+        return 0;
+    }
+    return protoStr.size();
+}
+
 // Convert LocConfigGetRobustLocationConfigReqMsg -> PBLocConfigGetRobustLocationConfigReqMsg
 int LocConfigGetRobustLocationConfigReqMsg::serializeToProtobuf(string& protoStr) {
     PBLocAPIMsgHeader pLocApiMsgHdr;
