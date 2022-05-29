@@ -1074,9 +1074,11 @@ void LocationApiService::deregisterXtraStatusUpdate(
     } else {
         std::string clientname(pReqMsg->mSocketName);
         LocHalDaemonClientHandler* pClient = getClient(clientname);
-        // inform client that request has been processed successfully
-        pClient->onControlResponseCb(LOCATION_ERROR_SUCCESS,
-                                     E_INTAPI_DEREGISTER_XTRA_STATUS_UPDATE_REQ_MSG_ID);
+        if (pClient) {
+            // inform client that request has been processed successfully
+            pClient->onControlResponseCb(LOCATION_ERROR_SUCCESS,
+                                         E_INTAPI_DEREGISTER_XTRA_STATUS_UPDATE_REQ_MSG_ID);
+        }
     }
 }
 
