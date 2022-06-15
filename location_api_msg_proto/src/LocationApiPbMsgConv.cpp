@@ -391,6 +391,8 @@ FixQualityLevel LocationApiPbMsgConv::getEnumForPBFixQualityLevel(
         case PB_QUALITY_ANY_OR_FAILED_FIX:
             qualityLevelAccepted = QUALITY_ANY_OR_FAILED_FIX;
             break;
+        default:
+            break;
     }
     LocApiPb_LOGv("LocApiPB: pbFixQualityLevel:%d, qualityLevelAccepted:%d", pbFixQualityLevel,
             qualityLevelAccepted);
@@ -1166,6 +1168,8 @@ PBFixQualityLevel LocationApiPbMsgConv::getPBEnumForFixQualityLevel(
             break;
         case QUALITY_ANY_OR_FAILED_FIX:
             pbQualityLevel = PB_QUALITY_ANY_OR_FAILED_FIX;
+            break;
+        default:
             break;
     }
     LocApiPb_LOGv("LocApiPB: qualityLevel:%d, pbQualityLevel:%d", qualityLevel, pbQualityLevel);
