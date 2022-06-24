@@ -67,6 +67,7 @@ IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <loc_pla.h>
 #include <LocationClientApi.h>
 
+#include <array>
 #ifdef NO_UNORDERED_SET_OR_MAP
     #include <set>
     #include <map>
@@ -128,6 +129,9 @@ enum LocConfigTypeEnum{
     /** Config the integrity risk level of the position engine.
      *  <br/> */
     CONFIG_ENGINE_INTEGRITY_RISK = 15,
+    /** Config the xtra parameters used by the standard position
+     *  engine (SPE). <br/> */
+    CONFIG_XTRA_PARAMS = 16,
     /** Max config enum supported. <br/> */
     CONFIG_ENUM_MAX = 99,
 
@@ -144,6 +148,12 @@ enum LocConfigTypeEnum{
     /** Get the secondary band configuration for constellation
      *  used by the GNSS standard position engine (SPE). <br/> */
     GET_CONSTELLATION_SECONDARY_BAND_CONFIG = 103,
+    /** Query xtra feature setting and xtra assistance data
+     *  status. <br/> */
+    GET_XTRA_STATUS = 104,
+    /** Register the callback to get update on xtra feature setting
+     *  and xtra assistance data status. <br/> */
+    REGISTER_XTRA_STATUS_UPDATE = 105,
 } ;
 
 /**
@@ -554,6 +564,84 @@ typedef std::function<void(
     const ConstellationSet& secondaryBandDisablementSet
 )> LocConfigGetConstellationSecondaryBandConfigCb;
 
+/** Specify the XTRA status update trigger. <br/>
+ *  The XTRA status update can be sent in two scenarios: by
+ *  calling getXtraStatus() to get one time XTRA status update
+ *  or by registering the callback via
+ *  registerXtraStatusUpdate() to get asynchronous XTRA
+ *  status update. <br/> */
+enum XtraStatusUpdateTrigger {
+    /** XTRA status update due to invoke getXtraStatus(). <br/> */
+    XTRA_STATUS_UPDATE_UPON_QUERY = 1,
+    /** XTRA status update due to first invokation of
+     *  registerXtraStatusUpdate(). <br/> */
+    XTRA_STATUS_UPDATE_UPON_REGISTRATION = 2,
+    /** XTRA status update due to status change due to enablement
+     *  and disablement and change in xtra assistance data status,
+     *  e.g.: from unknown to known during device bootup, or when
+     *  XTRA data gets downloaded. <br/> */
+    XTRA_STATUS_UPDATE_UPON_STATUS_CHANGE = 3,
+};
+
+/** Specify the XTRA assistance data status. */
+enum XtraDataStatus {
+    /** If XTRA feature is disabled or if XTRA feature is enabled,
+     *  but XTRA daemon has not yet retrieved the assistance data
+     *  status from modem on early stage of device bootup, xtra data
+     *  status will be unknown.  <br/>   */
+    XTRA_DATA_STATUS_UNKNOWN = 0,
+    /** If XTRA feature is enabled, but XTRA data is not present
+     *  on the device. <br/>   */
+    XTRA_DATA_STATUS_NOT_AVAIL = 1,
+    /** If XTRA feature is enabled, XTRA data has been downloaded
+     *  but it is no longer valid. <br/>   */
+    XTRA_DATA_STATUS_NOT_VALID = 2,
+    /** If XTRA feature is enabled, XTRA data has been downloaded
+     *  and is currently valid. <br/>   */
+    XTRA_DATA_STATUS_VALID = 3,
+};
+
+struct XtraStatus {
+    /** XTRA assistance data and NTP time download is enabled or
+     *  disabled. <br/> */
+    bool featureEnabled;
+    /** XTRA assistance data status. If XTRA assistance data
+     *  download is not enabled, this field will be set to
+     *  XTRA_DATA_STATUS_UNKNOWN. */
+    XtraDataStatus xtraDataStatus;
+    /** Number of hours that xtra assistance data will remain valid.
+     *  <br/>
+     *  This field will be valid when xtraDataStatus is set to
+     *  XTRA_DATA_STATUS_VALID. <br/>
+     *  For all other XtraDataStatus, this field will be set to
+     *  0. <br/> */
+    uint32_t xtraValidForHours;
+};
+
+/**
+ *  Specify the callback to retrieve the xtra feature settings
+ *  and xtra assistance data status. The callback will be
+ *  invoked for either successful processing of getXtraStatus()
+ *  and registerXtraStatusUpdate() or when the trigger for xtra
+ *  status update gets fired for registerXtraStatusUpdate().
+ *  <br/>
+ *
+ *  In order to receive the xtra status settings and xtra
+ *  assistance data status, client shall first instantiate the
+ *  callback and pass it to the LocationIntegrationApi
+ *  constructor and then invoke getXtraStatus() or
+ *  registerXtraStatusUpdate(). <br/> */
+typedef std::function<void(
+   /** Specify the update trigger, whether this is due to one time
+    *  query of getXtraStatus(), or due to the xtra status update
+    *  callback gets called due to registerXtraStatusUpdate().
+    *  <br/> */
+   XtraStatusUpdateTrigger updateTrigger,
+   /** Specify the xtra feature status and xtra assistance data
+    *  validity info. */
+   const XtraStatus&    xtraStatus
+)> LocConfigGetXtraStatusCb;
+
 /**
  *  Specify the set of callbacks that can be passed to
  *  LocationIntegrationAPI constructor to receive configuration
@@ -574,6 +662,9 @@ struct LocIntegrationCbs {
     /** Callback to receive the secondary band configuration for
      *  constellation. <br/> */
     LocConfigGetConstellationSecondaryBandConfigCb getConstellationSecondaryBandConfigCb;
+    /** Callback to receive the xtra feature enablement setting and
+     *  xtra assistance data status. <br/> */
+    LocConfigGetXtraStatusCb getXtraStatusCb;
 };
 
 /** Specify the NMEA sentence types that the device will output
@@ -622,6 +713,141 @@ enum NmeaTypesMask {
     /** Enable HLOS to generate and output all supported NMEA
      *  sentences. <br> */
     NMEA_TYPE_ALL        = 0xffffffff,
+};
+
+/** Specify the logcat debug level. Currently, only XTRA
+ *  daemon will support the runtime configure of debug log
+ *  level. <br/>   */
+enum DebugLogLevel {
+    /** No debug message will be outputed. <br/>   */
+    DEBUG_LOG_LEVEL_NONE = 0,
+    /** Only error level debug messages will get logged. <br/>   */
+    DEBUG_LOG_LEVEL_ERROR = 1,
+    /** Only warning/error level debug messages will get logged.
+     *  <br/> */
+    DEBUG_LOG_LEVEL_WARNING = 2,
+    /** Only info/wanring/error level debug messages will get
+     *  logged. <br/>   */
+    DEBUG_LOG_LEVEL_INFO = 3,
+    /** Only debug/info/wanring/error level debug messages will
+     *  get logged. <br/> */
+    DEBUG_LOG_LEVEL_DEBUG = 4,
+    /** Verbose/debug/info/wanring/error level debug messages will
+     *  get logged. <br/>   */
+    DEBUG_LOG_LEVEL_VERBOSE = 5,
+};
+
+/** Xtra feature configuration parameters */
+struct XtraConfigParams {
+    /** Number of minutes between periodic, consecutive successful
+     *  XTRA assistance data downloads. <br/>
+     *
+     *  If 0 is specified, modem default download for XTRA
+     *  assistance data will be performed. <br/>
+     *
+     *  If none-zero value is specified, the configured value is in
+     *  unit of 1 minute and will be capped at a maximum of 168
+     *  hours and minimum of 48 hours. <br/>
+     */
+    uint32_t xtraDownloadIntervalMinute;
+    /** Connection timeout when connecting backend for both xtra
+     *  assistance data download and NTP time downlaod.  <br/>
+     *
+     *  If 0 is specified, the download timeout value will use
+     *  device default values. <br/>
+     *
+     *  If none-zero value is specified, the configured value is in
+     *  in unit of 1 second and should be capped at maximum of 300
+     *  secs (not indefinite) and minimum of 3 secs. <br/> */
+    uint32_t xtraDownloadTimeoutSec;
+    /** Interval to wait before retrying xtra assistance data
+     *  download in case of device error. <br/>
+     *
+     *  If 0 is specified, XTRA download retry will follow device
+     *  default behavior. <br/>
+     *
+     *  If none-zero value is specified, the config value is in unit
+     *  of 1 minute and should be capped with maximum of 1 day and
+     *  minimum of 3 minutes. <br/>
+     *
+     *  If zero is specified for xtraDownloadRetryIntervalMinute,
+     *  then xtraDownloadRetryAttempts will also use device default
+     *  value. <br/> */
+    uint32_t xtraDownloadRetryIntervalMinute;
+    /** Total number of allowed retry attempts for assistance data
+     *  download in case of device error. <br/>
+     *
+     *  If 0 is specified, XTRA download retry will follow device
+     *  default behavior. <br/>
+     *
+     *  The configured value is in unit of 1 retry and max number of
+     *  allowed retry is 6 per download interval. <br/>
+     *
+     *  If zero is specified for xtraDownloadRetryAttempts, then
+     *  xtraDownloadRetryIntervalMinute will also use device default
+     *  value. <br/> */
+    uint32_t xtraDownloadRetryAttempts;
+    /** Path to the certificate authority (CA) repository that need
+     *  to be used for XTRA assistance data download. <br/>
+     *
+     *  Max of 128 bytes, including null-terminating byte will be
+     *  supported. <br/>
+     *
+     *  If empty string is specified, device default CA repositaory
+     *  will be used. <br/>
+     *
+     *  Please note that this parameter does not apply to NTP time
+     *  download. <br/> */
+    std::string xtraCaPath;
+    /** URLs from which XTRA assistance data will be fetched. <br/>
+     *
+     *  The URLs, if provided, shall be complete and shall include
+     *  the port number to be used for download. <br/>
+     *
+     *  Max of 128 bytes, including null-terminating byte will be
+     *  supported. <br/>
+     *
+     *  Valid xtra server URLs should start with "https://".
+     *  <br/>
+     *
+     *  If XTRA server URLs are not specified, then device will use
+     *  the default XTRA server from modem. <br/>
+     */
+    std::array<std::string, 3> xtraServerURLs;
+    /** URLs for NTP server to fetch current time. <br/>
+     *
+     *  If no NTP server URL is provided, then device will use the
+     *  default NTP server. <br/>
+     *
+     *  The URLs, if provided, shall include the port number to be
+     *  used for download. <br/>
+     *
+     *  Max of 128 bytes, including null-terminating byte will be
+     *  supported. <br/>
+     *
+     *  Example of valid ntp server URL is:
+     *  ntp.exampleserver.com:123. <br/> */
+    std::array<std::string, 3> ntpServerURLs;
+
+    /** Enable or disable XTRA integrity download. Parameter is only
+     *  applicable if XTRA data download is enabled. <br/>
+     *
+     *  true: enable XTRA integrity download. <br/>
+     *  false: disable XTRA integrity download. <br/> */
+    bool xtraIntegrityDownloadEnable;
+
+    /** XTRA integrity download interval, only applicable if XTRA
+     *  integrity download is enabled. <br/>
+     *
+     *  If 0 is specified, the download timeout value will use
+     *  device default values. <br/>
+     *
+     *  Valid range is 360 minutes (6 hours) to 2880 minutes
+     *  (48 hours), in unit of minutes. <br/> */
+    uint32_t xtraIntegrityDownloadIntervalMinute;
+
+    /** Level of debug log messages that will be logged. <br/> */
+    DebugLogLevel xtraDaemonDebugLogLevel;
 };
 
 class LocationIntegrationApiImpl;
@@ -1395,6 +1621,122 @@ public:
                 info. <br/>
     */
     bool injectLocation(const location_client::Location& location);
+
+   /** @brief
+        This API is used to enable/disable the XTRA (Predicted GNSS
+        Satellite Orbit Data) feature on device. If XTRA feature is
+        to be enabled, this API is also used to configure the
+        various XTRA settings in the device.  <br/>
+
+        Client should wait for the command to finish, e.g.: via
+        configCb received before issuing a second configXtraParams
+        command. Behavior is not defined if client issues a second
+        request of configXtraParams without waiting for the finish of the
+        previous configXtraParams request.  <br/>
+
+        Please note that if configXtraParams has never been called
+        since device first time bootup, the default behavior will be
+        maintained. Also, configXtraParams is not incremental, as a
+        successful call of configXtraParams will always overwrite
+        the settings in the previous call. In addition, the
+        configured xtra parameters will be made persistent. However,
+        to be consistent with other location integration API, it is
+        recommended to config xtra params using location integration
+        API upon every device bootup. <br/>
+
+        @param
+        enable: true to enable XTRA feature on the device
+                false to disable XTRA feature on the device. When
+                setting to false, both XTRA assistance data and NTP
+                time download will be disabled.  <br/>
+
+        @param
+        configParams:pointer to XtraConfigParams to be used by XTRA
+        daemon module when enabling XTRA feature on the device.
+        if xtra feature is to be disabled, this parameter should be
+        set to NULL. If it is not set to NULL, the parameter will be
+        ignored.  <br/>
+
+        @return true, if the request is accepted for further
+                processing. When returning true, configCb will be
+                invoked to deliver asynchronous processing status.
+                If this API is called when XTRA feature is disabled via
+                modem NV, the API will return
+                LOC_INT_RESPONSE_NOT_SUPPORTED. <br/>
+
+        @return false, if the request is not accepted for further
+                processing. When returning false, configCb will not
+                be invoked.  <br/>
+    */
+    bool configXtraParams(bool enable, XtraConfigParams* configParams);
+
+
+    /** @brief
+        Query xtra feature setting and xtra assistance data status
+        used by the GNSS standard position engine (SPE). <br/>
+
+        If processing of the command fails, the failure status will
+        be returned via LocConfigCb(). If the processing of the command
+        is successful, the successful command status will be
+        returned via configCB, and xtra setting and xtra assistance
+        data status will be returned via LocConfigGetXtraStatusCb()
+        that is passed via the Location Integration API constructor.
+        If XTRA_DATA_STATUS_UNKNOWN is returned but XTRA feature is
+        enabled, the client shall wait a few seconds before calling
+        this API again. <br/>.
+
+        @return true, if the API request has been accepted. <br/>
+
+        @return false, if the API request has not been accepted for
+                further processing. When returning false, LocConfigCb()
+                and LocConfigGetXtraStatusCb() will not be invoked.
+                <br/>
+    */
+    bool getXtraStatus();
+
+    /** @brief
+        Register the callback to get update on xtra feature setting
+        and xtra assistance data status used by the GNSS standard
+        position engine (SPE). The callback to receive the status
+        update, e.g.: LocConfigGetXtraStatusCb() shall be
+        instantiated and passed via the Location Integration API
+        constructor. <br/>
+
+        If processing of the command fails, the failure status will
+        be returned via LocConfigCb(). If the processing of the command
+        is successful, the command successful status will be
+        returned via configCB. The xtra setting and assistance data
+        status update will be returned via
+        LocConfigGetXtraStatusCb() passed via the constructor. <br/>
+
+        Please see below for some triggers that
+        LocConfigGetXtraStatusCb() will be invoked: <br/>
+        (1) upon successful registering the API <br/>
+        (2) upon xtra feature been enabled/disabled via the
+        configXtraParams() <br/>
+        (3) upon successful xtra assistance data download
+        (4) when XTRA assistance data is downloaded <br/>
+
+        Please note if registerXtraStatusUpdate is called to with
+        register setting to true again, the
+        LocConfigGetXtraStatusCb() will ve invoked first with
+        updateTrigger set to XTRA_STATUS_UPDATE_UPON_REGISTRATION,
+        but subsequent update will only happen once per
+        enable/disable of the feature and per download. <br/>
+
+        @param
+        registerUpdate: true, to register for xtra status update
+                        false, to un-register for xtra stauts update
+                        <br/>
+
+        @return true, if the API request has been accepted. <br/>
+
+        @return false, if the API request has not been accepted for
+                further processing. When returning false, LocConfigCb()
+                and LocConfigGetXtraStatusCb() will not be invoked.
+                <br/>
+    */
+    bool registerXtraStatusUpdate(bool registerUpdate);
 
     /** @example example1:testGetConfigApi
     * <pre>

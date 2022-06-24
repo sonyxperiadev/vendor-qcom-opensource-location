@@ -868,6 +868,9 @@ typedef union
     /*QMI_LOC_INJECT_RAW_DATA_REQ_V02*/
     const qmiLocSetTribandStateReqMsgT_v02 *pSetTribandStateReq;
     /*QMI_LOC_SET_TRIBAND_STATE_REQ_V02*/
+
+    const qmiLocSetSdkFeatureConfigReqMsgT_v02
+            *pLocSetSdkFeatureConfigReq;
 }locClientReqUnionType;
 
 

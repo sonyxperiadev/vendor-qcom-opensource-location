@@ -700,6 +700,17 @@ void LocationApiService::processClientMsg(const char* data, uint32_t length) {
             break;
         }
 
+        case E_INTAPI_CONFIG_XTRA_PARAMS_MSG_ID : {
+            PBLocConfigXtraReqMsg pbLocConf;
+            if (0 == pbLocConf.ParseFromString(pbLocApiMsg.payload())) {
+                LOC_LOGe("Failed to parse pbLocConfEngineIntegrityRisk from payload!!");
+                return;
+            }
+            LocConfigXtraReqMsg msg(sockName.c_str(), pbLocConf, &mPbufMsgConv);
+            configXtraParams(reinterpret_cast<LocConfigXtraReqMsg *>(&msg));
+            break;
+        }
+
         case E_INTAPI_GET_ROBUST_LOCATION_CONFIG_REQ_MSG_ID: {
             getGnssConfig(&locApiMsg, GNSS_CONFIG_FLAGS_ROBUST_LOCATION_BIT);
             break;
@@ -739,6 +750,22 @@ void LocationApiService::processClientMsg(const char* data, uint32_t length) {
 
         case E_LOCAPI_GET_ANTENNA_INFO_MSG_ID: {
             getAntennaInfo((const LocAPIGetAntennaInfoMsg*)&locApiMsg);
+            break;
+        }
+
+        case E_INTAPI_GET_XTRA_STATUS_REQ_MSG_ID: {
+            getXtraStatus((const LocConfigGetXtraStatusReqMsg*) &locApiMsg);
+            break;
+        }
+
+        case E_INTAPI_REGISTER_XTRA_STATUS_UPDATE_REQ_MSG_ID: {
+            registerXtraStatusUpdate((const LocConfigRegisterXtraStatusUpdateReqMsg*) &locApiMsg);
+            break;
+        }
+
+        case E_INTAPI_DEREGISTER_XTRA_STATUS_UPDATE_REQ_MSG_ID: {
+            deregisterXtraStatusUpdate(
+                    (const LocConfigDeregisterXtraStatusUpdateReqMsg*) &locApiMsg);
             break;
         }
 
@@ -855,46 +882,6 @@ void LocationApiService::stopTracking(LocAPIStopTrackingReqMsg *pMsg) {
     }
     pClient->stopTracking();
     LOC_LOGi(">-- stopping session");
-}
-
-// no need to hold the lock as lock has been held on calling functions
-void LocationApiService::suspendAllTrackingSessions() {
-    LOC_LOGi("--> enter");
-    for (auto client : mClients) {
-        // pause session if running
-        if (client.second) {
-            client.second->pauseTracking();
-        }
-    }
-
-    // pause the tracking session started by single shot api
-    if (mSingleFixLocationApi && mSingleFixTrackingSessionId) {
-        LOC_LOGi("pause tracking session %d for single shot fix clients",
-                 mSingleFixTrackingSessionId);
-        mSingleFixLocationApi->stopTracking(mSingleFixTrackingSessionId);
-        mSingleFixTrackingSessionId = 0;
-    }
-}
-
-// no need to hold the lock as lock has been held on calling functions
-void LocationApiService::resumeAllTrackingSessions() {
-    LOC_LOGi("--> enter");
-    for (auto client : mClients) {
-        // start session if not running
-        if (client.second) {
-            // resume session with preserved options
-            client.second->resumeTracking();
-        }
-    }
-
-    // resume the tracking session started by single shot api
-    if (mSingleFixReqMap.size() > 0) {
-        TrackingOptions options = {};
-        options.size = sizeof(options);
-        options.minInterval = 1000;
-        options.minDistance = 0;
-        mSingleFixTrackingSessionId = mSingleFixLocationApi->startTracking(options);
-    }
 }
 
 void LocationApiService::updateSubscription(LocAPIUpdateCallbacksReqMsg *pMsg) {
@@ -1022,6 +1009,76 @@ void LocationApiService::getAntennaInfo(const LocAPIGetAntennaInfoMsg* pMsg) {
         pClient->getAntennaInfo();
     } else {
         LOC_LOGe(">-- invalid client=%s", pMsg->mSocketName);
+    }
+}
+
+void LocationApiService::getXtraStatus(
+        const LocConfigGetXtraStatusReqMsg* pReqMsg) {
+    LOC_LOGi(">--getXtraStatus");
+    GnssInterface* gnssInterface = getGnssInterface();
+    if (!gnssInterface) {
+        LOC_LOGe(">-- null GnssInterface");
+        return;
+    }
+
+    std::lock_guard<std::recursive_mutex> lock(mMutex);
+    // retrieve xtra status
+    uint32_t sessionId = gnssInterface->gnssGetXtraStatus();
+
+    // if sessionId is 0, e.g.: error callback will be delivered
+    // by addConfigRequestToMap
+    addConfigRequestToMap(sessionId, pReqMsg);
+}
+
+void LocationApiService::registerXtraStatusUpdate(
+            const LocConfigRegisterXtraStatusUpdateReqMsg * pReqMsg) {
+    LOC_LOGi(">--registerXtraStatusUpdate, client %s", pReqMsg->mSocketName);
+
+    // if this is register, update the set
+    mClientsRegForXtraStatus.emplace(pReqMsg->mSocketName);
+
+    GnssInterface* gnssInterface = getGnssInterface();
+    if (!gnssInterface) {
+        LOC_LOGe(">-- null GnssInterface");
+        return;
+    }
+
+    std::lock_guard<std::recursive_mutex> lock(mMutex);
+    // register xtra status update
+    uint32_t sessionId = gnssInterface->gnssRegisterXtraStatusUpdate(true);
+
+    // if sessionId is 0, e.g.: error callback will be delivered
+    // by addConfigRequestToMap
+    addConfigRequestToMap(sessionId, pReqMsg);
+}
+
+void LocationApiService::deregisterXtraStatusUpdate(
+            const LocConfigDeregisterXtraStatusUpdateReqMsg * pReqMsg) {
+    LOC_LOGi(">--deregisterXtraStatusUpdate, client name %s", pReqMsg->mSocketName);
+
+    std::lock_guard<std::recursive_mutex> lock(mMutex);
+    mClientsRegForXtraStatus.erase(pReqMsg->mSocketName);
+    if (mClientsRegForXtraStatus.size() == 0) {
+        GnssInterface* gnssInterface = getGnssInterface();
+        if (!gnssInterface) {
+            LOC_LOGe(">-- null GnssInterface");
+            return;
+        }
+
+        // register xtra status update
+        uint32_t sessionId = gnssInterface->gnssRegisterXtraStatusUpdate(false);
+
+        // if sessionId is 0, e.g.: error callback will be delivered
+        // by addConfigRequestToMap
+        addConfigRequestToMap(sessionId, pReqMsg);
+    } else {
+        std::string clientname(pReqMsg->mSocketName);
+        LocHalDaemonClientHandler* pClient = getClient(clientname);
+        if (pClient) {
+            // inform client that request has been processed successfully
+            pClient->onControlResponseCb(LOCATION_ERROR_SUCCESS,
+                                         E_INTAPI_DEREGISTER_XTRA_STATUS_UPDATE_REQ_MSG_ID);
+        }
     }
 }
 
@@ -1314,23 +1371,8 @@ void LocationApiService::configAidingDataDeletion(LocConfigAidingDataDeletionReq
     LOC_LOGi(">-- client %s, deleteAll %d",
              pMsg->mSocketName, pMsg->mAidingData.deleteAll);
 
-    // suspend all sessions before calling delete
-    suspendAllTrackingSessions();
-
     uint32_t sessionId = mLocationControlApi->gnssDeleteAidingData(pMsg->mAidingData);
     addConfigRequestToMap(sessionId, pMsg);
-
-#ifdef POWERMANAGER_ENABLED
-    // We do not need to resume the session if device is suspend/shutdown state
-    // as sessions will resumed when power state changes to resume
-    if ((POWER_STATE_SUSPEND == mPowerState) ||
-        (POWER_STATE_SHUTDOWN == mPowerState)) {
-        return;
-    }
-#endif
-
-    // resume all sessions after calling aiding data deletion
-    resumeAllTrackingSessions();
 }
 
 void LocationApiService::configLeverArm(const LocConfigLeverArmReqMsg* pMsg){
@@ -1469,6 +1511,21 @@ void LocationApiService::configEngineIntegrityRisk(const LocConfigEngineIntegrit
     addConfigRequestToMap(sessionId, pMsg);
 }
 
+void LocationApiService::configXtraParams(const LocConfigXtraReqMsg* pMsg) {
+    if (!pMsg) {
+        return;
+    }
+    std::lock_guard<std::recursive_mutex> lock(mMutex);
+
+    LOC_LOGi("client %s, xtra enable %d, download interval %d min",
+             pMsg->mSocketName, pMsg->mEnable, pMsg->mXtraParams.xtraDownloadIntervalMinute);
+
+    uint32_t sessionId =
+            mLocationControlApi->configXtraParams(pMsg->mEnable, pMsg->mXtraParams);
+
+    addConfigRequestToMap(sessionId, pMsg);
+}
+
 void LocationApiService::getGnssConfig(const LocAPIMsgHeader* pReqMsg,
                                        GnssConfigFlagsBits configFlag) {
 
@@ -1552,7 +1609,7 @@ void LocationApiService::onControlResponseCallback(LocationError err, uint32_t s
         mConfigReqs.erase(configReqData);
         LOC_LOGd("--< map size %d", mConfigReqs.size());
     } else {
-        LOC_LOGe("--< client not found for session id %d", sessionId);
+        LOC_LOGw("--< client not found for session id %d", sessionId);
     }
 }
 
@@ -1579,7 +1636,7 @@ void LocationApiService::onControlCollectiveResponseCallback(
         mConfigReqs.erase(configReqData);
         LOC_LOGd("--< map size %d", mConfigReqs.size());
     } else {
-        LOC_LOGe("--< client not found for session id %d", sessionId);
+        LOC_LOGw("--< client not found for session id %d", sessionId);
     }
 }
 
@@ -1587,22 +1644,37 @@ void LocationApiService::onGnssConfigCallback(uint32_t sessionId,
                                               const GnssConfig& config) {
     std::lock_guard<std::recursive_mutex> lock(mMutex);
     LOC_LOGd("--< onGnssConfigCallback, req cnt %d", mConfigReqs.size());
-
-    auto configReqData = mConfigReqs.find(sessionId);
-    if (configReqData != std::end(mConfigReqs)) {
-        LocHalDaemonClientHandler* pClient = getClient(configReqData->second.clientName);
-        if (pClient) {
-            // invoke the respCb to deliver success status
-            pClient->onControlResponseCb(LOCATION_ERROR_SUCCESS, configReqData->second.configMsgId);
-            // invoke the configCb to deliver the config
-            pClient->onGnssConfigCb(configReqData->second.configMsgId, config);
+    if (sessionId == 0) {
+        // check whether this for xtra status update
+        if (config.flags & GNSS_CONFIG_FLAGS_XTRA_STATUS_BIT) {
+            for (std::string xtraClient : mClientsRegForXtraStatus) {
+                LocHalDaemonClientHandler* pClient = getClient(xtraClient.c_str());
+                if (pClient) {
+                    pClient->onXtraStatusUpdateCb(config.xtraStatus);
+                }
+            }
         }
-        mConfigReqs.erase(configReqData);
-        LOC_LOGd("--< map size %d", mConfigReqs.size());
     } else {
-        LOC_LOGe("--< client not found for session id %d", sessionId);
+        auto configReqData = mConfigReqs.find(sessionId);
+        if (configReqData != std::end(mConfigReqs)) {
+            LocHalDaemonClientHandler* pClient = getClient(configReqData->second.clientName);
+            if (pClient) {
+                LOC_LOGd("--< msg id %d, client %s", configReqData->second.configMsgId,
+                         configReqData->second.clientName.c_str());
+                // invoke the respCb to deliver success status
+                pClient->onControlResponseCb(LOCATION_ERROR_SUCCESS,
+                                             configReqData->second.configMsgId);
+                // invoke the configCb to deliver the config
+                pClient->onGnssConfigCb(configReqData->second.configMsgId, config);
+            }
+            mConfigReqs.erase(configReqData);
+            LOC_LOGd("--< map size %d", mConfigReqs.size());
+        } else {
+            LOC_LOGi("--< client not found for session id %d", sessionId);
+        }
     }
 }
+
 // mandatory callback for location api
 void LocationApiService::onCapabilitiesCallback(LocationCapabilitiesMask mask) {
 }
@@ -1915,6 +1987,7 @@ void LocationApiService::getSinglePos(LocAPIGetSinglePosReqMsg* pReqMsg) {
             options.size = sizeof(options);
             options.minInterval = 1000;
             options.minDistance = 0;
+            options.qualityLevelAccepted = QUALITY_ANY_OR_FAILED_FIX;
             mSingleFixTrackingSessionId = mSingleFixLocationApi->startTracking(options);
         }
     } else {

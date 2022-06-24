@@ -191,6 +191,10 @@ public:
 
     uint32_t configOutputNmeaTypes(GnssNmeaTypesMask enabledNmeaTypes) override;
 
+    uint32_t configXtraParams(bool enable, const ::XtraConfigParams& configParams);
+    uint32_t getXtraStatus();
+    uint32_t registerXtraStatusUpdate(bool registerUpdate);
+
 private:
     ~LocationIntegrationApiImpl();
     bool integrationClientAllowed();
@@ -209,6 +213,8 @@ private:
     void processGetMinSvElevationRespCb(const LocConfigGetMinSvElevationRespMsg* pRespMsg);
     void processGetConstellationSecondaryBandConfigRespCb(
             const LocConfigGetConstellationSecondaryBandConfigRespMsg* pRespMsg);
+    void processGetXtraStatusRespCb(
+            const LocConfigGetXtraStatusRespMsg* pRespMsg);
 
     // protobuf conversion util class
     LocationApiPbMsgConv mPbufMsgConv;
@@ -235,6 +241,8 @@ private:
     LocConfigEngIntegrityRiskMap  mEngIntegrityRiskConfigMap;
     GtpUserConsentConfigInfo      mGtpUserConsentConfigInfo;
     NmeaConfigInfo                mNmeaConfigInfo;
+    bool                          mRegisterXtraUpdate;
+    bool                          mXtraUpdateUponRegisterPending;
     LocConfigReqCntMap       mConfigReqCntMap;
     LocIntegrationCbs        mIntegrationCbs;
     std::queue<ProtoMsgInfo> mQueuedMsg; // queue of the requests before

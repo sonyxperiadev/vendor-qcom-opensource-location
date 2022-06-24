@@ -379,10 +379,7 @@ private:
 
   void convertSvType(
         const qmiLocEventGnssSvMeasInfoIndMsgT_v02& gnss_measurement_report_ptr,
-        GnssSvType& svType,
-        GnssMeasurementsDataFlagsMask& flags,
-        uint16_t  gloFrequency = 0,
-        bool updateFlags = false);
+        GnssSvType& svType);
 
   void setGnssBiases();
 
@@ -460,9 +457,6 @@ public:
                locClientErrorEnumType errorId);
 
   // Tracking
-  virtual void startFix(const LocPosMode& posMode, LocApiResponse *adapterResponse);
-  virtual void stopFix(LocApiResponse *adapterResponse);
-
   void startTimeBasedTracking(const TrackingOptions& options, LocApiResponse* adapterResponse);
   void stopTimeBasedTracking(LocApiResponse* adapterResponse);
   void startDistanceBasedTracking(uint32_t sessionId, const LocationOptions& options,
@@ -606,6 +600,8 @@ public:
         qmiLocGNSSConstellEnumT_v02 qmiSecondaryBandConfig,
         GnssSvTypeConfig& secondaryBandConfig);
 
+  virtual void configPrecisePositioning(uint32_t featureId, bool enable,
+          std::string appHash, LocApiResponse* adapterResponse=nullptr);
   /* Requests for SV/Constellation Control */
   virtual LocationError setBlacklistSvSync(const GnssSvIdConfig& config);
   virtual void setBlacklistSv(const GnssSvIdConfig& config,

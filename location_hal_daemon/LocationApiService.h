@@ -246,9 +246,6 @@ private:
     void startTracking(LocAPIStartTrackingReqMsg*);
     void stopTracking(LocAPIStopTrackingReqMsg*);
 
-    void suspendAllTrackingSessions();
-    void resumeAllTrackingSessions();
-
     void updateSubscription(LocAPIUpdateCallbacksReqMsg*);
     void updateTrackingOptions(LocAPIUpdateTrackingOptionsReqMsg*);
     void updateNetworkAvailability(bool availability);
@@ -316,6 +313,7 @@ private:
     void configOutputNmeaTypes(const LocConfigOutputNmeaTypesReqMsg* pMsg);
     void configEngineIntegrityRisk(const LocConfigEngineIntegrityRiskReqMsg* pMsg);
     void injectLocation(const LocIntApiInjectLocationMsg* pMsg);
+    void configXtraParams(const LocConfigXtraReqMsg* pMsg);
 
     // Location configuration API get/read requests
     void getGnssConfig(const LocAPIMsgHeader* pReqMsg,
@@ -324,6 +322,11 @@ private:
             const LocConfigGetConstellationSecondaryBandConfigReqMsg* pReqMsg);
     void getDebugReport(const LocAPIGetDebugReqMsg* pReqMsg);
     void getAntennaInfo(const LocAPIGetAntennaInfoMsg* pMsg);
+    void getXtraStatus(const LocConfigGetXtraStatusReqMsg* pReqMsg);
+    void registerXtraStatusUpdate(
+            const LocConfigRegisterXtraStatusUpdateReqMsg * pReqMsg);
+    void deregisterXtraStatusUpdate(
+            const LocConfigDeregisterXtraStatusUpdateReqMsg * pReqMsg);
 
     // Location configuration API util routines
     void addConfigRequestToMap(uint32_t sessionId,

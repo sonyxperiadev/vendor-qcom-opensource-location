@@ -332,6 +332,7 @@ enum ELocMsgID {
     E_INTAPI_CONFIG_OUTPUT_NMEA_TYPES_MSG_ID = 212,
     E_INTAPI_CONFIG_ENGINE_INTEGRITY_RISK_MSG_ID = 213,
     E_INTAPI_INJECT_LOCATION_MSG_ID = 214,
+    E_INTAPI_CONFIG_XTRA_PARAMS_MSG_ID = 215,
 
     // integration API config retrieval request/response
     E_INTAPI_GET_ROBUST_LOCATION_CONFIG_REQ_MSG_ID  = 300,
@@ -345,6 +346,12 @@ enum ELocMsgID {
 
     E_INTAPI_GET_CONSTELLATION_SECONDARY_BAND_CONFIG_REQ_MSG_ID = 306,
     E_INTAPI_GET_CONSTELLATION_SECONDARY_BAND_CONFIG_RESP_MSG_ID = 307,
+
+    E_INTAPI_GET_XTRA_STATUS_REQ_MSG_ID = 308,
+    E_INTAPI_GET_XTRA_STATUS_RESP_MSG_ID = 309,
+
+    E_INTAPI_REGISTER_XTRA_STATUS_UPDATE_REQ_MSG_ID = 310,
+    E_INTAPI_DEREGISTER_XTRA_STATUS_UPDATE_REQ_MSG_ID = 311,
 };
 
 const char* LocApiMsgString(ELocMsgID msgId);
@@ -927,12 +934,13 @@ struct LocAPILocationIndMsg: LocAPIMsgHeader
 struct LocAPIBatchingIndMsg: LocAPIMsgHeader
 {
     LocAPIBatchNotification batchNotification;
+    BatchingMode batchingMode;
 
     inline LocAPIBatchingIndMsg(const char* name, const LocationApiPbMsgConv *pbMsgConv) :
         LocAPIMsgHeader(name, E_LOCAPI_BATCHING_MSG_ID, pbMsgConv) { }
     inline LocAPIBatchingIndMsg(const char* name, LocAPIBatchNotification& batchNotif,
-            const LocationApiPbMsgConv *pbMsgConv) :
-        LocAPIMsgHeader(name, E_LOCAPI_BATCHING_MSG_ID, pbMsgConv),
+            BatchingMode mode, const LocationApiPbMsgConv *pbMsgConv) :
+        LocAPIMsgHeader(name, E_LOCAPI_BATCHING_MSG_ID, pbMsgConv), batchingMode(mode),
         batchNotification(batchNotif) { }
     LocAPIBatchingIndMsg(const char* name, const PBLocAPIBatchingIndMsg &pbLocApiBatchingIndMsg,
             const LocationApiPbMsgConv *pbMsgConv);
@@ -1373,6 +1381,23 @@ struct LocConfigEngineIntegrityRiskReqMsg: LocAPIMsgHeader
     int serializeToProtobuf(string& protoStr) override;
 };
 
+struct LocConfigXtraReqMsg: LocAPIMsgHeader
+{
+    bool mEnable;
+    XtraConfigParams mXtraParams;
+
+    inline LocConfigXtraReqMsg(const char* name, bool enable, XtraConfigParams xtraParams,
+                               const LocationApiPbMsgConv *pbMsgConv) :
+        LocAPIMsgHeader(name, E_INTAPI_CONFIG_XTRA_PARAMS_MSG_ID, pbMsgConv),
+        mEnable(enable),
+        mXtraParams(xtraParams) { }
+
+    LocConfigXtraReqMsg(const char* name, const PBLocConfigXtraReqMsg &pbConfigXtraMsg,
+                        const LocationApiPbMsgConv *pbMsgConv);
+
+    int serializeToProtobuf(string& protoStr) override;
+};
+
 /******************************************************************************
 IPC message structure - Location Integration API Get request/response message
 ******************************************************************************/
@@ -1538,6 +1563,55 @@ struct LocIntApiInjectLocationMsg : LocAPIMsgHeader
     LocIntApiInjectLocationMsg(const char* name,
                                const PBLocIntApiInjectLocationMsg &pbMsg,
                                const LocationApiPbMsgConv *pbMsgConv);
+
+    int serializeToProtobuf(string& protoStr) override;
+};
+
+/**************** XTRA related section **********************/
+struct LocConfigGetXtraStatusReqMsg: LocAPIMsgHeader
+{
+    inline LocConfigGetXtraStatusReqMsg(const char* name,
+                                        const LocationApiPbMsgConv *pbMsgConv) :
+        LocAPIMsgHeader(name, E_INTAPI_GET_XTRA_STATUS_REQ_MSG_ID,
+                        pbMsgConv) { }
+
+    int serializeToProtobuf(string& protoStr) override;
+};
+
+struct LocConfigRegisterXtraStatusUpdateReqMsg: LocAPIMsgHeader
+{
+    inline LocConfigRegisterXtraStatusUpdateReqMsg(
+            const char* name, const LocationApiPbMsgConv *pbMsgConv) :
+        LocAPIMsgHeader(name, E_INTAPI_REGISTER_XTRA_STATUS_UPDATE_REQ_MSG_ID,
+                        pbMsgConv) { }
+
+    int serializeToProtobuf(string& protoStr) override;
+};
+
+struct LocConfigDeregisterXtraStatusUpdateReqMsg: LocAPIMsgHeader
+{
+    inline LocConfigDeregisterXtraStatusUpdateReqMsg(
+            const char* name, const LocationApiPbMsgConv *pbMsgConv) :
+        LocAPIMsgHeader(name, E_INTAPI_DEREGISTER_XTRA_STATUS_UPDATE_REQ_MSG_ID,
+                        pbMsgConv) { }
+
+    int serializeToProtobuf(string& protoStr) override;
+};
+
+struct LocConfigGetXtraStatusRespMsg: LocAPIMsgHeader
+{
+    XtraStatusUpdateType mUpdateType;
+    XtraStatus           mXtraStatus;
+
+    inline LocConfigGetXtraStatusRespMsg(const char* name,
+                                         XtraStatusUpdateType updateType,
+                                         XtraStatus           xtraStatus,
+                                         const LocationApiPbMsgConv *pbMsgConv) :
+        LocAPIMsgHeader(name, E_INTAPI_GET_XTRA_STATUS_RESP_MSG_ID, pbMsgConv),
+        mUpdateType(updateType), mXtraStatus(xtraStatus) { }
+    LocConfigGetXtraStatusRespMsg(const char* name,
+                                  const PBLocConfigGetXtraStatusRespMsg &pbGetXtraStatusMsg,
+                                  const LocationApiPbMsgConv *pbMsgConv);
 
     int serializeToProtobuf(string& protoStr) override;
 };

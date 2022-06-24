@@ -695,6 +695,8 @@ GnssSystemTime LocationClientApiImpl::parseSystemTime(const ::GnssSystemTime &ha
            systemTime.gnssSystemTimeSrc = GNSS_LOC_SV_SYSTEM_NAVIC;
            systemTime.u.navicSystemTime = parseGnssTime(halSystemTime.u.navicSystemTime);
            break;
+        default:
+           break;
     }
 
     return systemTime;
@@ -1187,6 +1189,8 @@ GnssDcReport LocationClientApiImpl::parseDcReport(const::GnssDcReportInfo &halDc
         case ::QZSS_NON_JMA_DISASTER_PREVENTION_INFO:
             dcReport.dcReportType = QZSS_NON_JMA_DISASTER_PREVENTION_INFO;
             break;
+        default:
+            break;
     }
     dcReport.numValidBits = halDcReport.numValidBits;
     dcReport.dcReportData = std::move(halDcReport.dcReportData);
@@ -1402,7 +1406,7 @@ LocationClientApiImpl::LocationClientApiImpl(capabilitiesCallback capabilitiescb
     }
 
     SockNodeLocal sock(LOCATION_CLIENT_API, pid, mClientId);
-    size_t pathNameLength = strlcpy(mSocketName, sock.getNodePathname().c_str(),
+    size_t pathNameLength = (size_t) strlcpy(mSocketName, sock.getNodePathname().c_str(),
                                     sizeof(mSocketName));
     if (pathNameLength >= sizeof(mSocketName)) {
         LOC_LOGe("socket name length exceeds limit of %" PRIu32 " bytes",
@@ -1700,6 +1704,11 @@ void LocationClientApiImpl::startPositionSession(
                 mApiImpl->mLocationCbs.responseCb(::LOCATION_ERROR_ALREADY_STARTED, 0);
                 return;
             }
+            if (mApiImpl->isInBatching()) {
+                //TODO: to mirror LOCATION_RESPONSE_EXCLUSIVE_SESSION_IN_PROGRESS
+                mApiImpl->mLocationCbs.responseCb(::LOCATION_ERROR_NOT_SUPPORTED, 0);
+                return;
+            }
             // set up the flag to indicate that responseCb is pending
             mApiImpl->mPositionSessionResponseCbPending = true;
 
@@ -1915,6 +1924,11 @@ void LocationClientApiImpl::startBatchingSession(const LocationCallbacks& callba
         void proc() const {
             if (mApiImpl->mPositionSessionResponseCbPending) {
                 mApiImpl->mLocationCbs.responseCb(::LOCATION_ERROR_ALREADY_STARTED, 0);
+                return;
+            }
+            if (mApiImpl->isInTracking()) {
+                //TODO: to mirror LOCATION_RESPONSE_EXCLUSIVE_SESSION_IN_PROGRESS
+                mApiImpl->mLocationCbs.responseCb(::LOCATION_ERROR_NOT_SUPPORTED, 0);
                 return;
             }
             // set up the flag to indicate that responseCb is pending
@@ -2693,13 +2707,19 @@ void LocationClientApiImpl::capabilitesCallback(ELocMsgID msgId, const void* msg
     }
 
     LOC_LOGe(">>> session id %d, cap mask 0x%" PRIx64, mSessionId, mCapsMask);
-    if (mSessionId != LOCATION_CLIENT_SESSION_ID_INVALID)  {
+    if (isInTracking())  {
         // force mSessionId to invalid so startTracking will start the sesssion
         // if hal deamon crashes and restarts in the middle of a session
         mSessionId = LOCATION_CLIENT_SESSION_ID_INVALID;
         TrackingOptions trackOption;
         trackOption.setLocationOptions(mLocationOptions);
         (void)startTrackingSync(trackOption);
+    } else if (isInBatching()) {
+        // force mBatchingId to invalid so startBatching will start the sesssion
+        // if hal deamon crashes and restarts in the middle of a session
+        mBatchingId = LOCATION_CLIENT_SESSION_ID_INVALID;
+        BatchingOptions batchOption = mBatchingOptions;
+        startBatchingSync(batchOption);
     }
 
     // hal daemon restarts
@@ -2944,6 +2964,17 @@ void IpcListener::onReceive(const char* data, uint32_t length,
                         (BATCHING_STATUS_POSITION_UNAVAILABLE != batchStatus)) {
                         LOC_LOGe("invalid Batching Status!");
                         break;
+                    } else if (BATCHING_STATUS_POSITION_AVAILABE == batchStatus) {
+                        int batchCount = pBatchingIndMsg->batchNotification.location.size();
+                        LOC_LOGd("Batch count : %d", batchCount);
+                        for (int i=0; i < batchCount; i++) {
+                            Location location = LocationClientApiImpl::parseLocation(
+                                    pBatchingIndMsg->batchNotification.location[i]);
+                            mApiImpl.logLocation(location,
+                                    BATCHING_MODE_ROUTINE == pBatchingIndMsg->batchingMode ?
+                                    LOC_REPORT_TRIGGER_ROUTINE_BATCHING_SESSION :
+                                    LOC_REPORT_TRIGGER_TRIP_BATCHING_SESSION);
+                        }
                     }
 
                     if (mApiImpl.mLocationCbs.batchingCb) {
