@@ -378,6 +378,10 @@ LocApiV02 :: LocApiV02(LOC_API_ADAPTER_EVENT_MASK_T exMask,
 LocApiV02 :: ~LocApiV02()
 {
     close();
+    if (mGnssMeasurements) {
+        free(mGnssMeasurements);
+        mGnssMeasurements = nullptr;
+    }
 }
 
 LocApiBase* getLocApi(LOC_API_ADAPTER_EVENT_MASK_T exMask,
@@ -10826,12 +10830,6 @@ LocApiV02::stopTimeBasedTracking(LocApiResponse* adapterResponse)
         mInSession = false;
         mPowerMode = GNSS_POWER_MODE_INVALID;
         registerEventMask();
-        // free the memory used to assemble SV measurement from
-        // different constellations and bands
-        if (!mGnssMeasurements) {
-            free(mGnssMeasurements);
-            mGnssMeasurements = nullptr;
-        }
     }
 
     if (adapterResponse != NULL) {
