@@ -65,6 +65,7 @@ IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <stdint.h>
 #include <sys/stat.h>
 #include <dlfcn.h>
+#include <dirent.h>
 #include <memory>
 #include <SystemStatus.h>
 #include <LocationApiMsg.h>

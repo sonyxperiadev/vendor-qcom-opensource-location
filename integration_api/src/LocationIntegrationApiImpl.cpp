@@ -293,7 +293,7 @@ LocationIntegrationApiImpl::LocationIntegrationApiImpl(LocIntegrationCbs& integr
 #ifdef FEATURE_EXTERNAL_AP
     SockNodeEap sock(LOCATION_CLIENT_API_QSOCKET_CLIENT_SERVICE_ID,
                      pid * 100);
-    size_t pathNameLength = strlcpy(mSocketName, sock.getNodePathname().c_str(),
+    size_t pathNameLength = (size_t) strlcpy(mSocketName, sock.getNodePathname().c_str(),
                                     sizeof(mSocketName));
     if (pathNameLength >= sizeof(mSocketName)) {
         LOC_LOGe("socket name length exceeds limit of %d bytes", sizeof(mSocketName));
@@ -314,7 +314,7 @@ LocationIntegrationApiImpl::LocationIntegrationApiImpl(LocIntegrationCbs& integr
             make_shared<HalDaemonQrtrWatcher>(listener, mIpcSender, mPbufMsgConv, mMsgTask));
 #else
     SockNodeLocal sock(LOCATION_INTEGRATION_API, pid, 0);
-    size_t pathNameLength = strlcpy(mSocketName, sock.getNodePathname().c_str(),
+    size_t pathNameLength = (size_t) strlcpy(mSocketName, sock.getNodePathname().c_str(),
                                     sizeof(mSocketName));
     if (pathNameLength >= sizeof(mSocketName)) {
         LOC_LOGe("socket name length exceeds limit of %zu bytes", sizeof(mSocketName));

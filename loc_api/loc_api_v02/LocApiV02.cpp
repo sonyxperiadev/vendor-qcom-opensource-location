@@ -75,6 +75,7 @@ IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <math.h>
 #include <dlfcn.h>
 #include <algorithm>
+#include <cfloat>
 
 #include <LocApiV02.h>
 #include <loc_api_v02_log.h>
