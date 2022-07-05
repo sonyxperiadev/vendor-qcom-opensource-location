@@ -1126,6 +1126,9 @@ LocationResponse LocationClientApiImpl::parseLocationError(::LocationError error
         case LOCATION_ERROR_SYSTEM_NOT_READY:
             response = LOCATION_RESPONSE_SYSTEM_NOT_READY;
             break;
+        case LOCATION_ERROR_EXCLUSIVE_SESSION_IN_PROGRESS:
+            response = LOCATION_RESPONSE_EXCLUSIVE_SESSION_IN_PROGRESS;
+            break;
         default:
             response = LOCATION_RESPONSE_UNKOWN_FAILURE;
             break;
@@ -1705,8 +1708,8 @@ void LocationClientApiImpl::startPositionSession(
                 return;
             }
             if (mApiImpl->isInBatching()) {
-                //TODO: to mirror LOCATION_RESPONSE_EXCLUSIVE_SESSION_IN_PROGRESS
-                mApiImpl->mLocationCbs.responseCb(::LOCATION_ERROR_NOT_SUPPORTED, 0);
+                mApiImpl->mLocationCbs.responseCb(
+                        ::LOCATION_ERROR_EXCLUSIVE_SESSION_IN_PROGRESS, 0);
                 return;
             }
             // set up the flag to indicate that responseCb is pending
@@ -1927,8 +1930,8 @@ void LocationClientApiImpl::startBatchingSession(const LocationCallbacks& callba
                 return;
             }
             if (mApiImpl->isInTracking()) {
-                //TODO: to mirror LOCATION_RESPONSE_EXCLUSIVE_SESSION_IN_PROGRESS
-                mApiImpl->mLocationCbs.responseCb(::LOCATION_ERROR_NOT_SUPPORTED, 0);
+                mApiImpl->mLocationCbs.responseCb(
+                        ::LOCATION_ERROR_EXCLUSIVE_SESSION_IN_PROGRESS, 0);
                 return;
             }
             // set up the flag to indicate that responseCb is pending
@@ -2719,7 +2722,7 @@ void LocationClientApiImpl::capabilitesCallback(ELocMsgID msgId, const void* msg
         // if hal deamon crashes and restarts in the middle of a session
         mBatchingId = LOCATION_CLIENT_SESSION_ID_INVALID;
         BatchingOptions batchOption = mBatchingOptions;
-        startBatchingSync(batchOption);
+        (void)startBatchingSync(batchOption);
     }
 
     // hal daemon restarts
