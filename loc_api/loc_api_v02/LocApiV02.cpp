@@ -378,6 +378,10 @@ LocApiV02 :: LocApiV02(LOC_API_ADAPTER_EVENT_MASK_T exMask,
 LocApiV02 :: ~LocApiV02()
 {
     close();
+    if (mGnssMeasurements) {
+        free(mGnssMeasurements);
+        mGnssMeasurements = nullptr;
+    }
 }
 
 LocApiBase* getLocApi(LOC_API_ADAPTER_EVENT_MASK_T exMask,
@@ -2238,9 +2242,6 @@ LocApiV02::setLPPeProtocolCpSync(GnssConfigLppeControlPlaneMask lppeCP)
   if (GNSS_CONFIG_LPPE_CONTROL_PLANE_WLAN_AP_MEASUREMENTS_BIT & lppeCP) {
       lppe_req.lppeCpConfig |= QMI_LOC_LPPE_MASK_CP_AP_WIFI_MEASUREMENT_V02;
   }
-  if (GNSS_CONFIG_LPPE_CONTROL_PLANE_SRN_AP_MEASUREMENTS_BIT & lppeCP) {
-      lppe_req.lppeCpConfig |= QMI_LOC_LPPE_MASK_CP_AP_SRN_BTLE_MEASUREMENT_V02;
-  }
   if (GNSS_CONFIG_LPPE_CONTROL_PLANE_SENSOR_BARO_MEASUREMENTS_BIT & lppeCP) {
       lppe_req.lppeCpConfig |= QMI_LOC_LPPE_MASK_CP_UBP_V02;
   }
@@ -2294,9 +2295,6 @@ LocApiV02::setLPPeProtocolUpSync(GnssConfigLppeUserPlaneMask lppeUP)
   }
   if (GNSS_CONFIG_LPPE_USER_PLANE_WLAN_AP_MEASUREMENTS_BIT & lppeUP) {
       lppe_req.lppeUpConfig |= QMI_LOC_LPPE_MASK_UP_AP_WIFI_MEASUREMENT_V02;
-  }
-  if (GNSS_CONFIG_LPPE_USER_PLANE_SRN_AP_MEASUREMENTS_BIT & lppeUP) {
-      lppe_req.lppeUpConfig |= QMI_LOC_LPPE_MASK_UP_AP_SRN_BTLE_MEASUREMENT_V02;
   }
   if (GNSS_CONFIG_LPPE_USER_PLANE_SENSOR_BARO_MEASUREMENTS_BIT & lppeUP) {
       lppe_req.lppeUpConfig |= QMI_LOC_LPPE_MASK_UP_UBP_V02;
@@ -2453,9 +2451,6 @@ locClientEventMaskType LocApiV02 :: convertLocClientEventMask(
 
   if(mask & LOC_API_ADAPTER_BIT_REQUEST_TIMEZONE)
       eventMask |= QMI_LOC_EVENT_MASK_GET_TIME_ZONE_REQ_V02;
-
-  if(mask & LOC_API_ADAPTER_BIT_REQUEST_SRN_DATA)
-      eventMask |= QMI_LOC_EVENT_MASK_INJECT_SRN_AP_DATA_REQ_V02 ;
 
   if (mask & LOC_API_ADAPTER_BIT_FDCL_SERVICE_REQ)
       eventMask |= QMI_LOC_EVENT_MASK_FDCL_SERVICE_REQ_V02;
@@ -8899,9 +8894,6 @@ LocApiV02::convertLppeCp(const uint32_t lppeControlPlaneMask)
     if ((1<<1) & lppeControlPlaneMask) {
         mask |= GNSS_CONFIG_LPPE_CONTROL_PLANE_WLAN_AP_MEASUREMENTS_BIT;
     }
-    if ((1<<2) & lppeControlPlaneMask) {
-        mask |= GNSS_CONFIG_LPPE_CONTROL_PLANE_SRN_AP_MEASUREMENTS_BIT;
-    }
     if ((1<<3) & lppeControlPlaneMask) {
         mask |= GNSS_CONFIG_LPPE_CONTROL_PLANE_SENSOR_BARO_MEASUREMENTS_BIT;
     }
@@ -8923,9 +8915,6 @@ LocApiV02::convertLppeUp(const uint32_t lppeUserPlaneMask)
     }
     if ((1 << 1) & lppeUserPlaneMask) {
         mask |= GNSS_CONFIG_LPPE_USER_PLANE_WLAN_AP_MEASUREMENTS_BIT;
-    }
-    if ((1 << 2) & lppeUserPlaneMask) {
-        mask |= GNSS_CONFIG_LPPE_USER_PLANE_SRN_AP_MEASUREMENTS_BIT;
     }
     if ((1 << 3) & lppeUserPlaneMask) {
         mask |= GNSS_CONFIG_LPPE_USER_PLANE_SENSOR_BARO_MEASUREMENTS_BIT;
@@ -10841,12 +10830,6 @@ LocApiV02::stopTimeBasedTracking(LocApiResponse* adapterResponse)
         mInSession = false;
         mPowerMode = GNSS_POWER_MODE_INVALID;
         registerEventMask();
-        // free the memory used to assemble SV measurement from
-        // different constellations and bands
-        if (!mGnssMeasurements) {
-            free(mGnssMeasurements);
-            mGnssMeasurements = nullptr;
-        }
     }
 
     if (adapterResponse != NULL) {
