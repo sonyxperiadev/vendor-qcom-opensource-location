@@ -2923,7 +2923,7 @@ void IpcListener::onReceive(const char* data, uint32_t length,
             // async indication messages
             case E_LOCAPI_LOCATION_MSG_ID:
             {
-                LOC_LOGd("<<< message = location");
+                LOC_LOGd("<<< message = simple location");
                 PBLocAPILocationIndMsg pbLocApiLocIndMsg;
                 if (0 == pbLocApiLocIndMsg.ParseFromString(pbLocApiMsg.payload())) {
                     LOC_LOGe("Failed to parse pbLocApiLocIndMsg from payload!!");
@@ -2932,6 +2932,7 @@ void IpcListener::onReceive(const char* data, uint32_t length,
                 LocAPILocationIndMsg msg(sockName.c_str(), pbLocApiLocIndMsg,
                         &mApiImpl.mPbufMsgConv);
                 if ((mApiImpl.mSessionId != LOCATION_CLIENT_SESSION_ID_INVALID) &&
+                        (mApiImpl.mPositionSessionResponseCbPending == false) &&
                         (mApiImpl.mCallbacksMask & E_LOC_CB_TRACKING_BIT)) {
                     const LocAPILocationIndMsg* pLocationIndMsg = (LocAPILocationIndMsg*)(&msg);
                     Location location = LocationClientApiImpl::parseLocation(
@@ -3035,6 +3036,7 @@ void IpcListener::onReceive(const char* data, uint32_t length,
             {
                 LOC_LOGd("<<< message = location info");
                 if ((mApiImpl.mSessionId != LOCATION_CLIENT_SESSION_ID_INVALID) &&
+                        (mApiImpl.mPositionSessionResponseCbPending == false) &&
                         (mApiImpl.mCallbacksMask & E_LOC_CB_GNSS_LOCATION_INFO_BIT) &&
                         (mApiImpl.mLocationCbs.gnssLocationInfoCb)) {
                     PBLocAPILocationInfoIndMsg pbLocApiLocInfoIndMsg;
@@ -3056,6 +3058,7 @@ void IpcListener::onReceive(const char* data, uint32_t length,
                 LOC_LOGd("<<< message = engine location info\n");
 
                 if ((mApiImpl.mSessionId != LOCATION_CLIENT_SESSION_ID_INVALID) &&
+                        (mApiImpl.mPositionSessionResponseCbPending == false) &&
                         (mApiImpl.mCallbacksMask & E_LOC_CB_ENGINE_LOCATIONS_INFO_BIT)) {
                     PBLocAPIEngineLocationsInfoIndMsg pbLocApiEngLocInfoIndMsg;
                     if (0 == pbLocApiEngLocInfoIndMsg.ParseFromString(pbLocApiMsg.payload())) {
@@ -3083,7 +3086,9 @@ void IpcListener::onReceive(const char* data, uint32_t length,
             case E_LOCAPI_SATELLITE_VEHICLE_MSG_ID:
             {
                 LOC_LOGd("<<< message = sv");
-                if ((mApiImpl.mCallbacksMask & E_LOC_CB_GNSS_SV_BIT) &&
+                if ((mApiImpl.mSessionId != LOCATION_CLIENT_SESSION_ID_INVALID) &&
+                        (mApiImpl.mPositionSessionResponseCbPending == false) &&
+                        (mApiImpl.mCallbacksMask & E_LOC_CB_GNSS_SV_BIT) &&
                         (mApiImpl.mLocationCbs.gnssSvCb)) {
                     PBLocAPISatelliteVehicleIndMsg pbLocApiSatVehIndMsg;
                     if (0 == pbLocApiSatVehIndMsg.ParseFromString(pbLocApiMsg.payload())) {
@@ -3102,6 +3107,7 @@ void IpcListener::onReceive(const char* data, uint32_t length,
             case E_LOCAPI_NMEA_MSG_ID:
             {
                 if ((mApiImpl.mSessionId != LOCATION_CLIENT_SESSION_ID_INVALID) &&
+                        (mApiImpl.mPositionSessionResponseCbPending == false) &&
                         (mApiImpl.mCallbacksMask & E_LOC_CB_GNSS_NMEA_BIT) &&
                         (mApiImpl.mLocationCbs.gnssNmeaCb)) {
 
@@ -3128,6 +3134,7 @@ void IpcListener::onReceive(const char* data, uint32_t length,
             {
                 LOC_LOGd("<<< message = data");
                 if ((mApiImpl.mSessionId != LOCATION_CLIENT_SESSION_ID_INVALID) &&
+                        (mApiImpl.mPositionSessionResponseCbPending == false) &&
                         (mApiImpl.mCallbacksMask & E_LOC_CB_GNSS_DATA_BIT) &&
                         (mApiImpl.mLocationCbs.gnssDataCb)) {
                     PBLocAPIDataIndMsg pbLocApiDataIndMsg;
@@ -3147,6 +3154,7 @@ void IpcListener::onReceive(const char* data, uint32_t length,
             {
                 LOC_LOGd("<<< message = DC report");
                 if ((mApiImpl.mSessionId != LOCATION_CLIENT_SESSION_ID_INVALID) &&
+                        (mApiImpl.mPositionSessionResponseCbPending == false) &&
                         (mApiImpl.mCallbacksMask & E_LOC_CB_GNSS_DC_REPORT_BIT) &&
                         (mApiImpl.mLocationCbs.gnssDcReportCb)) {
                     PBLocAPIDcReportIndMsg pbMsg;
@@ -3163,7 +3171,8 @@ void IpcListener::onReceive(const char* data, uint32_t length,
             case E_LOCAPI_MEAS_MSG_ID:
             {
                 LOC_LOGd("<<< message = measurements");
-                if (mApiImpl.mSessionId != LOCATION_CLIENT_SESSION_ID_INVALID) {
+                if ((mApiImpl.mSessionId != LOCATION_CLIENT_SESSION_ID_INVALID) &&
+                        (mApiImpl.mPositionSessionResponseCbPending == false)) {
                     PBLocAPIMeasIndMsg pbLocApiMeasIndMsg;
                     if (0 == pbLocApiMeasIndMsg.ParseFromString(pbLocApiMsg.payload())) {
                         LOC_LOGe("Failed to parse pbLocApiMeasIndMsg from payload!!");
