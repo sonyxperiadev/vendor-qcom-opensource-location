@@ -142,7 +142,7 @@ int main(int argc, char *argv[])
 
     // check if this process started by root
     if (0 == getuid()) {
-#if defined(INIT_SYSTEM_SYSTEMD) || defined(OPENWRT_BUILD)
+#if defined(INIT_SYSTEM_SYSTEMD)
         // started as root.
         LOC_LOGE("Error !!! location_hal_daemon started as root");
         exit(1);
@@ -166,7 +166,7 @@ int main(int argc, char *argv[])
 
         // Set access to netmgr (QCMAP)
         struct __user_cap_data_struct cap_data = {};
-        cap_data.permitted = (1 << CAP_NET_BIND_SERVICE) | (1 << CAP_NET_ADMIN);
+        cap_data.permitted = (1<<CAP_SETGID) | (1 << CAP_NET_BIND_SERVICE) | (1 << CAP_NET_ADMIN);
         cap_data.effective = cap_data.permitted;
         LOC_LOGv("cap_data.permitted: %d", (int)cap_data.permitted);
         if(capset(&cap_hdr, &cap_data)) {
