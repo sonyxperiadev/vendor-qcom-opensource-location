@@ -2020,8 +2020,10 @@ bool LocationClientApiImpl::checkGeofenceMap(size_t count, uint32_t* ids) {
     return true;
 }
 
-void LocationClientApiImpl::addGeofenceMap(uint32_t id, Geofence& geofence) {
-    mGeofenceMap.insert(make_pair(id, geofence));
+void LocationClientApiImpl::addGeofenceMap(Geofence& geofence) {
+    if (geofence.mGeofenceImpl != nullptr) {
+        mGeofenceMap.insert(make_pair(geofence.mGeofenceImpl->getClientId(), geofence));
+    }
 }
 
 void LocationClientApiImpl::eraseGeofenceMap(size_t count, uint32_t* ids) {
@@ -2101,11 +2103,10 @@ void LocationClientApiImpl::addGeofences(const LocationCallbacks& callbacksOptio
                     gfInfos[i].radius = mGeofences[i].getRadius();
                     gfInfos[i].size = sizeof(gfInfos[i]);
 
-                    std::shared_ptr<GeofenceImpl> gfImpl(new GeofenceImpl(&mGeofences[i]));
-                    gfImpl->bindGeofence(&mGeofences[i]);
-                    mApiImpl->mLastAddedClientIds.push_back(gfImpl->getClientId());
-                    mApiImpl->addGeofenceMap(gfImpl->getClientId(), mGeofences[i]);
-                    LOC_LOGd("Geofence LastAddedClientId: %d", gfImpl->getClientId());
+                    uint32_t clientId = mGeofences[i].mGeofenceImpl->getClientId();
+                    mApiImpl->mLastAddedClientIds.push_back(clientId);
+                    mApiImpl->addGeofenceMap(mGeofences[i]);
+                    LOC_LOGd("Geofence LastAddedClientId: %u", clientId);
                 }
                 mApiImpl->addGeofences(count, reinterpret_cast<GeofenceOption*>(gfOptions),
                                        reinterpret_cast<GeofenceInfo*>(gfInfos));
@@ -2732,6 +2733,34 @@ void LocationClientApiImpl::capabilitesCallback(ELocMsgID msgId, const void* msg
         (void)startBatchingSync(batchOption);
     }
 
+    if (mGeofenceMap.size() > 0) {
+        size_t count = mGeofenceMap.size();
+        GeofenceOption* gfOptions = (GeofenceOption*)malloc(sizeof(GeofenceOption) * count);
+        GeofenceInfo* gfInfos = (GeofenceInfo*)malloc(sizeof(GeofenceInfo) * count);
+        if ((gfOptions != nullptr) && (gfInfos != nullptr)) {
+            int i = 0;
+            for (auto it = mGeofenceMap.begin(); it != mGeofenceMap.end(); ++it) {
+                gfOptions[i].breachTypeMask = it->second.getBreachType();
+                gfOptions[i].responsiveness = it->second.getResponsiveness();
+                gfOptions[i].dwellTime = it->second.getDwellTime();
+                gfOptions[i].size = sizeof(gfOptions[i]);
+
+                gfInfos[i].latitude = it->second.getLatitude();
+                gfInfos[i].longitude = it->second.getLongitude();
+                gfInfos[i].radius = it->second.getRadius();
+                gfInfos[i].size = sizeof(gfInfos[i]);
+                ++i;
+            }
+            addGeofences(count, gfOptions, gfInfos);
+        }
+        if (gfOptions) {
+            free(gfOptions);
+        }
+        if (gfInfos) {
+            free(gfInfos);
+        }
+    }
+
     // hal daemon restarts
     // inform client that gtp fix request fails and reset the variables
     if (mSingleTerrestrialPosRespCb) {
@@ -2924,6 +2953,9 @@ void IpcListener::onReceive(const char* data, uint32_t length,
                     }
                     mApiImpl.mLocationCbs.collectiveResponseCb(count, errs, ids);
                 }
+                if (mApiImpl.mPositionSessionResponseCbPending) {
+                    mApiImpl.mPositionSessionResponseCbPending = false;
+                }
                 break;
             }
 
@@ -3033,6 +3065,9 @@ void IpcListener::onReceive(const char* data, uint32_t length,
                         gfBrNotif.ids[i] = pGfBreachIndMsg->gfBreachNotification.id[i];
                     }
 
+                    Location location = LocationClientApiImpl::parseLocation(
+                            pGfBreachIndMsg->gfBreachNotification.location);
+                    mApiImpl.logLocation(location, LOC_REPORT_TRIGGER_GEOFENCE_SESSION);
                     mApiImpl.mLocationCbs.geofenceBreachCb(gfBrNotif);
                     free(gfBrNotif.ids);
                 }

@@ -555,7 +555,7 @@ void LocHalDaemonClientHandler::onResponseCb(LocationError err, uint32_t id) {
 void LocHalDaemonClientHandler::onCollectiveResponseCallback(
         size_t count, LocationError *errs, uint32_t *ids) {
     std::lock_guard<std::recursive_mutex> lock(LocationApiService::mMutex);
-    LOC_LOGd("--< onCollectiveResponseCallback, client name %s", mName.c_str());
+    LOC_LOGd("--< onCollectiveResponseCallback, client name %s, count: %zu", mName.c_str(), count);
 
     if (nullptr == mIpcSender) {
         LOC_LOGe("mIpcSender is null");
@@ -618,7 +618,7 @@ void LocHalDaemonClientHandler::onCollectiveResponseCallback(
     LocAPICollectiveRespMsg msg(SERVICE_NAME, eLocMsgId, &mService->mPbufMsgConv);
     string pbStr;
     uint32_t collctResCount = count;
-    LOC_LOGd("Gf Resp count: %ul", collctResCount);
+    LOC_LOGd("Gf Resp count: %u", collctResCount);
     for (uint32_t i=0; i < collctResCount; i++) {
         GeofenceResponse gfResp;
         gfResp.clientId = clientIds[i];
