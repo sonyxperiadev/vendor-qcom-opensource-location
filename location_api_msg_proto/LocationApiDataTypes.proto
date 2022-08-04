@@ -79,8 +79,8 @@ enum LocationApiDataTypesVersion {
     LOCAPI_DATA_TYPES_VER_MAJOR = 1;
     // Minor - New features / API addition, new message/elemtent addition.
     // Bump the last byte of version i.e. x.2 to x.3
-    // Minor version 22: Add AntennaInfo messages for LCA
-    LOCAPI_DATA_TYPES_VER_MINOR = 22;
+    // Minor version 23: Add dgnss station Id to PVT report
+    LOCAPI_DATA_TYPES_VER_MINOR = 23;
 
 }
 
@@ -239,6 +239,7 @@ enum PBGnssLocationInfoExtFlagMask {
     PB_GNSS_LOCATION_INFO_PROTECT_ALONG_TRACK_BIT = 0x8;  // valid protection level along track
     PB_GNSS_LOCATION_INFO_PROTECT_CROSS_TRACK_BIT = 0x10; // valid protection level cross track
     PB_GNSS_LOCATION_INFO_PROTECT_VERTICAL_BIT    = 0x20; // valid protection level vertical
+    PB_GNSS_LOCATION_INFO_DGNSS_STATION_ID_MASK_BIT = 0x40; // valid dgnss station id info
 };
 
 enum PBGnssLocationNavSolutionMask {
@@ -1102,7 +1103,9 @@ message PBGnssLocationInfoNotification {
     // Cross-track protection level, validity is set via extFlags
     float    protectCrossTrack = 45;
     // Vertical component protection level, validity is set via extFlags
-    float    protectVertical = 46;;
+    float    protectVertical = 46;
+    // dgnss station id, validity is set via extFlags
+    repeated uint32 dgnssStationId = 47;
 }
 
 message PBGnssDataNotification {
