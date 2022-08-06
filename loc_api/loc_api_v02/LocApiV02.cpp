@@ -3923,6 +3923,11 @@ void  LocApiV02 :: reportSvPolynomial(const qmiLocEventGnssSvPolyIndMsgT_v02 *gn
             svPolynomial.bdsTgdB1c = gnss_sv_poly_ptr->bdsTgdB1c;
         }
 
+        if (1 == gnss_sv_poly_ptr->bdsIscB1c_valid) {
+            svPolynomial.is_valid |= ULP_GNSS_SV_POLY_BIT_BDS_ISC_B1C;
+            svPolynomial.bdsIscB1c = gnss_sv_poly_ptr->bdsIscB1c;
+        }
+
         if (1 == gnss_sv_poly_ptr->toc_valid) {
             svPolynomial.is_valid |= ULP_GNSS_SV_POLY_BIT_TOC;
             svPolynomial.toc = gnss_sv_poly_ptr->toc;
