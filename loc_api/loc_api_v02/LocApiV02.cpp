@@ -75,6 +75,7 @@ IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <math.h>
 #include <dlfcn.h>
 #include <algorithm>
+#include <cfloat>
 
 #include <LocApiV02.h>
 #include <loc_api_v02_log.h>
@@ -10517,9 +10518,13 @@ LocApiV02::startTimeBasedTracking(const TrackingOptions& options, LocApiResponse
     req_union.pStartReq = &start_msg;
     status = locClientSendReq(QMI_LOC_START_REQ_V02, req_union);
     if (eLOC_CLIENT_SUCCESS != status) {
-        LOC_LOGE ("%s]: failed! status %d",
-                  __func__, status);
-        err = LOCATION_ERROR_GENERAL_FAILURE;
+        if (ENGINE_LOCK_STATE_DISABLED == getEngineLockState()) {
+            LOC_LOGd("engine state disabled");
+            err = LOCATION_ERROR_TZ_LOCKED;
+        } else {
+            LOC_LOGe("failed! status %d", status);
+            err = LOCATION_ERROR_GENERAL_FAILURE;
+        }
     }
 
     if (adapterResponse != NULL) {
@@ -10823,7 +10828,7 @@ LocApiV02::stopTimeBasedTracking(LocApiResponse* adapterResponse)
     status = locClientSendReq(QMI_LOC_STOP_REQ_V02, req_union);
     if (status != eLOC_CLIENT_SUCCESS) {
         LOC_LOGE ("%s]: failed! status %d",
-                  __func__, status);
+            __func__, status);
         err = LOCATION_ERROR_GENERAL_FAILURE;
     } else {
         mIsFirstFinalFixReported = false;
@@ -10890,8 +10895,13 @@ LocApiV02::startDistanceBasedTracking(uint32_t sessionId,
 
     if (eLOC_CLIENT_SUCCESS != status ||
         eQMI_LOC_SUCCESS_V02 != start_dbt_ind.status) {
-        LOC_LOGE("%s] failed! status %d ind.status %d",
-              __func__, status, start_dbt_ind.status);
+        if (ENGINE_LOCK_STATE_DISABLED == getEngineLockState()) {
+            LOC_LOGd("engine state disabled");
+            err = LOCATION_ERROR_TZ_LOCKED;
+        } else {
+            LOC_LOGe("failed! status %d ind.status %d", status, start_dbt_ind.status);
+            err = LOCATION_ERROR_GENERAL_FAILURE;
+        }
     }
 
     if (adapterResponse != NULL) {
@@ -10926,9 +10936,9 @@ LocApiV02::stopDistanceBasedTracking(uint32_t sessionId, LocApiResponse* adapter
                             &stop_dbt_Ind);
 
     if (eLOC_CLIENT_SUCCESS != status ||
-        eQMI_LOC_SUCCESS_V02 != stop_dbt_Ind.status) {
-        LOC_LOGE("%s] failed! status %d ind.status %d",
-              __func__, status, stop_dbt_Ind.status);
+            eQMI_LOC_SUCCESS_V02 != stop_dbt_Ind.status) {
+            LOC_LOGE("%s] failed! status %d ind.status %d",
+                __func__, status, stop_dbt_Ind.status);
     }
 
     adapterResponse->returnToSender(err);
@@ -11012,8 +11022,13 @@ LocApiV02::startBatching(uint32_t sessionId,
     LOC_SEND_SYNC_REQ(StartBatching, START_BATCHING, startBatchReq);
 
     if (!rv) {
-        LOC_LOGE("%s] failed!", __func__);
-        err = LOCATION_ERROR_GENERAL_FAILURE;
+        if (ENGINE_LOCK_STATE_DISABLED == getEngineLockState()) {
+            LOC_LOGd("engine state disabled");
+            err = LOCATION_ERROR_TZ_LOCKED;
+        } else {
+            LOC_LOGe("failed!");
+            err = LOCATION_ERROR_GENERAL_FAILURE;
+        }
     }
 
     if (adapterResponse != NULL) {
@@ -11101,10 +11116,14 @@ LocApiV02::startOutdoorTripBatchingSync(uint32_t tripDistance, uint32_t tripTbf,
             startOutdoorTripBatchReq);
 
     if (!rv) {
-        LOC_LOGE("%s] failed!", __func__);
-        err = LOCATION_ERROR_GENERAL_FAILURE;
+        if (ENGINE_LOCK_STATE_DISABLED == getEngineLockState()) {
+            LOC_LOGd("engine state disabled");
+            err = LOCATION_ERROR_TZ_LOCKED;
+        } else {
+            LOC_LOGe("failed!");
+            err = LOCATION_ERROR_GENERAL_FAILURE;
+        }
     }
-
     return err;
 }
 

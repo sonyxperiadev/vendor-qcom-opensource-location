@@ -65,6 +65,7 @@ IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <stdint.h>
 #include <sys/stat.h>
 #include <dlfcn.h>
+#include <dirent.h>
 #include <memory>
 #include <SystemStatus.h>
 #include <LocationApiMsg.h>
@@ -823,9 +824,10 @@ void LocationApiService::deleteClientbyName(const std::string clientname) {
     mClients.erase(clientname);
 
     // if client is requesting terrestrial fix, stop it
-    mTerrestrialFixTimeoutMap.erase(clientname);
-    if (mTerrestrialFixTimeoutMap.size() == 0) {
-        mGtpWwanSsLocationApi->stopNetworkLocation(&mGtpWwanPosCallback);
+    if (mTerrestrialFixTimeoutMap.erase(clientname) != 0) {
+        if (mTerrestrialFixTimeoutMap.size() == 0) {
+            mGtpWwanSsLocationApi->stopNetworkLocation(&mGtpWwanPosCallback);
+        }
     }
 
     // if client is requesting single shot fix, stop it
