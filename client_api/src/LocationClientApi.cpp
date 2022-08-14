@@ -1410,6 +1410,14 @@ string GnssLocation::toString() const {
     out += FIELDVAL_DEC(elapsedRealTimeNs);
     out += FIELDVAL_DEC(elapsedRealTimeUncNs);
     out += FIELDVAL_DEC(timeUncMs);
+    uint32_t count = 0;
+    for (auto dgnssId : dgnssStationId) {
+        out += "dgnssStationId[";
+        out += to_string(count);
+        out += "]: ";
+        out += to_string(dgnssId);
+        count++;
+    }
     return out;
 }
 
