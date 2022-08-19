@@ -201,13 +201,6 @@ public:
         return mInstance;
     }
 
-    static void destroy() {
-        if (nullptr != mInstance) {
-            delete mInstance;
-            mInstance = nullptr;
-        }
-    }
-
     // APIs can be invoked by IPC
     void processClientMsg(const char* data, uint32_t length);
 
