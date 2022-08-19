@@ -82,8 +82,8 @@ enum LocationApiMsgVersion {
     LOCAPI_MSG_VER_MAJOR = 1;
     // Minor - New features / API addition, new message/elemtent addition.
     // Bump the last byte of version i.e. x.2 to x.3
-    // Minor version 16: Add batching mode in LocAPIBatchingIndMsg
-    LOCAPI_MSG_VER_MINOR = 16;
+    // Minor version 17: Add geodetic datum type in ConfigOutputNmea msg
+    LOCAPI_MSG_VER_MINOR = 17;
 }
 
 // ============================================================================
@@ -613,6 +613,7 @@ message PBLocConfigUserConsentTerrestrialPositioningReqMsg {
 // PB_E_INTAPI_CONFIG_OUTPUT_NMEA_TYPES_MSG_ID
 message PBLocConfigOutputNmeaTypesReqMsg {
     uint32 nmeaTypesMask = 1;
+    PBGnssGeodeticDatumType nmeaDatumType = 2;
 }
 
 // defintion for message with msg id of
