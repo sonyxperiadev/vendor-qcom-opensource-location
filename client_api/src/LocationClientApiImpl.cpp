@@ -245,7 +245,7 @@ uint16_t LocationClientApiImpl::parseYearOfHw(::LocationCapabilitiesMask mask) {
 
     if (::LOCATION_CAPABILITIES_GNSS_MEASUREMENTS_BIT & mask) {
         yearOfHw++; // 2016
-        if (::LOCATION_CAPABILITIES_DEBUG_NMEA_BIT & mask) {
+        if (::LOCATION_CAPABILITIES_DEBUG_DATA_BIT & mask) {
             yearOfHw++; // 2017
             if (::LOCATION_CAPABILITIES_CONSTELLATION_ENABLEMENT_BIT & mask ||
                 ::LOCATION_CAPABILITIES_AGPM_BIT & mask) {
