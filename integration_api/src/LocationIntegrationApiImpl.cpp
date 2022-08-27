@@ -1706,7 +1706,6 @@ void LocationIntegrationApiImpl::processGetXtraStatusRespCb(
 
     xtraStatus.featureEnabled = pRespMsg->mXtraStatus.featureEnabled;
     if (xtraStatus.featureEnabled == true) {
-        xtraStatus.xtraDataStatus = (XtraDataStatus) XTRA_DATA_STATUS_UNKNOWN;
         switch (pRespMsg->mXtraStatus.xtraDataStatus) {
         case ::XTRA_DATA_STATUS_NOT_AVAIL:
             xtraStatus.xtraDataStatus = XTRA_DATA_STATUS_NOT_AVAIL;
@@ -1716,6 +1715,9 @@ void LocationIntegrationApiImpl::processGetXtraStatusRespCb(
             break;
         case ::XTRA_DATA_STATUS_VALID:
             xtraStatus.xtraDataStatus = XTRA_DATA_STATUS_VALID;
+            break;
+        default:
+            xtraStatus.xtraDataStatus = XTRA_DATA_STATUS_UNKNOWN;
             break;
         }
 
