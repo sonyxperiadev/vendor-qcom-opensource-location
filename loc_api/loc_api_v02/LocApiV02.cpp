@@ -7463,7 +7463,9 @@ void LocApiV02 :: getEngineLockStateSync() {
             ret = QMILOCENGINELOCKSTATEENUMT_MIN_ENUM_VAL_V02;
         }
     }
-    setEngineLockState(convertEngineLockState(ret));
+    EngineLockState lockState = convertEngineLockState(ret);
+    setEngineLockState(lockState);
+    LocApiBase::reportEngineLockStatus(lockState);
 }
 
 LocationError
