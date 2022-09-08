@@ -114,8 +114,9 @@ int main(int argc, char *argv[])
 
     LOC_LOGd("starting loc_hal_daemon");
 
-#ifdef INIT_SYSTEM_SYSV
+#if defined(INIT_SYSTEM_SYSV) || defined(OPENWRT_BUILD)
     // set supplementary groups for sysvinit
+    // For openwrt, procd does not have support for supplementary groups. So set here.
     // For systemd, common supplementary groups are set via service files
     char groupNames[LOC_MAX_PARAM_NAME] = "gps radio diag powermgr locclient inet vnw";
 
@@ -142,7 +143,7 @@ int main(int argc, char *argv[])
 
     // check if this process started by root
     if (0 == getuid()) {
-#if defined(INIT_SYSTEM_SYSTEMD)
+#if defined(INIT_SYSTEM_SYSTEMD) || defined(OPENWRT_BUILD)
         // started as root.
         LOC_LOGE("Error !!! location_hal_daemon started as root");
         exit(1);
