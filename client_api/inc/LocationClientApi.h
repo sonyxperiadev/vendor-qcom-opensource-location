@@ -591,9 +591,11 @@ enum GnssLocationInfoFlagMask {
     /** GnssLocation has valid GnssLocation::protectCrossTrack.
      *  <br/> */
     GNSS_LOCATION_INFO_PROTECT_CROSS_TRACK_BIT          = (1ULL<<37),
-    /** GnssLocation has valid GnssLocation::sprotectVertical.
+    /** GnssLocation has valid GnssLocation::protectVertical.
      *  <br/> */
     GNSS_LOCATION_INFO_PROTECT_VERTICAL_BIT             = (1ULL<<38),
+    /** GnssLocation has valid GnssLocation::dgnssStationId. <br/> */
+    GNSS_LOCATION_INFO_DGNSS_STATION_ID_BIT             = (1ULL<<39),
 };
 
 /** Specify the reliability level of
@@ -1248,6 +1250,13 @@ struct GnssLocation : public Location {
      *  risk, in unit of meter. <br/>
      */
     float    protectVertical;
+    /**<   List of DGNSS station IDs providing corrections. <br/>
+       Range:   <br/>
+       - SBAS --  120 to 158 and 183 to 191. <br/>
+       - Monitoring station -- 1000-2023 (Station ID biased by 1000).<br/>
+       - Other values reserved. <br/>
+    */
+    std::vector<uint16_t> dgnssStationId;
 
     /* Default constructor to initalize GnssLocation structure */
     inline GnssLocation() :

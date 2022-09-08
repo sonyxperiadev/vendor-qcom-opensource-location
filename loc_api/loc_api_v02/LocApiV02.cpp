@@ -3282,9 +3282,21 @@ void LocApiV02 :: reportPosition (
                     location_report_ptr->dgnssDataAgeMsec;
         }
 
-        LOC_LOGd("Position elapsedRealtime: %" PRIi64 " uncertainty: %" PRIi64 "",
+        LOC_LOGv("Position elapsedRealtime: %" PRIi64 " uncertainty: %" PRIi64 "",
                location.gpsLocation.elapsedRealTime,
                location.gpsLocation.elapsedRealTimeUnc);
+
+        if (location_report_ptr->dgnssStationId_valid) {
+            locationExtended.flags |= GPS_LOCATION_EXTENDED_HAS_DGNSS_STATION_ID;
+            uint32_t cnt = location_report_ptr->dgnssStationId_len;
+            uint32_t i = 0;
+            for (i = 0; i < cnt && i < DGNSS_STATION_ID_MAX; i++) {
+                locationExtended.dgnssStationId[i] = location_report_ptr->dgnssStationId[i];
+            }
+            locationExtended.numOfDgnssStationId = i;
+        } else {
+            LOC_LOGv("no dgnss station id");
+        }
 
         LOC_LOGv("report position mask: 0x%" PRIx64 ", dgnss info: 0x%x %d %d %d %d,",
                  locationExtended.flags,
@@ -3921,6 +3933,11 @@ void  LocApiV02 :: reportSvPolynomial(const qmiLocEventGnssSvPolyIndMsgT_v02 *gn
         if (1 == gnss_sv_poly_ptr->bdsTgdB1c_valid) {
             svPolynomial.is_valid |= ULP_GNSS_SV_POLY_BIT_BDS_TGD_B1C;
             svPolynomial.bdsTgdB1c = gnss_sv_poly_ptr->bdsTgdB1c;
+        }
+
+        if (1 == gnss_sv_poly_ptr->bdsIscB1c_valid) {
+            svPolynomial.is_valid |= ULP_GNSS_SV_POLY_BIT_BDS_ISC_B1C;
+            svPolynomial.bdsIscB1c = gnss_sv_poly_ptr->bdsIscB1c;
         }
 
         if (1 == gnss_sv_poly_ptr->toc_valid) {
