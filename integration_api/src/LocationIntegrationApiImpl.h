@@ -206,7 +206,7 @@ private:
     void processHalReadyMsg();
 
     void addConfigReq(LocConfigTypeEnum configType);
-    void processQueuedReqs();
+    bool processQueuedReqs(); // return true indicates queue is note empty
     void flushConfigReqs();
     void processConfigRespCb(const LocAPIGenericRespMsg* pRespMsg);
     void processGetRobustLocationConfigRespCb(
