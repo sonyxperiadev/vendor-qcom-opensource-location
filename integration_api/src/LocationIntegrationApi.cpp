@@ -608,7 +608,8 @@ bool LocationIntegrationApi::setUserConsentForTerrestrialPositioning(bool userCo
     }
 }
 
-bool LocationIntegrationApi::configOutputNmeaTypes(NmeaTypesMask enabledNMEATypes) {
+bool LocationIntegrationApi::configOutputNmeaTypes(NmeaTypesMask enabledNMEATypes,
+                                                   GeodeticDatumType nmeaDatumType) {
     if (mApiImpl) {
         uint32_t halNmeaTypes = ::NMEA_TYPE_NONE;
         if (enabledNMEATypes & NMEA_TYPE_GGA) {
@@ -647,7 +648,13 @@ bool LocationIntegrationApi::configOutputNmeaTypes(NmeaTypesMask enabledNMEAType
         if (enabledNMEATypes & NMEA_TYPE_GIGSV) {
             halNmeaTypes |= ::NMEA_TYPE_GIGSV;
         }
-        return (mApiImpl->configOutputNmeaTypes((GnssNmeaTypesMask) halNmeaTypes) == 0);
+        GnssGeodeticDatumType halDatumType = ::GEODETIC_TYPE_WGS_84;
+        if (nmeaDatumType == GEODETIC_TYPE_PZ_90) {
+            halDatumType = ::GEODETIC_TYPE_PZ_90;
+        }
+        LOC_LOGd("datum type 0x%x %d", halNmeaTypes, halDatumType);
+        return (mApiImpl->configOutputNmeaTypes((GnssNmeaTypesMask) halNmeaTypes,
+                                                halDatumType) == 0);
     } else {
         LOC_LOGe ("NULL mApiImpl");
         return false;

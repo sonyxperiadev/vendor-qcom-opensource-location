@@ -1494,8 +1494,10 @@ void LocationApiService::configOutputNmeaTypes(const LocConfigOutputNmeaTypesReq
     }
     std::lock_guard<std::recursive_mutex> lock(mMutex);
 
-    LOC_LOGi(">-- client %s, mEnabledNmeaTypes 0x%x",  pMsg->mSocketName, pMsg->mEnabledNmeaTypes);
-    uint32_t sessionId = mLocationControlApi->configOutputNmeaTypes(pMsg->mEnabledNmeaTypes);
+    LOC_LOGi(">-- client %s, mEnabledNmeaTypes 0x%x, mNmeaDatumType %d",
+             pMsg->mSocketName, pMsg->mEnabledNmeaTypes, pMsg->mNmeaDatumType);
+    uint32_t sessionId = mLocationControlApi->configOutputNmeaTypes(pMsg->mEnabledNmeaTypes,
+                                                                    pMsg->mNmeaDatumType);
     addConfigRequestToMap(sessionId, pMsg);
 }
 
