@@ -289,6 +289,7 @@ LocationIntegrationApiImpl::LocationIntegrationApiImpl(LocIntegrationCbs& integr
 
     // read configuration file
     UTIL_READ_CONF(LOC_PATH_GPS_CONF, gConfigTable);
+    LOC_LOGd("sXtraTestEnabled=%u", sXtraTestEnabled);
 
     // get pid to generate sokect name
     uint32_t pid = (uint32_t)getpid();
@@ -430,7 +431,6 @@ void IpcListener::onReceive(const char* data, uint32_t length,
 
             ELocMsgID eLocMsgid = mApiImpl.mPbufMsgConv.getEnumForPBELocMsgID(pbLocApiMsg.msgid());
             string sockName = pbLocApiMsg.msocketname();
-            uint32_t msgVer = pbLocApiMsg.msgversion();
             uint32_t payloadSize = pbLocApiMsg.payloadsize();
             // pbLocApiMsg.payload() contains the payload data.
 
