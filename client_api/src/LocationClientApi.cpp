@@ -546,6 +546,8 @@ void LocationClientApi::addGeofences(std::vector<Geofence>& geofences,
     std::vector<Geofence> geofencesToAdd;
     for (int i = 0; i < geofences.size(); ++i) {
         if (!geofences[i].mGeofenceImpl) {
+            std::shared_ptr<GeofenceImpl> gfImpl(new GeofenceImpl(&geofences[i]));
+            gfImpl->bindGeofence(&geofences[i]);
             geofencesToAdd.emplace_back(geofences[i]);
         }
     }
