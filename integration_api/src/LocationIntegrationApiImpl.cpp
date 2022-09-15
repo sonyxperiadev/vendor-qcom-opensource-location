@@ -287,6 +287,9 @@ LocationIntegrationApiImpl::LocationIntegrationApiImpl(LocIntegrationCbs& integr
         return;
     }
 
+    // read configuration file
+    UTIL_READ_CONF(LOC_PATH_GPS_CONF, gConfigTable);
+
     // get pid to generate sokect name
     uint32_t pid = (uint32_t)getpid();
 
