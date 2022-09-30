@@ -724,6 +724,10 @@ locClientEventMaskType LocApiV02 :: adjustLocClientEventMask(locClientEventMaskT
         qmiMask = qmiMask & ~clearMask;
     }
 
+    //Enable feature status report for master client
+    if (isMaster()) {
+        qmiMask |= QMI_LOC_EVENT_MASK_FEATURE_STATUS_V02;
+    }
     // By default, every loc api client will need to registers for power state event
     qmiMask |= QMI_LOC_EVENT_MASK_PLATFORM_POWER_STATE_CHANGED_V02;
 
