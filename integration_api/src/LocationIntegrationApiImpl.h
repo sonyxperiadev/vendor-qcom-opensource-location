@@ -131,6 +131,7 @@ struct GtpUserConsentConfigInfo{
 struct NmeaConfigInfo{
     bool isValid;
     GnssNmeaTypesMask enabledNmeaTypes;
+    GnssGeodeticDatumType nmeaDatumType;
 };
 
 struct ProtoMsgInfo{
@@ -189,7 +190,8 @@ public:
 
     uint32_t setUserConsentForTerrestrialPositioning(bool userConsent);
 
-    uint32_t configOutputNmeaTypes(GnssNmeaTypesMask enabledNmeaTypes) override;
+    uint32_t configOutputNmeaTypes(GnssNmeaTypesMask enabledNmeaTypes,
+                                   GnssGeodeticDatumType nmeaDatumType) override;
 
     uint32_t configXtraParams(bool enable, const ::XtraConfigParams& configParams);
     uint32_t getXtraStatus();

@@ -1345,14 +1345,17 @@ struct LocConfigUserConsentTerrestrialPositioningReqMsg: LocAPIMsgHeader
 struct LocConfigOutputNmeaTypesReqMsg: LocAPIMsgHeader
 {
     GnssNmeaTypesMask mEnabledNmeaTypes;
+    GnssGeodeticDatumType mNmeaDatumType;
 
     inline LocConfigOutputNmeaTypesReqMsg(
             const char* name, GnssNmeaTypesMask enabledNmeaTypes,
+            GnssGeodeticDatumType nmeaDatumType,
             const LocationApiPbMsgConv *pbMsgConv) :
         LocAPIMsgHeader(name,
                         E_INTAPI_CONFIG_OUTPUT_NMEA_TYPES_MSG_ID,
                         pbMsgConv),
-        mEnabledNmeaTypes(enabledNmeaTypes) { }
+            mEnabledNmeaTypes(enabledNmeaTypes),
+            mNmeaDatumType(nmeaDatumType) { }
 
     LocConfigOutputNmeaTypesReqMsg(const char* name,
             const PBLocConfigOutputNmeaTypesReqMsg &pbMsg,

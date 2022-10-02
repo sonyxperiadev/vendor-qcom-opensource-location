@@ -1066,7 +1066,7 @@ struct Location {
 /** Specify latitude, longitude and altitude info of location.
  *  <br/>
  */
-typedef struct {
+struct LLAInfo {
     /**  Latitude, in unit of degrees, range [-90.0, 90.0]. <br/> */
     double latitude;
 
@@ -1081,7 +1081,7 @@ typedef struct {
     /** Method to print the struct to human readable form, for logging.
      *  <br/> */
     string toString() const;
-} LLAInfo;
+};
 
 /** Specify various status that contributes to the DR poisition
  *  engine. <br/> */
@@ -1928,9 +1928,9 @@ enum GeofenceBreachTypeMask {
     GEOFENCE_BREACH_ENTER_BIT     = (1<<0),
     /** Indicates that a client left the Geofence */
     GEOFENCE_BREACH_EXIT_BIT      = (1<<1),
-    /** Indicates that a client dwelled inside the Geofence */
+    /** Indicates that a client has dwelled inside the Geofence for a given period */
     GEOFENCE_BREACH_DWELL_IN_BIT  = (1<<2),
-    /** Indicates that a client dwelled outside the Geofence */
+    /** Indicates that a client has dwelled outside the Geofence for a given period */
     GEOFENCE_BREACH_DWELL_OUT_BIT = (1<<3),
 };
 
@@ -2086,7 +2086,7 @@ typedef std::function<void(
 
 /** @brief Used by geofence APIs
 
-    @param responses: include Geofence objects and correponding responses.
+    @param responses: include Geofence objects and their correponding responses.
 */
 class Geofence;
 typedef std::function<void(
@@ -2928,7 +2928,7 @@ public:
     */
 
     /* ================================== Geofence ================================== */
-    /** @brief Adds any number of geofences. The geofenceBreachCallback will
+    /** @brief Adds vector of geofences. The geofenceBreachCallback will
         deliver the status of each geofence according to the Geofence parameter for each.
 
         If this API is called when any previous
@@ -2941,41 +2941,56 @@ public:
         Geofence objects, Once addGeofences returns, each Geofence object in the vector would
         be the identifier throughout the remaining communication of that geofence.
         Such a Geofence object can be copied or cloned, but they would all reference
-        the same geofence.
+        the same geofence. Currently, at most 20 geofences are allowed to be added/removed within
+        a single request. But client can call add/removeGeofences multiple times to enable
+        more geofences. For other geofence APIs, the geofence must be copied/cloned from
+        the geofence object in the vector after addGeofences API calls.
+
         @param gfBreachCb
-        callback to receive geofences state change. addGeofences is no op if gfBreachCb is null
+        callback to receive geofences state change. mandatory, no op if gfBreachCb is null
         @param responseCallback
         callback to receive geofence ids and system responses; optional.
+        LCA will check if there is former geofence add request whose responseCallback
+        has not yet been invoked, then the latter add request will return
+        LOCATION_RESPONSE_REQUEST_ALREADY_IN_PROGRESS via responseCallback.
     */
     void addGeofences(std::vector<Geofence>& geofences, GeofenceBreachCb gfBreachCb,
                       CollectiveResponseCb responseCallback);
 
-    /** @brief Removes any number of geofences.
+    /** @brief Removes vector of geofences.
         @param geofences
         Geofence objects, must be originally added to the system. Otherwise it would be no op.
+        The geofences parameter must be copied/cloned from the geofences vector of addGeofences()
+        API which should get called beforehand.
     */
     void removeGeofences(std::vector<Geofence>& geofences);
 
-    /** @brief Modifies any number of geofences.
+    /** @brief Modifies vector of geofences.
         @param geofences
         Geofence objects, must be originally added to the system. Otherwise it would be no op.
         Modifiable fields include breachTypeMask, responsiveness and dwelltime.
         A geofence that has been added to the system may have these fields modified.
         But it is not going to take any effect until modifyGeofences is called with
         the changed geofence passed in.
+        The geofences parameter must be copied/cloned from the geofences vector of addGeofences()
+        API which should get called beforehand.
     */
     void modifyGeofences(std::vector<Geofence>& geofences);
 
-    /** @brief Pauses any number of geofences, which is similar to removeGeofences,
+    /** @brief Pauses vector of geofences, which is similar to removeGeofences,
         only that they can be resumed at any time.
         @param geofences
         Geofence objects, must be originally added to the system. Otherwise it would be no op.
+        The geofences parameter must be copied/cloned from the geofences vector of addGeofences()
+        API which should get called beforehand.
     */
     void pauseGeofences(std::vector<Geofence>& geofences);
 
-    /** @brief Resumes any number of geofences that are currently paused.
+    /** @brief Resumes vector of geofences that are currently paused.
         @param geofences
         Geofence objects, must be originally added to the system. Otherwise it would be no op.
+        The geofences parameter must be copied/cloned from the geofences vector of addGeofences()
+        API which should get called beforehand.
     */
     void resumeGeofences(std::vector<Geofence>& geofences);
 
@@ -3175,6 +3190,7 @@ class GeofenceImpl;
 class Geofence {
     friend class GeofenceImpl;
     friend class LocationClientApi;
+    friend class LocationClientApiImpl;
     std::shared_ptr<GeofenceImpl> mGeofenceImpl;
     double mLatitude;
     double mLongitude;
