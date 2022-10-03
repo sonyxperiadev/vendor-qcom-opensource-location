@@ -7728,6 +7728,22 @@ void LocApiV02 :: updateSystemPowerState(PowerStateType powerState){
     }));
 }
 
+void LocApiV02::updatePowerConnectState(bool connected)
+{
+    LOC_LOGd("power connected %d", connected);
+    sendMsg(new LocApiMsg([this, connected] () {
+    qmiLocSetExternalPowerConfigReqMsgT_v02 chargerStatus = {};
+
+    if (connected) {
+        chargerStatus.externalPowerState = eQMI_LOC_EXTERNAL_POWER_CONNECTED_V02;
+    } else {
+        chargerStatus.externalPowerState = eQMI_LOC_EXTERNAL_POWER_NOT_CONNECTED_V02;
+    }
+
+    LOC_SEND_SYNC_REQ(SetExternalPowerConfig, SET_EXTERNAL_POWER_CONFIG, chargerStatus);
+    }));
+}
+
 void LocApiV02::reportLatencyInfo(const qmiLocLatencyInformationIndMsgT_v02* pLocLatencyInfo)
 {
     GnssLatencyInfo gnssLatencyInfo = {};

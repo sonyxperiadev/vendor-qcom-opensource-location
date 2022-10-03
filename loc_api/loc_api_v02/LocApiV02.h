@@ -564,6 +564,8 @@ public:
                                                      LocApiResponse *adapterResponse=nullptr);
   virtual void getGnssEnergyConsumed();
   virtual void updateSystemPowerState(PowerStateType powerState);
+  virtual void updatePowerConnectState(bool connected);
+
   virtual void requestForAidingData(GnssAidingDataSvMask svDataMask);
   virtual void configRobustLocation(bool enable, bool enableForE911,
                                     LocApiResponse *adapterResponse=nullptr);
