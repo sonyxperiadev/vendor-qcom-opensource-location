@@ -724,6 +724,10 @@ locClientEventMaskType LocApiV02 :: adjustLocClientEventMask(locClientEventMaskT
         qmiMask = qmiMask & ~clearMask;
     }
 
+    //Enable feature status report for master client
+    if (isMaster()) {
+        qmiMask |= QMI_LOC_EVENT_MASK_FEATURE_STATUS_V02;
+    }
     // By default, every loc api client will need to registers for power state event
     qmiMask |= QMI_LOC_EVENT_MASK_PLATFORM_POWER_STATE_CHANGED_V02;
 
@@ -5013,9 +5017,6 @@ void LocApiV02 :: reportNiRequest(
 
         // ES SUPL
         if (1 == ni_req_ptr->suplEmergencyNotification_valid) {
-            const qmiLocEmergencyNotificationStructT_v02 *supl_emergency_request =
-                &ni_req_ptr->suplEmergencyNotification;
-
             notif.type = GNSS_NI_TYPE_EMERGENCY_SUPL;
         }
     } //ni_req_ptr->NiSuplInd_valid == 1
@@ -5773,9 +5774,6 @@ void LocApiV02::convertGnssMeasurementsHeader(const Gnss_LocSvSystemEnumType loc
 
     // clock frequency
     if (1 == gnss_measurement_info.rcvrClockFrequencyInfo_valid) {
-        const qmiLocRcvrClockFrequencyInfoStructT_v02* rcvClockFreqInfo =
-            &gnss_measurement_info.rcvrClockFrequencyInfo;
-
         svMeasSetHead.clockFreq.size = sizeof(Gnss_LocRcvrClockFrequencyInfoStructType);
         svMeasSetHead.clockFreq.clockDrift =
             gnss_measurement_info.rcvrClockFrequencyInfo.clockDrift;
@@ -5792,10 +5790,6 @@ void LocApiV02::convertGnssMeasurementsHeader(const Gnss_LocSvSystemEnumType loc
 
     if ((1 == gnss_measurement_info.leapSecondInfo_valid) &&
         (0 == gnss_measurement_info.leapSecondInfo.leapSecUnc)) {
-
-        qmiLocLeapSecondInfoStructT_v02* leapSecond =
-            (qmiLocLeapSecondInfoStructT_v02*)&gnss_measurement_info.leapSecondInfo;
-
         svMeasSetHead.leapSec.size = sizeof(Gnss_LeapSecondInfoStructType);
         svMeasSetHead.leapSec.leapSec = gnss_measurement_info.leapSecondInfo.leapSec;
         svMeasSetHead.leapSec.leapSecUnc = gnss_measurement_info.leapSecondInfo.leapSecUnc;
@@ -6305,6 +6299,7 @@ void LocApiV02 :: reportDcMessage(const qmiLocEventDcReportIndMsgT_v02* pDcRepor
             break;
         case eQMI_LOC_QZSS_NON_JMA_DISASTER_PREVENTION_INFO_V02:
             dcReportInfo.dcReportType = QZSS_NON_JMA_DISASTER_PREVENTION_INFO;
+            break;
         default:
             LOC_LOGe("unknown qmi dc report type: %d", pDcReportIndMsg->msgType);
             return;
@@ -6622,8 +6617,6 @@ bool LocApiV02 :: convertGnssMeasurements(
         if (bIsL5orE5) {
             measurementData.stateMask |= GNSS_MEASUREMENTS_STATE_2ND_CODE_LOCK_BIT;
         }
-
-        const qmiLocSVTimeSpeedStructT_v02 &svTimeSpeed = gnss_measurement_info.svTimeSpeed;
         double svTimeNs = fmod(((double)gnss_measurement_info.svTimeSpeed.svTimeMs +
                   (double)gnss_measurement_info.svTimeSpeed.svTimeSubMs), 20) * NSEC_IN_MSEC;
         measurementData.receivedSvTimeNs = (int64_t)svTimeNs;
@@ -7735,6 +7728,22 @@ void LocApiV02 :: updateSystemPowerState(PowerStateType powerState){
     }));
 }
 
+void LocApiV02::updatePowerConnectState(bool connected)
+{
+    LOC_LOGd("power connected %d", connected);
+    sendMsg(new LocApiMsg([this, connected] () {
+    qmiLocSetExternalPowerConfigReqMsgT_v02 chargerStatus = {};
+
+    if (connected) {
+        chargerStatus.externalPowerState = eQMI_LOC_EXTERNAL_POWER_CONNECTED_V02;
+    } else {
+        chargerStatus.externalPowerState = eQMI_LOC_EXTERNAL_POWER_NOT_CONNECTED_V02;
+    }
+
+    LOC_SEND_SYNC_REQ(SetExternalPowerConfig, SET_EXTERNAL_POWER_CONFIG, chargerStatus);
+    }));
+}
+
 void LocApiV02::reportLatencyInfo(const qmiLocLatencyInformationIndMsgT_v02* pLocLatencyInfo)
 {
     GnssLatencyInfo gnssLatencyInfo = {};
@@ -8220,7 +8229,6 @@ void LocApiV02 :: getRobustLocationConfig(uint32_t sessionId, LocApiResponse *ad
 {
     sendMsg(new LocApiMsg([this, sessionId, adapterResponse] () {
 
-    int ret=0;
     LocationError err = LOCATION_ERROR_SUCCESS;
     locClientStatusEnumType status = eLOC_CLIENT_FAILURE_GENERAL;
     locClientReqUnionType req_union = {};
@@ -10628,8 +10636,6 @@ void LocApiV02::getConstellationMultiBandConfig(
     locClientStatusEnumType status = eLOC_CLIENT_FAILURE_GENERAL;
     locClientReqUnionType req_union = {};
 
-    qmiLocGetConstellationConfigIndMsgT_v02 getConstellationConfigInd = {};
-    qmiLocGetBlacklistSvIndMsgT_v02 getBlacklistSvConfigInd = {};
     qmiLocGetMultibandConfigIndMsgT_v02 getMultibandConfigInd = {};
     GnssConfig gnssConfig = {};
 
@@ -10705,7 +10711,6 @@ void LocApiV02::convertQmiBlacklistedSvConfigToGnssConfig(
         const qmiLocGetBlacklistSvIndMsgT_v02& qmiBlacklistConfig,
         GnssSvIdConfig& gnssBlacklistConfig) {
 
-    GnssSvIdConfig svConfig = {};
     gnssBlacklistConfig.size = sizeof(gnssBlacklistConfig);
 
     if (qmiBlacklistConfig.glo_persist_blacklist_sv_valid) {
@@ -10788,7 +10793,7 @@ void LocApiV02::configPrecisePositioning(uint32_t featureId, bool enable,
                                 QMI_LOC_SET_SDK_FEATURE_CONFIG_IND_V02,
                                 &ind);
         LOC_LOGd("configPrecisePositioning Ind. featureStatusReport_valid %d, "
-                "featureStatusReport %d", ind.featureStatusReport_valid,
+                "featureStatusReport %" PRIx64"", ind.featureStatusReport_valid,
                 ind.featureStatusReport);
         if (status != eLOC_CLIENT_SUCCESS || ind.status != eQMI_LOC_SUCCESS_V02) {
             LOC_LOGe("failed. status: %s, ind status:%s\n",
@@ -11064,8 +11069,6 @@ LocApiV02::stopBatching(uint32_t sessionId, LocApiResponse* adapterResponse)
     LOC_LOGD("%s] id %u", __func__, sessionId);
     LocationError err = LOCATION_ERROR_SUCCESS;
 
-    locClientStatusEnumType status;
-
     qmiLocStopBatchingReqMsgT_v02 stopBatchingReq;
     memset(&stopBatchingReq, 0, sizeof(stopBatchingReq));
 
@@ -11191,8 +11194,6 @@ LocApiV02::stopOutdoorTripBatchingSync(bool deallocBatchBuffer)
 {
     LOC_LOGD("%s] dellocBatchBuffer : %d", __func__, deallocBatchBuffer);
     LocationError err = LOCATION_ERROR_SUCCESS;
-
-    locClientStatusEnumType status;
 
     qmiLocStopBatchingReqMsgT_v02 stopBatchingReq;
     memset(&stopBatchingReq, 0, sizeof(stopBatchingReq));
@@ -11515,9 +11516,8 @@ LocApiV02::readModemLocations(Location* pLocationPiece,
 LocationError LocApiV02::queryAccumulatedTripDistanceSync(uint32_t &accumulatedTripDistance,
         uint32_t &numOfBatchedPositions)
 {
-    locClientStatusEnumType st = eLOC_CLIENT_SUCCESS;
     locClientReqUnionType req_union;
-    locClientStatusEnumType status;
+    locClientStatusEnumType status = eLOC_CLIENT_SUCCESS;
 
     qmiLocQueryOTBAccumulatedDistanceReqMsgT_v02 accumulated_distance_req;
     qmiLocQueryOTBAccumulatedDistanceIndMsgT_v02 accumulated_distance_ind;

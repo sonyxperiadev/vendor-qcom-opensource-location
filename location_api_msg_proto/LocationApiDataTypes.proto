@@ -79,8 +79,8 @@ enum LocationApiDataTypesVersion {
     LOCAPI_DATA_TYPES_VER_MAJOR = 1;
     // Minor - New features / API addition, new message/elemtent addition.
     // Bump the last byte of version i.e. x.2 to x.3
-    // Minor version 24: Add Geodetic datum type
-    LOCAPI_DATA_TYPES_VER_MINOR = 24;
+    // Minor version 25: Add LOCATION_TECHNOLOGY_PROPAGATED_BIT
+    LOCAPI_DATA_TYPES_VER_MINOR = 25;
 }
 
 // ============================================================================
@@ -571,6 +571,8 @@ enum PBLocationTechnologyMask {
     PB_LOCATION_TECHNOLOGY_VEH_BIT      = 0x000000200;
     // Visual data
     PB_LOCATION_TECHNOLOGY_VIS_BIT      = 0x000000400;
+    // location was calculated using propagation
+    PB_LOCATION_TECHNOLOGY_PROPAGATED_BIT = 0x000000800;
 }
 
 enum PBLocationCapabilitiesMask {

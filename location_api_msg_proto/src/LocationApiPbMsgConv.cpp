@@ -5243,7 +5243,8 @@ int LocationApiPbMsgConv::pbConvertToGnssLocInfoNotif(
     }
     gnssLocInfoNotif.numOfDgnssStationId = i;
 
-    LOC_LOGv("LocApiPB: pbGnssLocInfoNotif -GLocInfoFlgMask:%u, pdop:%f, hdop:%f, vdop:%f",
+    LOC_LOGv("LocApiPB: pbGnssLocInfoNotif -GLocInfoFlgMask:0x%" PRIx64 ", pdop:%f, "
+            "hdop:%f, vdop:%f",
             gnssLocInfoNotif.flags, gnssLocInfoNotif.pdop, gnssLocInfoNotif.hdop,
             gnssLocInfoNotif.vdop);
     LOC_LOGv("HorReliab:%d, VerReliab:%d, HorUncElps-SemiMajor:%f SemiMinor:%f, NumSvUsedInPos:%u",
