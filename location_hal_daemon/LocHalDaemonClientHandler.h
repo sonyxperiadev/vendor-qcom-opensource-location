@@ -138,9 +138,7 @@ public:
     // related to location session need to be unsubscribed
     void unsubscribeLocationSessionCb();
     uint32_t startTracking(LocationOptions & locOptions);
-    void stopTracking();
-    uint32_t resumeTracking(); // resume tracking due to power resume
-    void pauseTracking();      // stop tracking due to power suspend
+    void stopTracking(bool clientExpectingResp);
     void updateTrackingOptions(LocationOptions & locOptions);
     void onGnssEnergyConsumedInfoAvailable(LocAPIGnssEnergyConsumedIndMsg &msg);
     void onControlResponseCb(LocationError err, ELocMsgID msgId);
