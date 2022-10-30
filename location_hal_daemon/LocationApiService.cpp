@@ -1714,10 +1714,10 @@ void LocationApiService::onGtpWwanTrackingCallback(Location location) {
 }
 
 // LCA client will get intermediate fixes as well
-void LocationApiService::onGnssLocationInfoCb(GnssLocationInfoNotification notification) {
+void LocationApiService::onGnssLocationInfoCb(const GnssLocationInfoNotification& notification) {
     std::lock_guard<std::recursive_mutex> lock(mMutex);
 
-    Location &location = notification.location;
+    const Location &location = notification.location;
     mSingleFixLastLocation = location;
     LOC_LOGd("--< onGnssLocationInfoCb loc flags=0x%x, accracy %f, request cnt %d",
              location.flags, location.accuracy, mSingleFixReqMap.size());
@@ -1960,7 +1960,7 @@ void LocationApiService::getSinglePos(LocAPIGetSinglePosReqMsg* pReqMsg) {
             onCollectiveResponseCallback(count, errs, ids);
         };
         mSingleFixLocationApiCallbacks.gnssLocationInfoCb =
-                [this](GnssLocationInfoNotification notification) {
+                [this](const GnssLocationInfoNotification& notification) {
             onGnssLocationInfoCb(notification);
         };
 

@@ -101,7 +101,7 @@ void LocHalDaemonClientHandler::updateSubscription(uint32_t mask) {
     // update optional callback - following four callbacks can be controlable
     // tracking
     if (mSubscriptionMask & E_LOC_CB_TRACKING_BIT) {
-        mCallbacks.trackingCb = [this](Location location) {
+        mCallbacks.trackingCb = [this](const Location& location) {
             onTrackingCb(location);
         };
     } else {
@@ -128,7 +128,8 @@ void LocHalDaemonClientHandler::updateSubscription(uint32_t mask) {
     }
     //Geofence Breach
     if (mSubscriptionMask & E_LOC_CB_GEOFENCE_BREACH_BIT) {
-        mCallbacks.geofenceBreachCb = [this](GeofenceBreachNotification geofenceBreachNotif) {
+        mCallbacks.geofenceBreachCb = [this](
+                const GeofenceBreachNotification& geofenceBreachNotif) {
             onGeofenceBreachCb(geofenceBreachNotif);
         };
     } else {
@@ -137,7 +138,7 @@ void LocHalDaemonClientHandler::updateSubscription(uint32_t mask) {
 
     // location info
     if (mSubscriptionMask & E_LOC_CB_GNSS_LOCATION_INFO_BIT) {
-        mCallbacks.gnssLocationInfoCb = [this](GnssLocationInfoNotification notification) {
+        mCallbacks.gnssLocationInfoCb = [this](const GnssLocationInfoNotification& notification) {
             onGnssLocationInfoCb(notification);
         };
     } else {
@@ -156,7 +157,7 @@ void LocHalDaemonClientHandler::updateSubscription(uint32_t mask) {
 
     // sv info
     if (mSubscriptionMask & E_LOC_CB_GNSS_SV_BIT) {
-        mCallbacks.gnssSvCb = [this](GnssSvNotification notification) {
+        mCallbacks.gnssSvCb = [this](const GnssSvNotification &notification) {
             onGnssSvCb(notification);
         };
     } else {
@@ -174,7 +175,7 @@ void LocHalDaemonClientHandler::updateSubscription(uint32_t mask) {
 
     // data
     if (mSubscriptionMask & E_LOC_CB_GNSS_DATA_BIT) {
-        mCallbacks.gnssDataCb = [this](GnssDataNotification notification) {
+        mCallbacks.gnssDataCb = [this](const GnssDataNotification& notification) {
             onGnssDataCb(notification);
         };
     } else {
@@ -183,7 +184,7 @@ void LocHalDaemonClientHandler::updateSubscription(uint32_t mask) {
 
     // measurements
     if (mSubscriptionMask & E_LOC_CB_GNSS_MEAS_BIT) {
-        mCallbacks.gnssMeasurementsCb = [this](GnssMeasurementsNotification notification) {
+        mCallbacks.gnssMeasurementsCb = [this](const GnssMeasurementsNotification &notification) {
             onGnssMeasurementsCb(notification);
         };
     } else {
@@ -192,7 +193,8 @@ void LocHalDaemonClientHandler::updateSubscription(uint32_t mask) {
 
     // nHz measurements
     if (mSubscriptionMask & E_LOC_CB_GNSS_NHZ_MEAS_BIT) {
-        mCallbacks.gnssNHzMeasurementsCb = [this](GnssMeasurementsNotification notification) {
+        mCallbacks.gnssNHzMeasurementsCb = [this](
+                const GnssMeasurementsNotification &notification) {
             onGnssMeasurementsCb(notification);
         };
     } else {
@@ -812,7 +814,7 @@ void LocHalDaemonClientHandler::onCapabilitiesCallback(LocationCapabilitiesMask 
     }
 }
 
-void LocHalDaemonClientHandler::onTrackingCb(Location location) {
+void LocHalDaemonClientHandler::onTrackingCb(const Location& location) {
 
     std::lock_guard<std::recursive_mutex> lock(LocationApiService::mMutex);
     LOC_LOGd("--< onTrackingCb, client name %s, ipc valid %d, sub mask 0x%x", mName.c_str(),
@@ -895,7 +897,8 @@ void LocHalDaemonClientHandler::onBatchingStatusCb(BatchingStatusInfo batchingSt
     }
 }
 
-void LocHalDaemonClientHandler::onGeofenceBreachCb(GeofenceBreachNotification gfBreachNotif) {
+void LocHalDaemonClientHandler::onGeofenceBreachCb(
+        const GeofenceBreachNotification& gfBreachNotif) {
     LOC_LOGd("--< onGeofenceBreachCallback");
     std::lock_guard<std::recursive_mutex> lock(LocationApiService::mMutex);
 
@@ -934,7 +937,8 @@ void LocHalDaemonClientHandler::onGeofenceBreachCb(GeofenceBreachNotification gf
     }
 }
 
-void LocHalDaemonClientHandler::onGnssLocationInfoCb(GnssLocationInfoNotification notification) {
+void LocHalDaemonClientHandler::onGnssLocationInfoCb(
+        const GnssLocationInfoNotification& notification) {
 
     std::lock_guard<std::recursive_mutex> lock(LocationApiService::mMutex);
     LOC_LOGd("--< onGnssLocationInfo, client name %s, ipc valid %d, sub mask 0x%x", mName.c_str(),
@@ -1013,7 +1017,7 @@ void LocHalDaemonClientHandler::onGnssNiCb(uint32_t id, GnssNiNotification gnssN
     LOC_LOGd("--< onGnssNiCb");
 }
 
-void LocHalDaemonClientHandler::onGnssSvCb(GnssSvNotification notification) {
+void LocHalDaemonClientHandler::onGnssSvCb(const GnssSvNotification &notification) {
     std::lock_guard<std::recursive_mutex> lock(LocationApiService::mMutex);
     LOC_LOGd("--< onGnssSvCb, client name %s, ipc valid %d, sub mask 0x%x",
              mName.c_str(), (nullptr != mIpcSender), mSubscriptionMask);
@@ -1069,7 +1073,7 @@ void LocHalDaemonClientHandler::onGnssNmeaCb(GnssNmeaNotification notification) 
     }
 }
 
-void LocHalDaemonClientHandler::onGnssDataCb(GnssDataNotification notification) {
+void LocHalDaemonClientHandler::onGnssDataCb(const GnssDataNotification& notification) {
 
     std::lock_guard<std::recursive_mutex> lock(LocationApiService::mMutex);
     LOC_LOGd("--< onGnssDataCb, client name %s, ipc valid %d, sub mask 0x%x",
@@ -1104,7 +1108,8 @@ void LocHalDaemonClientHandler::onGnssDataCb(GnssDataNotification notification) 
     }
 }
 
-void LocHalDaemonClientHandler::onGnssMeasurementsCb(GnssMeasurementsNotification notification) {
+void LocHalDaemonClientHandler::onGnssMeasurementsCb(
+        const GnssMeasurementsNotification &notification) {
     std::lock_guard<std::recursive_mutex> lock(LocationApiService::mMutex);
     LOC_LOGd("--< onGnssMeasurementsCb, client name %s, ipc valid %d, sub mask 0x%x",
              mName.c_str(), (nullptr != mIpcSender), mSubscriptionMask);
