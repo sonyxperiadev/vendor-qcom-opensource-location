@@ -252,44 +252,16 @@ uint32_t LocHalDaemonClientHandler::startTracking(LocationOptions & locOptions) 
     return mSessionId;
 }
 
-void LocHalDaemonClientHandler::stopTracking() {
+void LocHalDaemonClientHandler::stopTracking(bool clientExpectingResp) {
     if (mSessionId != 0 && mLocationApi) {
         mLocationApi->stopTracking(mSessionId);
         mSessionId = 0;
-        mPendingMessages.push(E_LOCAPI_STOP_TRACKING_MSG_ID);
-    }
-
-    mTracking = false;
-}
-
-uint32_t LocHalDaemonClientHandler::resumeTracking() {
-    LOC_LOGd("resume session for client %s, mtracking %d, msession id %d"
-             "distance %d, internal %d, req mask %x",
-             mName.c_str(), mTracking, mSessionId, mOptions.minDistance,
-             mOptions.minInterval,
-             mOptions.locReqEngTypeMask);
-
-    if (mTracking == true) {
-        if (mSessionId == 0 && mLocationApi) {
-            mSessionId = mLocationApi->startTracking(mOptions);
-            mPendingMessages.push(E_LOCAPI_START_TRACKING_MSG_ID);
-        } else {
-            LOC_LOGe("mSession id is %d, or mLocation api is null", mSessionId);
-        }
-    }
-    return mSessionId;
-}
-
-void LocHalDaemonClientHandler::pauseTracking() {
-    LOC_LOGd("pause session for client %s, mtracking %d, msession id %d",
-            mName.c_str(), mTracking, mSessionId);
-    if (mTracking == true) {
-        if (mSessionId != 0 && mLocationApi) {
-            mLocationApi->stopTracking(mSessionId);
-            mSessionId = 0;
+        if (clientExpectingResp) {
             mPendingMessages.push(E_LOCAPI_STOP_TRACKING_MSG_ID);
         }
     }
+
+    mTracking = false;
 }
 
 void LocHalDaemonClientHandler::unsubscribeLocationSessionCb() {

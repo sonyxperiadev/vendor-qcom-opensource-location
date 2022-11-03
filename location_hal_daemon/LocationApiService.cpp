@@ -882,7 +882,7 @@ void LocationApiService::stopTracking(LocAPIStopTrackingReqMsg *pMsg) {
     if (pMsg->clearSubscriptions) {
         pClient->unsubscribeLocationSessionCb();
     }
-    pClient->stopTracking();
+    pClient->stopTracking(!(pMsg->clearSubscriptions));
     LOC_LOGi(">-- stopping session");
 }
 
