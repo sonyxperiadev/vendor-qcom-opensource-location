@@ -72,12 +72,7 @@ IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <loc_api_v02_client.h>
 #include <vector>
 #include <functional>
-#ifdef NO_UNORDERED_SET_OR_MAP
-    #include <map>
-    #define unordered_map map
-#else
-    #include <unordered_map>
-#endif
+#include <unordered_map>
 
 #define LOC_SEND_SYNC_REQ(NAME, ID, REQ)  \
     int rv = true; \

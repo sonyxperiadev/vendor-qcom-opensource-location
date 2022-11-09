@@ -69,13 +69,7 @@ IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <mutex>
 #include <log_util.h>
 #include <loc_pla.h>
-
-#ifdef NO_UNORDERED_SET_OR_MAP
-    #include <map>
-    #define unordered_map map
-#else
-    #include <unordered_map>
-#endif
+#include <unordered_map>
 
 #include <ILocationAPI.h>
 #include <LocIpc.h>

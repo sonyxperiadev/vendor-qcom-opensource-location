@@ -80,13 +80,7 @@ IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <LocationApiMsg.h>
 
 #include <LocHalDaemonClientHandler.h>
-
-#ifdef NO_UNORDERED_SET_OR_MAP
-    #include <map>
-    #define unordered_map map
-#else
-    #include <unordered_map>
-#endif
+#include <unordered_map>
 
 #undef LOG_TAG
 #define LOG_TAG "LocSvc_HalDaemon"

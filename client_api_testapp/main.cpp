@@ -79,13 +79,7 @@ IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <loc_cfg.h>
 #include <loc_misc_utils.h>
 #include <thread>
-
-#ifdef NO_UNORDERED_SET_OR_MAP
-    #include <map>
-    #define unordered_map map
-#else
-    #include <unordered_map>
-#endif
+#include <unordered_map>
 
 #include <LocationClientApi.h>
 #include <LocationIntegrationApi.h>
