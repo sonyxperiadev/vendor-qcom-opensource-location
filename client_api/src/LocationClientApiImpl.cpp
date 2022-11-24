@@ -77,10 +77,12 @@ IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <loc_misc_utils.h>
 
 static uint32_t gDebug = 0;
+static uint32_t gSleepTime = 800000;
 
 static const loc_param_s_type gConfigTable[] =
 {
-    {"DEBUG_LEVEL", &gDebug, NULL, 'n'}
+    {"DEBUG_LEVEL", &gDebug, NULL, 'n'},
+    {"QRTRWATCHER_DELAY_MICROSECOND", &gSleepTime, NULL, 'n'}
 };
 
 namespace location_client {
@@ -1281,7 +1283,7 @@ public:
                 if (LocIpcQrtrWatcher::ServiceStatus::UP == mStatus) {
                     auto sender = mWatcher.mIpcSender.lock();
                     if (nullptr != sender && sender->copyDestAddrFrom(mRefSender)) {
-                        sleep(2);
+                        usleep(gSleepTime);
                         auto listener = mWatcher.mIpcListener.lock();
                         if (nullptr != listener) {
                             LocAPIHalReadyIndMsg msg(SERVICE_NAME, &mWatcher.mPbufMsgConv);
