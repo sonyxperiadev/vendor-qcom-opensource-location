@@ -10487,6 +10487,10 @@ LocApiV02::startTimeBasedTracking(const TrackingOptions& options, LocApiResponse
         mMeasElapsedRealTimeCal.reset();
     }
 
+    // BOOT KPI marker, print only once for a session
+    if (false == mInSession) {
+        loc_boot_kpi_marker("L - LocApiV02 startFix, tbf %d", options.minInterval);
+    }
     mInSession = true;
     mMeasurementsStarted = true;
     registerEventMask();
