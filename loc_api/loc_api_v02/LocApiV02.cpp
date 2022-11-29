@@ -3318,11 +3318,25 @@ void LocApiV02 :: reportPosition (
             locationExtended.systemTickUnc = location_report_ptr->systemTickUnc;
         }
 
+        loc_sess_status sessStatus =
+                (location_report_ptr->sessionStatus == eQMI_LOC_SESS_STATUS_IN_PROGRESS_V02) ?
+                LOC_SESS_INTERMEDIATE : LOC_SESS_SUCCESS;
+
+        // if for some reason, modem did not set valid lat/lon/accuracy,
+        // mark session status as failure
+        if ((location.gpsLocation.flags & LOC_GPS_LOCATION_HAS_LAT_LONG) == 0 ||
+                (location.gpsLocation.flags & LOC_GPS_LOCATION_HAS_ACCURACY) == 0 ||
+                (location.gpsLocation.accuracy == 0.0f)) {
+            LOC_LOGe("fix of sess status %d but with invalid info, valid flags 0x%x, "
+                     "lat: %f, lon: %f, accuracy %f",
+                     sessStatus, location.gpsLocation.flags, location.gpsLocation.latitude,
+                     location.gpsLocation.longitude, location.gpsLocation.accuracy);
+            sessStatus = LOC_SESS_FAILURE;
+        }
+
         LocApiBase::reportPosition(location,
                                    locationExtended,
-                                   (location_report_ptr->sessionStatus ==
-                                    eQMI_LOC_SESS_STATUS_IN_PROGRESS_V02 ?
-                                    LOC_SESS_INTERMEDIATE : LOC_SESS_SUCCESS),
+                                   sessStatus,
                                    locationExtended.tech_mask, &dataNotify, msInWeek);
     }
     else
