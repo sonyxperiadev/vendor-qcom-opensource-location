@@ -138,9 +138,7 @@ public:
     // related to location session need to be unsubscribed
     void unsubscribeLocationSessionCb();
     uint32_t startTracking(LocationOptions & locOptions);
-    void stopTracking();
-    uint32_t resumeTracking(); // resume tracking due to power resume
-    void pauseTracking();      // stop tracking due to power suspend
+    void stopTracking(bool clientExpectingResp);
     void updateTrackingOptions(LocationOptions & locOptions);
     void onGnssEnergyConsumedInfoAvailable(LocAPIGnssEnergyConsumedIndMsg &msg);
     void onControlResponseCb(LocationError err, ELocMsgID msgId);
@@ -200,19 +198,19 @@ private:
     void onResponseCb(LocationError err, uint32_t id);
     void onCollectiveResponseCallback(size_t count, LocationError *errs, uint32_t *ids);
 
-    void onTrackingCb(Location location);
+    void onTrackingCb(const Location& location);
     void onBatchingCb(size_t count, Location* location, BatchingOptions batchOptions);
     void onBatchingStatusCb(BatchingStatusInfo batchingStatus,
             std::list<uint32_t>& listOfCompletedTrips);
-    void onGnssLocationInfoCb(GnssLocationInfoNotification gnssLocationInfoNotification);
-    void onGeofenceBreachCb(GeofenceBreachNotification geofenceBreachNotification);
+    void onGnssLocationInfoCb(const GnssLocationInfoNotification& gnssLocationInfoNotification);
+    void onGeofenceBreachCb(const GeofenceBreachNotification& geofenceBreachNotification);
     void onEngLocationsInfoCb(uint32_t count,
                               GnssLocationInfoNotification* engLocationsInfoNotification);
     void onGnssNiCb(uint32_t id, GnssNiNotification gnssNiNotification);
-    void onGnssSvCb(GnssSvNotification gnssSvNotification);
+    void onGnssSvCb(const GnssSvNotification &gnssSvNotification);
     void onGnssNmeaCb(GnssNmeaNotification);
-    void onGnssDataCb(GnssDataNotification gnssDataNotification);
-    void onGnssMeasurementsCb(GnssMeasurementsNotification gnssMeasurementsNotification);
+    void onGnssDataCb(const GnssDataNotification& gnssDataNotification);
+    void onGnssMeasurementsCb(const GnssMeasurementsNotification &gnssMeasurementsNotification);
     void onLocationSystemInfoCb(LocationSystemInfo systemInfo);
     void onDcReportCb(const GnssDcReportInfo& dcReportInfo);
     void onLocationApiDestroyCompleteCb();

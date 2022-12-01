@@ -203,14 +203,15 @@ void TrackingSessCbHandler::initializeCommonCbs(LocationClientApiImpl *pClientAp
     }
     if (gnssDataCallback) {
         mCallbackOptions.gnssDataCb =
-                [pClientApiImpl, gnssDataCallback] (::GnssDataNotification n) {
+                [pClientApiImpl, gnssDataCallback] (const ::GnssDataNotification& n) {
             GnssData gnssData = LocationClientApiImpl::parseGnssData(n);
             gnssDataCallback(gnssData);
        };
     }
     if (gnssMeasurementsCallback) {
         mCallbackOptions.gnssMeasurementsCb =
-                [pClientApiImpl, gnssMeasurementsCallback](::GnssMeasurementsNotification n) {
+                [pClientApiImpl, gnssMeasurementsCallback](
+                    const ::GnssMeasurementsNotification &n) {
             GnssMeasurements gnssMeasurements =
                         LocationClientApiImpl::parseGnssMeasurements(n);
             gnssMeasurementsCallback(gnssMeasurements);
@@ -223,7 +224,7 @@ void TrackingSessCbHandler::initializeCommonCbs(LocationClientApiImpl *pClientAp
         } else {
             mCallbackOptions.gnssNHzMeasurementsCb =
                     [pClientApiImpl, gnssNHzMeasurementsCallback](
-                    ::GnssMeasurementsNotification n) {
+                    const ::GnssMeasurementsNotification &n) {
                 GnssMeasurements gnssMeasurements =
                         LocationClientApiImpl::parseGnssMeasurements(n);
                 gnssNHzMeasurementsCallback(gnssMeasurements);
@@ -293,7 +294,7 @@ bool LocationClientApi::startPositionSession(
         };
     }
 
-    callbacksOption.trackingCb = [this, locationCallback](::Location loc) {
+    callbacksOption.trackingCb = [this, locationCallback](const ::Location& loc) {
         Location location = LocationClientApiImpl::parseLocation(loc);
         locationCallback(location);
         mApiImpl->logLocation(location, LOC_REPORT_TRIGGER_SIMPLE_TRACKING_SESSION);
@@ -527,7 +528,7 @@ void LocationClientApi::addGeofences(std::vector<Geofence>& geofences,
     }
 
     callbacksOption.geofenceBreachCb =
-            [this, gfBreachCb](GeofenceBreachNotification geofenceBreachNotification) {
+            [this, gfBreachCb](const GeofenceBreachNotification& geofenceBreachNotification) {
         std::vector<Geofence> geofences;
         int gfBreachCnt = geofenceBreachNotification.count;
         for (int i=0; i < gfBreachCnt; i++) {

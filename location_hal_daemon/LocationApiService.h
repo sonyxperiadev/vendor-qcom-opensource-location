@@ -282,7 +282,7 @@ private:
     void onResponseCb(LocationError err, uint32_t id);
     void onCollectiveResponseCallback(size_t count, LocationError *errs, uint32_t *ids);
     void onGtpWwanTrackingCallback(Location location);
-    void onGnssLocationInfoCb(GnssLocationInfoNotification notification);
+    void onGnssLocationInfoCb(const GnssLocationInfoNotification& notification);
 
     // Location configuration API requests
     void configConstrainedTunc(
