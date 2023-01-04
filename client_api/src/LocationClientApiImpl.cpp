@@ -77,10 +77,12 @@ IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <loc_misc_utils.h>
 
 static uint32_t gDebug = 0;
+static uint32_t gSleepTime = 800000;
 
 static const loc_param_s_type gConfigTable[] =
 {
-    {"DEBUG_LEVEL", &gDebug, NULL, 'n'}
+    {"DEBUG_LEVEL", &gDebug, NULL, 'n'},
+    {"QRTRWATCHER_DELAY_MICROSECOND", &gSleepTime, NULL, 'n'}
 };
 
 namespace location_client {
@@ -709,140 +711,140 @@ GnssLocation LocationClientApiImpl::parseLocationInfo(
     parseLocation(halLocationInfo.location, locationInfo);
     uint64_t flags = 0;
 
-    if (::GNSS_LOCATION_INFO_ALTITUDE_MEAN_SEA_LEVEL_BIT & halLocationInfo.flags) {
-        flags |= GNSS_LOCATION_INFO_ALTITUDE_MEAN_SEA_LEVEL_BIT;
+    if (LDT_GNSS_LOCATION_INFO_ALTITUDE_MEAN_SEA_LEVEL_BIT & halLocationInfo.flags) {
+        flags |= LCA_GNSS_LOCATION_INFO_ALTITUDE_MEAN_SEA_LEVEL_BIT;
     }
-    if (::GNSS_LOCATION_INFO_DOP_BIT & halLocationInfo.flags) {
-        flags |= GNSS_LOCATION_INFO_DOP_BIT;
+    if (LDT_GNSS_LOCATION_INFO_DOP_BIT & halLocationInfo.flags) {
+        flags |= LCA_GNSS_LOCATION_INFO_DOP_BIT;
     }
-    if (::GNSS_LOCATION_INFO_MAGNETIC_DEVIATION_BIT & halLocationInfo.flags) {
-        flags |= GNSS_LOCATION_INFO_MAGNETIC_DEVIATION_BIT;
+    if (LDT_GNSS_LOCATION_INFO_MAGNETIC_DEVIATION_BIT & halLocationInfo.flags) {
+        flags |= LCA_GNSS_LOCATION_INFO_MAGNETIC_DEVIATION_BIT;
     }
-    if (::GNSS_LOCATION_INFO_HOR_RELIABILITY_BIT & halLocationInfo.flags) {
-        flags |= GNSS_LOCATION_INFO_HOR_RELIABILITY_BIT;
+    if (LDT_GNSS_LOCATION_INFO_HOR_RELIABILITY_BIT & halLocationInfo.flags) {
+        flags |= LCA_GNSS_LOCATION_INFO_HOR_RELIABILITY_BIT;
     }
-    if (::GNSS_LOCATION_INFO_VER_RELIABILITY_BIT & halLocationInfo.flags) {
-        flags |= GNSS_LOCATION_INFO_VER_RELIABILITY_BIT;
+    if (LDT_GNSS_LOCATION_INFO_VER_RELIABILITY_BIT & halLocationInfo.flags) {
+        flags |= LCA_GNSS_LOCATION_INFO_VER_RELIABILITY_BIT;
     }
-    if (::GNSS_LOCATION_INFO_HOR_ACCURACY_ELIP_SEMI_MAJOR_BIT & halLocationInfo.flags) {
-        flags |= GNSS_LOCATION_INFO_HOR_ACCURACY_ELIP_SEMI_MAJOR_BIT;
+    if (LDT_GNSS_LOCATION_INFO_HOR_ACCURACY_ELIP_SEMI_MAJOR_BIT & halLocationInfo.flags) {
+        flags |= LCA_GNSS_LOCATION_INFO_HOR_ACCURACY_ELIP_SEMI_MAJOR_BIT;
     }
-    if (::GNSS_LOCATION_INFO_HOR_ACCURACY_ELIP_SEMI_MINOR_BIT & halLocationInfo.flags) {
-        flags |= GNSS_LOCATION_INFO_HOR_ACCURACY_ELIP_SEMI_MINOR_BIT;
+    if (LDT_GNSS_LOCATION_INFO_HOR_ACCURACY_ELIP_SEMI_MINOR_BIT & halLocationInfo.flags) {
+        flags |= LCA_GNSS_LOCATION_INFO_HOR_ACCURACY_ELIP_SEMI_MINOR_BIT;
     }
-    if (::GNSS_LOCATION_INFO_HOR_ACCURACY_ELIP_AZIMUTH_BIT & halLocationInfo.flags) {
-        flags |= GNSS_LOCATION_INFO_HOR_ACCURACY_ELIP_AZIMUTH_BIT;
+    if (LDT_GNSS_LOCATION_INFO_HOR_ACCURACY_ELIP_AZIMUTH_BIT & halLocationInfo.flags) {
+        flags |= LCA_GNSS_LOCATION_INFO_HOR_ACCURACY_ELIP_AZIMUTH_BIT;
     }
-    if (::GNSS_LOCATION_INFO_GNSS_SV_USED_DATA_BIT & halLocationInfo.flags) {
-        flags |= GNSS_LOCATION_INFO_GNSS_SV_USED_DATA_BIT;
+    if (LDT_GNSS_LOCATION_INFO_GNSS_SV_USED_DATA_BIT & halLocationInfo.flags) {
+        flags |= LCA_GNSS_LOCATION_INFO_GNSS_SV_USED_DATA_BIT;
     }
-    if (::GNSS_LOCATION_INFO_NAV_SOLUTION_MASK_BIT & halLocationInfo.flags) {
-        flags |= GNSS_LOCATION_INFO_NAV_SOLUTION_MASK_BIT;
+    if (LDT_GNSS_LOCATION_INFO_NAV_SOLUTION_MASK_BIT & halLocationInfo.flags) {
+        flags |= LCA_GNSS_LOCATION_INFO_NAV_SOLUTION_MASK_BIT;
     }
-    flags |= GNSS_LOCATION_INFO_POS_TECH_MASK_BIT;
-    if (::GNSS_LOCATION_INFO_SV_SOURCE_INFO_BIT & halLocationInfo.flags) {
-        flags |= GNSS_LOCATION_INFO_SV_SOURCE_INFO_BIT;
+    flags |= LCA_GNSS_LOCATION_INFO_POS_TECH_MASK_BIT;
+    if (LDT_GNSS_LOCATION_INFO_SV_SOURCE_INFO_BIT & halLocationInfo.flags) {
+        flags |= LCA_GNSS_LOCATION_INFO_SV_SOURCE_INFO_BIT;
     }
-    if (::GNSS_LOCATION_INFO_POS_DYNAMICS_DATA_BIT & halLocationInfo.flags) {
-        flags |= GNSS_LOCATION_INFO_POS_DYNAMICS_DATA_BIT;
+    if (LDT_GNSS_LOCATION_INFO_POS_DYNAMICS_DATA_BIT & halLocationInfo.flags) {
+        flags |= LCA_GNSS_LOCATION_INFO_POS_DYNAMICS_DATA_BIT;
     }
-    if (::GNSS_LOCATION_INFO_EXT_DOP_BIT & halLocationInfo.flags) {
-        flags |= GNSS_LOCATION_INFO_EXT_DOP_BIT;
+    if (LDT_GNSS_LOCATION_INFO_EXT_DOP_BIT & halLocationInfo.flags) {
+        flags |= LCA_GNSS_LOCATION_INFO_EXT_DOP_BIT;
     }
-    if (::GNSS_LOCATION_INFO_ALTITUDE_MEAN_SEA_LEVEL_BIT & halLocationInfo.flags) {
-        flags |= GNSS_LOCATION_INFO_ALTITUDE_MEAN_SEA_LEVEL_BIT;
+    if (LDT_GNSS_LOCATION_INFO_ALTITUDE_MEAN_SEA_LEVEL_BIT & halLocationInfo.flags) {
+        flags |= LCA_GNSS_LOCATION_INFO_ALTITUDE_MEAN_SEA_LEVEL_BIT;
     }
-    if (::GNSS_LOCATION_INFO_NORTH_STD_DEV_BIT & halLocationInfo.flags) {
-        flags |= GNSS_LOCATION_INFO_NORTH_STD_DEV_BIT;
+    if (LDT_GNSS_LOCATION_INFO_NORTH_STD_DEV_BIT & halLocationInfo.flags) {
+        flags |= LCA_GNSS_LOCATION_INFO_NORTH_STD_DEV_BIT;
     }
-    if (::GNSS_LOCATION_INFO_EAST_STD_DEV_BIT & halLocationInfo.flags) {
-        flags |= GNSS_LOCATION_INFO_EAST_STD_DEV_BIT;
+    if (LDT_GNSS_LOCATION_INFO_EAST_STD_DEV_BIT & halLocationInfo.flags) {
+        flags |= LCA_GNSS_LOCATION_INFO_EAST_STD_DEV_BIT;
     }
-    if (::GNSS_LOCATION_INFO_NORTH_VEL_BIT & halLocationInfo.flags) {
-        flags |= GNSS_LOCATION_INFO_NORTH_VEL_BIT;
+    if (LDT_GNSS_LOCATION_INFO_NORTH_VEL_BIT & halLocationInfo.flags) {
+        flags |= LCA_GNSS_LOCATION_INFO_NORTH_VEL_BIT;
     }
-    if (::GNSS_LOCATION_INFO_NORTH_VEL_UNC_BIT & halLocationInfo.flags) {
-        flags |= GNSS_LOCATION_INFO_NORTH_VEL_UNC_BIT;
+    if (LDT_GNSS_LOCATION_INFO_NORTH_VEL_UNC_BIT & halLocationInfo.flags) {
+        flags |= LCA_GNSS_LOCATION_INFO_NORTH_VEL_UNC_BIT;
     }
-    if (::GNSS_LOCATION_INFO_EAST_VEL_BIT & halLocationInfo.flags) {
-        flags |= GNSS_LOCATION_INFO_EAST_VEL_BIT;
+    if (LDT_GNSS_LOCATION_INFO_EAST_VEL_BIT & halLocationInfo.flags) {
+        flags |= LCA_GNSS_LOCATION_INFO_EAST_VEL_BIT;
     }
-    if (::GNSS_LOCATION_INFO_EAST_VEL_UNC_BIT & halLocationInfo.flags) {
-        flags |= GNSS_LOCATION_INFO_EAST_VEL_UNC_BIT;
+    if (LDT_GNSS_LOCATION_INFO_EAST_VEL_UNC_BIT & halLocationInfo.flags) {
+        flags |= LCA_GNSS_LOCATION_INFO_EAST_VEL_UNC_BIT;
     }
-    if (::GNSS_LOCATION_INFO_UP_VEL_BIT & halLocationInfo.flags) {
-        flags |= GNSS_LOCATION_INFO_UP_VEL_BIT;
+    if (LDT_GNSS_LOCATION_INFO_UP_VEL_BIT & halLocationInfo.flags) {
+        flags |= LCA_GNSS_LOCATION_INFO_UP_VEL_BIT;
     }
-    if (::GNSS_LOCATION_INFO_UP_VEL_UNC_BIT & halLocationInfo.flags) {
-        flags |= GNSS_LOCATION_INFO_UP_VEL_UNC_BIT;
+    if (LDT_GNSS_LOCATION_INFO_UP_VEL_UNC_BIT & halLocationInfo.flags) {
+        flags |= LCA_GNSS_LOCATION_INFO_UP_VEL_UNC_BIT;
     }
-    if (::GNSS_LOCATION_INFO_LEAP_SECONDS_BIT & halLocationInfo.flags) {
-       flags |= GNSS_LOCATION_INFO_LEAP_SECONDS_BIT;
+    if (LDT_GNSS_LOCATION_INFO_LEAP_SECONDS_BIT & halLocationInfo.flags) {
+       flags |= LCA_GNSS_LOCATION_INFO_LEAP_SECONDS_BIT;
     }
-    if (::LOCATION_HAS_TIME_UNC_BIT & halLocationInfo.location.flags) {
-        flags |= GNSS_LOCATION_INFO_TIME_UNC_BIT;
+    if (LOCATION_HAS_TIME_UNC_BIT & halLocationInfo.location.flags) {
+        flags |= LCA_GNSS_LOCATION_INFO_TIME_UNC_BIT;
     }
-    if (::GNSS_LOCATION_INFO_NUM_SV_USED_IN_POSITION_BIT & halLocationInfo.flags) {
-        flags |= GNSS_LOCATION_INFO_NUM_SV_USED_IN_POSITION_BIT;
+    if (LDT_GNSS_LOCATION_INFO_NUM_SV_USED_IN_POSITION_BIT & halLocationInfo.flags) {
+        flags |= LCA_GNSS_LOCATION_INFO_NUM_SV_USED_IN_POSITION_BIT;
     }
-    if (::GNSS_LOCATION_INFO_CALIBRATION_CONFIDENCE_BIT & halLocationInfo.flags) {
-        flags |= GNSS_LOCATION_INFO_CALIBRATION_CONFIDENCE_PERCENT_BIT;
+    if (LDT_GNSS_LOCATION_INFO_CALIBRATION_CONFIDENCE_BIT & halLocationInfo.flags) {
+        flags |= LCA_GNSS_LOCATION_INFO_CALIBRATION_CONFIDENCE_PERCENT_BIT;
         locationInfo.calibrationConfidencePercent = halLocationInfo.calibrationConfidence;
     }
-    if (::GNSS_LOCATION_INFO_CALIBRATION_STATUS_BIT & halLocationInfo.flags) {
-        flags |= GNSS_LOCATION_INFO_CALIBRATION_STATUS_BIT;
+    if (LDT_GNSS_LOCATION_INFO_CALIBRATION_STATUS_BIT & halLocationInfo.flags) {
+        flags |= LCA_GNSS_LOCATION_INFO_CALIBRATION_STATUS_BIT;
         locationInfo.calibrationStatus =
                 (DrCalibrationStatusMask)halLocationInfo.calibrationStatus;
     }
-    if (::GNSS_LOCATION_INFO_OUTPUT_ENG_TYPE_BIT & halLocationInfo.flags) {
-        flags |= GNSS_LOCATION_INFO_OUTPUT_ENG_TYPE_BIT;
+    if (LDT_GNSS_LOCATION_INFO_OUTPUT_ENG_TYPE_BIT & halLocationInfo.flags) {
+        flags |= LCA_GNSS_LOCATION_INFO_OUTPUT_ENG_TYPE_BIT;
     }
-    if (::GNSS_LOCATION_INFO_OUTPUT_ENG_MASK_BIT & halLocationInfo.flags) {
-        flags |= GNSS_LOCATION_INFO_OUTPUT_ENG_MASK_BIT;
-    }
-
-    if (::GNSS_LOCATION_INFO_CONFORMITY_INDEX_BIT & halLocationInfo.flags) {
-        flags |= GNSS_LOCATION_INFO_CONFORMITY_INDEX_BIT;
+    if (LDT_GNSS_LOCATION_INFO_OUTPUT_ENG_MASK_BIT & halLocationInfo.flags) {
+        flags |= LCA_GNSS_LOCATION_INFO_OUTPUT_ENG_MASK_BIT;
     }
 
-    if (::GNSS_LOCATION_INFO_LLA_VRP_BASED_BIT & halLocationInfo.flags) {
-        flags |= GNSS_LOCATION_INFO_LLA_VRP_BASED_BIT;
+    if (LDT_GNSS_LOCATION_INFO_CONFORMITY_INDEX_BIT & halLocationInfo.flags) {
+        flags |= LCA_GNSS_LOCATION_INFO_CONFORMITY_INDEX_BIT;
     }
 
-    if (::GNSS_LOCATION_INFO_ENU_VELOCITY_VRP_BASED_BIT & halLocationInfo.flags) {
-        flags |= GNSS_LOCATION_INFO_ENU_VELOCITY_VRP_BASED_BIT;
+    if (LDT_GNSS_LOCATION_INFO_LLA_VRP_BASED_BIT & halLocationInfo.flags) {
+        flags |= LCA_GNSS_LOCATION_INFO_LLA_VRP_BASED_BIT;
     }
 
-    if (::GNSS_LOCATION_INFO_DR_SOLUTION_STATUS_MASK_BIT & halLocationInfo.flags) {
-        flags |= GNSS_LOCATION_INFO_DR_SOLUTION_STATUS_MASK_BIT;
+    if (LDT_GNSS_LOCATION_INFO_ENU_VELOCITY_VRP_BASED_BIT & halLocationInfo.flags) {
+        flags |= LCA_GNSS_LOCATION_INFO_ENU_VELOCITY_VRP_BASED_BIT;
     }
 
-    if (::GNSS_LOCATION_INFO_ALTITUDE_ASSUMED_BIT & halLocationInfo.flags) {
-        flags |= GNSS_LOCATION_INFO_ALTITUDE_ASSUMED_BIT;
+    if (LDT_GNSS_LOCATION_INFO_DR_SOLUTION_STATUS_MASK_BIT & halLocationInfo.flags) {
+        flags |= LCA_GNSS_LOCATION_INFO_DR_SOLUTION_STATUS_MASK_BIT;
     }
 
-    if (::GNSS_LOCATION_INFO_SESSION_STATUS_BIT & halLocationInfo.flags) {
-        flags |= GNSS_LOCATION_INFO_SESSION_STATUS_BIT;
+    if (LDT_GNSS_LOCATION_INFO_ALTITUDE_ASSUMED_BIT & halLocationInfo.flags) {
+        flags |= LCA_GNSS_LOCATION_INFO_ALTITUDE_ASSUMED_BIT;
     }
 
-    if (::GNSS_LOCATION_INFO_INTEGRITY_RISK_USED_BIT & halLocationInfo.flags) {
-        flags |= GNSS_LOCATION_INFO_INTEGRITY_RISK_USED_BIT;
+    if (LDT_GNSS_LOCATION_INFO_SESSION_STATUS_BIT & halLocationInfo.flags) {
+        flags |= LCA_GNSS_LOCATION_INFO_SESSION_STATUS_BIT;
     }
 
-    if (::GNSS_LOCATION_INFO_PROTECT_ALONG_TRACK_BIT & halLocationInfo.flags) {
-        flags |= GNSS_LOCATION_INFO_PROTECT_ALONG_TRACK_BIT;
+    if (LDT_GNSS_LOCATION_INFO_INTEGRITY_RISK_USED_BIT & halLocationInfo.flags) {
+        flags |= LCA_GNSS_LOCATION_INFO_INTEGRITY_RISK_USED_BIT;
     }
 
-    if (::GNSS_LOCATION_INFO_PROTECT_CROSS_TRACK_BIT & halLocationInfo.flags) {
-        flags |= GNSS_LOCATION_INFO_PROTECT_CROSS_TRACK_BIT;
+    if (LDT_GNSS_LOCATION_INFO_PROTECT_ALONG_TRACK_BIT & halLocationInfo.flags) {
+        flags |= LCA_GNSS_LOCATION_INFO_PROTECT_ALONG_TRACK_BIT;
     }
 
-    if (::GNSS_LOCATION_INFO_PROTECT_VERTICAL_BIT & halLocationInfo.flags) {
-        flags |= GNSS_LOCATION_INFO_PROTECT_VERTICAL_BIT;
+    if (LDT_GNSS_LOCATION_INFO_PROTECT_CROSS_TRACK_BIT & halLocationInfo.flags) {
+        flags |= LCA_GNSS_LOCATION_INFO_PROTECT_CROSS_TRACK_BIT;
     }
 
-    if (::GNSS_LOCATION_INFO_DGNSS_STATION_ID_BIT & halLocationInfo.flags) {
-        flags |= GNSS_LOCATION_INFO_DGNSS_STATION_ID_BIT;
+    if (LDT_GNSS_LOCATION_INFO_PROTECT_VERTICAL_BIT & halLocationInfo.flags) {
+        flags |= LCA_GNSS_LOCATION_INFO_PROTECT_VERTICAL_BIT;
+    }
+
+    if (LDT_GNSS_LOCATION_INFO_DGNSS_STATION_ID_BIT & halLocationInfo.flags) {
+        flags |= LCA_GNSS_LOCATION_INFO_DGNSS_STATION_ID_BIT;
     }
 
     locationInfo.gnssInfoFlags = (GnssLocationInfoFlagMask)flags;
@@ -1281,7 +1283,7 @@ public:
                 if (LocIpcQrtrWatcher::ServiceStatus::UP == mStatus) {
                     auto sender = mWatcher.mIpcSender.lock();
                     if (nullptr != sender && sender->copyDestAddrFrom(mRefSender)) {
-                        sleep(2);
+                        usleep(gSleepTime);
                         auto listener = mWatcher.mIpcListener.lock();
                         if (nullptr != listener) {
                             LocAPIHalReadyIndMsg msg(SERVICE_NAME, &mWatcher.mPbufMsgConv);

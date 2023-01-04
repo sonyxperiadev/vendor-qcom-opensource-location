@@ -1004,7 +1004,7 @@ void LocApiV02::injectPosition(const GnssLocationInfoNotification &locationInfo,
         injectPositionReq.gpsTime.gpsTimeOfWeekMs =
                 locationInfo.gnssSystemTime.u.qzssSystemTime.systemMsec;
      } else if (locationInfo.gnssSystemTime.gnssSystemTimeSrc == GNSS_LOC_SV_SYSTEM_GLONASS) {
-         if (GNSS_LOCATION_INFO_LEAP_SECONDS_BIT & locationInfo.flags) {
+         if (LDT_GNSS_LOCATION_INFO_LEAP_SECONDS_BIT & locationInfo.flags) {
              const GnssGloTimeStructType &gloSystemTime =
                      locationInfo.gnssSystemTime.u.gloSystemTime;
              unsigned long long msecTotal =
@@ -1028,9 +1028,9 @@ void LocApiV02::injectPosition(const GnssLocationInfoNotification &locationInfo,
     }
 
     // velocity enu
-    if ((GNSS_LOCATION_INFO_EAST_VEL_BIT & locationInfo.flags) &&
-        (GNSS_LOCATION_INFO_NORTH_VEL_BIT & locationInfo.flags) &&
-        (GNSS_LOCATION_INFO_UP_VEL_BIT & locationInfo.flags)) {
+    if ((LDT_GNSS_LOCATION_INFO_EAST_VEL_BIT & locationInfo.flags) &&
+        (LDT_GNSS_LOCATION_INFO_NORTH_VEL_BIT & locationInfo.flags) &&
+        (LDT_GNSS_LOCATION_INFO_UP_VEL_BIT & locationInfo.flags)) {
         injectPositionReq.velEnu_valid = 1;
         injectPositionReq.velEnu[0] = locationInfo.eastVelocity;
         injectPositionReq.velEnu[1] = locationInfo.northVelocity;
@@ -1038,9 +1038,9 @@ void LocApiV02::injectPosition(const GnssLocationInfoNotification &locationInfo,
     }
 
     // velocity uncertainty enu
-    if ((GNSS_LOCATION_INFO_EAST_VEL_UNC_BIT & locationInfo.flags) &&
-        (GNSS_LOCATION_INFO_NORTH_VEL_UNC_BIT & locationInfo.flags) &&
-        (GNSS_LOCATION_INFO_UP_VEL_UNC_BIT & locationInfo.flags)) {
+    if ((LDT_GNSS_LOCATION_INFO_EAST_VEL_UNC_BIT & locationInfo.flags) &&
+        (LDT_GNSS_LOCATION_INFO_NORTH_VEL_UNC_BIT & locationInfo.flags) &&
+        (LDT_GNSS_LOCATION_INFO_UP_VEL_UNC_BIT & locationInfo.flags)) {
         injectPositionReq.velUncEnu_valid = 1;
         injectPositionReq.velUncEnu[0] = locationInfo.eastVelocityStdDeviation;
         injectPositionReq.velUncEnu[1] = locationInfo.northVelocityStdDeviation;
@@ -1049,7 +1049,7 @@ void LocApiV02::injectPosition(const GnssLocationInfoNotification &locationInfo,
 
     // number of SV used info, this replaces expandedGnssSvUsedList as the payload
     // for expandedGnssSvUsedList is too large
-    if (GNSS_LOCATION_INFO_NUM_SV_USED_IN_POSITION_BIT & locationInfo.flags) {
+    if (LDT_GNSS_LOCATION_INFO_NUM_SV_USED_IN_POSITION_BIT & locationInfo.flags) {
         injectPositionReq.numSvInFix = locationInfo.numSvUsedInPosition;
         injectPositionReq.numSvInFix_valid = 1;
     }
@@ -3318,11 +3318,25 @@ void LocApiV02 :: reportPosition (
             locationExtended.systemTickUnc = location_report_ptr->systemTickUnc;
         }
 
+        loc_sess_status sessStatus =
+                (location_report_ptr->sessionStatus == eQMI_LOC_SESS_STATUS_IN_PROGRESS_V02) ?
+                LOC_SESS_INTERMEDIATE : LOC_SESS_SUCCESS;
+
+        // if for some reason, modem did not set valid lat/lon/accuracy,
+        // mark session status as failure
+        if ((location.gpsLocation.flags & LOC_GPS_LOCATION_HAS_LAT_LONG) == 0 ||
+                (location.gpsLocation.flags & LOC_GPS_LOCATION_HAS_ACCURACY) == 0 ||
+                (location.gpsLocation.accuracy == 0.0f)) {
+            LOC_LOGe("fix of sess status %d but with invalid info, valid flags 0x%x, "
+                     "lat: %f, lon: %f, accuracy %f",
+                     sessStatus, location.gpsLocation.flags, location.gpsLocation.latitude,
+                     location.gpsLocation.longitude, location.gpsLocation.accuracy);
+            sessStatus = LOC_SESS_FAILURE;
+        }
+
         LocApiBase::reportPosition(location,
                                    locationExtended,
-                                   (location_report_ptr->sessionStatus ==
-                                    eQMI_LOC_SESS_STATUS_IN_PROGRESS_V02 ?
-                                    LOC_SESS_INTERMEDIATE : LOC_SESS_SUCCESS),
+                                   sessStatus,
                                    locationExtended.tech_mask, &dataNotify, msInWeek);
     }
     else
@@ -7879,18 +7893,16 @@ void LocApiV02::reportEngDebugDataInfo(const qmiLocEngineDebugDataIndMsgT_v02*
     }
 
     if (pLocEngDbgDataInfoIndMsg->jammerIndicatorList_valid) {
-        // initalize the bpMetricDb and agcMetricDb as invalid for all signal types
+        // initalize the bpMetricDb as invalid for all signal types
         // modem does not report jammerData for signal types if they are invalid as earlier.
-        gnssEngineDebugDataInfo.jammerData.resize(GNSS_LOC_MAX_NUMBER_OF_SIGNAL_TYPES,
-                {INT32_MAX, INT32_MAX});
+        gnssEngineDebugDataInfo.jammerInd.resize(GNSS_LOC_MAX_NUMBER_OF_SIGNAL_TYPES, INT32_MAX);
         for (int i = 0; i < pLocEngDbgDataInfoIndMsg->jammerIndicatorList_len; i++) {
             // get the signal type index from the signalTypeMask
             int signalTypeIndex =
                 log2(pLocEngDbgDataInfoIndMsg->jammerIndicatorList[i].gnssSignalType);
-                if (gnssEngineDebugDataInfo.jammerData.size() > signalTypeIndex) {
-                    gnssEngineDebugDataInfo.jammerData[signalTypeIndex] = {
-                        pLocEngDbgDataInfoIndMsg->jammerIndicatorList[i].bpMetricDb,
-                        pLocEngDbgDataInfoIndMsg->jammerIndicatorList[i].agcMetricDb};
+                if (gnssEngineDebugDataInfo.jammerInd.size() > signalTypeIndex) {
+                    gnssEngineDebugDataInfo.jammerInd[signalTypeIndex] =
+                        pLocEngDbgDataInfoIndMsg->jammerIndicatorList[i].bpMetricDb;
                 }
         }
     }
@@ -7901,28 +7913,22 @@ void LocApiV02::reportEngDebugDataInfo(const qmiLocEngineDebugDataIndMsgT_v02*
         gnssEngineDebugDataInfo.epiTime.secs = pLocEngDbgDataInfoIndMsg->epiTime.secs;
     }
 
-    if (pLocEngDbgDataInfoIndMsg->epiLat_valid) {
-        gnssEngineDebugDataInfo.epiValidity = 1;
+    if (pLocEngDbgDataInfoIndMsg->epiLat_valid && pLocEngDbgDataInfoIndMsg->epiLon_valid
+            && pLocEngDbgDataInfoIndMsg->epiHepe_valid) {
+        gnssEngineDebugDataInfo.epiValidity |= 1 << 0;
         gnssEngineDebugDataInfo.epiLat = pLocEngDbgDataInfoIndMsg->epiLat;
-    }
-
-    if (pLocEngDbgDataInfoIndMsg->epiLon_valid) {
         gnssEngineDebugDataInfo.epiLon = pLocEngDbgDataInfoIndMsg->epiLon;
-    }
-
-    if (pLocEngDbgDataInfoIndMsg->epiAlt_valid) {
-        gnssEngineDebugDataInfo.epiAlt = pLocEngDbgDataInfoIndMsg->epiAlt;
-    }
-
-    if (pLocEngDbgDataInfoIndMsg->epiHepe_valid) {
         gnssEngineDebugDataInfo.epiHepe = pLocEngDbgDataInfoIndMsg->epiHepe;
     }
 
-    if (pLocEngDbgDataInfoIndMsg->epiAltUnc_valid) {
+    if (pLocEngDbgDataInfoIndMsg->epiAlt_valid && pLocEngDbgDataInfoIndMsg->epiAltUnc_valid) {
+        gnssEngineDebugDataInfo.epiValidity |= 1 << 1;
+        gnssEngineDebugDataInfo.epiAlt = pLocEngDbgDataInfoIndMsg->epiAlt;
         gnssEngineDebugDataInfo.epiAltUnc = pLocEngDbgDataInfoIndMsg->epiAltUnc;
     }
 
     if (pLocEngDbgDataInfoIndMsg->epiSrc_valid) {
+        gnssEngineDebugDataInfo.epiValidity |= 1 << 2;
         gnssEngineDebugDataInfo.epiSrc = pLocEngDbgDataInfoIndMsg->epiSrc;
     }
 
@@ -10473,6 +10479,10 @@ LocApiV02::startTimeBasedTracking(const TrackingOptions& options, LocApiResponse
         mMeasElapsedRealTimeCal.reset();
     }
 
+    // BOOT KPI marker, print only once for a session
+    if (false == mInSession) {
+        loc_boot_kpi_marker("L - LocApiV02 startFix, tbf %d", options.minInterval);
+    }
     mInSession = true;
     mMeasurementsStarted = true;
     registerEventMask();

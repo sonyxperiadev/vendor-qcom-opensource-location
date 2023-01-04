@@ -98,6 +98,138 @@ using std::string;
 
 namespace location_client
 {
+// DEPRECATION - BACKWARD COMPATIBILITY SECTION
+/** Specify the valid fields in GnssLocation.
+ *  <br/>
+ *
+ *  User should determine whether a field in
+ *  GnssLocation is valid or not by checking
+ *  whether the corrsponding bit in
+ *  GnssLocation::gnssInfoFlags is set or
+ *  not. <br/> */
+enum GnssLocationInfoFlagMask { // Recommend use LCAGnssLocationInfoFlagMask by instead
+    /** GnssLocation has valid
+     *  GnssLocation::altitudeMeanSeaLevel. <br/>   */
+    GNSS_LOCATION_INFO_ALTITUDE_MEAN_SEA_LEVEL_BIT      = (1ULL<<0),
+    /** GnssLocation has valid
+     *  GnssLocation::pdop,
+     *  GnssLocation::hdop and
+     *  GnssLocation::vdop. <br/>   */
+    GNSS_LOCATION_INFO_DOP_BIT                          = (1ULL<<1),
+    /** GnssLocation has valid
+     *  GnssLocation::magneticDeviation. <br/>   */
+    GNSS_LOCATION_INFO_MAGNETIC_DEVIATION_BIT           = (1ULL<<2),
+    /** GnssLocation has valid
+     *  GnssLocation::horReliability. <br/>   */
+    GNSS_LOCATION_INFO_HOR_RELIABILITY_BIT              = (1ULL<<3),
+    /** GnssLocation has valid
+     *  GnssLocation::verReliability.  <br/>   */
+    GNSS_LOCATION_INFO_VER_RELIABILITY_BIT              = (1ULL<<4),
+    /** GnssLocation has valid
+     *  GnssLocation::horUncEllipseSemiMajor. <br/>   */
+    GNSS_LOCATION_INFO_HOR_ACCURACY_ELIP_SEMI_MAJOR_BIT = (1ULL<<5),
+    /** GnssLocation has valid
+     *  GnssLocation::horUncEllipseSemiMinor. <br/>   */
+    GNSS_LOCATION_INFO_HOR_ACCURACY_ELIP_SEMI_MINOR_BIT = (1ULL<<6),
+    /** GnssLocation has valid
+     *  GnssLocation::horUncEllipseOrientAzimuth. <br/>   */
+    GNSS_LOCATION_INFO_HOR_ACCURACY_ELIP_AZIMUTH_BIT    = (1ULL<<7),
+    /** GnssLocation has valid
+     *  GnssLocation::svUsedInPosition and
+     *  GnssLocation::measUsageInfo. <br/>   */
+    GNSS_LOCATION_INFO_GNSS_SV_USED_DATA_BIT            = (1ULL<<8),
+    /** GnssLocation has valid
+     *  GnssLocation::navSolutionMask. <br/>   */
+    GNSS_LOCATION_INFO_NAV_SOLUTION_MASK_BIT            = (1ULL<<9),
+    /** GnssLocation has valid
+     *  GnssLocation::posTechMask. <br/>   */
+    GNSS_LOCATION_INFO_POS_TECH_MASK_BIT                = (1ULL<<10),
+    /** Deplicated field as there is no corresponding field in
+     *  GnssLocation. <br/>   */
+    GNSS_LOCATION_INFO_SV_SOURCE_INFO_BIT               = (1ULL<<11),
+    /** GnssLocation has valid
+     *  GnssLocation::altitudeMeanSeaLevel. <br/> */
+    GNSS_LOCATION_INFO_POS_DYNAMICS_DATA_BIT            = (1ULL<<12),
+    /** GnssLocation has valid
+     *  GnssLocation::gdop and
+     *  GnssLocation::tdop. <br/>   */
+    GNSS_LOCATION_INFO_EXT_DOP_BIT                      = (1ULL<<13),
+    /** GnssLocation has valid GnssLocation::northStdDeviation.
+     *  <br/> */
+    GNSS_LOCATION_INFO_NORTH_STD_DEV_BIT                = (1ULL<<14),
+    /** GnssLocation has valid
+     *  GnssLocation::eastStdDeviation. <br/>   */
+    GNSS_LOCATION_INFO_EAST_STD_DEV_BIT                 = (1ULL<<15),
+    /** GnssLocation has valid
+     *  GnssLocation::northVelocity. <br/>   */
+    GNSS_LOCATION_INFO_NORTH_VEL_BIT                    = (1ULL<<16),
+    /** GnssLocation has valid
+     *  GnssLocation::eastVelocity. <br/>   */
+    GNSS_LOCATION_INFO_EAST_VEL_BIT                     = (1ULL<<17),
+    /** GnssLocation has valid
+     *  GnssLocation::upVelocity. <br/>   */
+    GNSS_LOCATION_INFO_UP_VEL_BIT                       = (1ULL<<18),
+    /** GnssLocation has valid
+     *  GnssLocation::northVelocityStdDeviation. <br/>   */
+    GNSS_LOCATION_INFO_NORTH_VEL_UNC_BIT                = (1ULL<<19),
+    /** GnssLocation has valid
+     *  GnssLocation::eastVelocityStdDeviation. <br/>   */
+    GNSS_LOCATION_INFO_EAST_VEL_UNC_BIT                 = (1ULL<<20),
+    /** GnssLocation has valid
+     *  GnssLocation::upVelocityStdDeviation. <br/>   */
+    GNSS_LOCATION_INFO_UP_VEL_UNC_BIT                   = (1ULL<<21),
+    /** GnssLocation has valid
+     *  GnssLocation::leapSeconds. <br/>   */
+    GNSS_LOCATION_INFO_LEAP_SECONDS_BIT                 = (1ULL<<22),
+    /** GnssLocation has valid
+     *  GnssLocation::timeUncMs. <br/>   */
+    GNSS_LOCATION_INFO_TIME_UNC_BIT                     = (1ULL<<23),
+    /** GnssLocation has valid
+     *  GnssLocation::numSvUsedInPosition. <br/>   */
+    GNSS_LOCATION_INFO_NUM_SV_USED_IN_POSITION_BIT      = (1ULL<<24),
+    /** GnssLocation has valid
+     *  GnssLocation::calibrationConfidencePercent. <br/>   */
+    GNSS_LOCATION_INFO_CALIBRATION_CONFIDENCE_PERCENT_BIT = (1ULL<<25),
+    /** GnssLocation has valid
+     *  GnssLocation::calibrationStatus.  <br/>   */
+    GNSS_LOCATION_INFO_CALIBRATION_STATUS_BIT           = (1ULL<<26),
+    /** GnssLocation has valid
+     *  GnssLocation::locOutputEngType.  <br/>   */
+    GNSS_LOCATION_INFO_OUTPUT_ENG_TYPE_BIT              = (1ULL<<27),
+    /** GnssLocation has valid
+     *  GnssLocation::locOutputEngMask. <br/>   */
+    GNSS_LOCATION_INFO_OUTPUT_ENG_MASK_BIT              = (1ULL<<28),
+    /** GnssLocation has valid GnssLocation::conformityIndex.
+     *  <br/> */
+    GNSS_LOCATION_INFO_CONFORMITY_INDEX_BIT             = (1ULL<<29),
+    /** GnssLocation has valid
+     *  GnssLocation::llaVRPBased. <br/>   */
+    GNSS_LOCATION_INFO_LLA_VRP_BASED_BIT                = (1ULL<<30),
+    /** GnssLocation has valid GnssLocation::enuVelocityVRPBased.
+     *  <br/> */
+    GNSS_LOCATION_INFO_ENU_VELOCITY_VRP_BASED_BIT       = (1ULL<<31),
+    /** GnssLocation has valid GnssLocation::drSolutionStatusMask.
+     *  <br/>   */
+    GNSS_LOCATION_INFO_DR_SOLUTION_STATUS_MASK_BIT      = (1ULL<<32),
+    /** GnssLocation has valid GnssLocation::altitudeAssumed.
+     *  <br/> */
+    GNSS_LOCATION_INFO_ALTITUDE_ASSUMED_BIT             = (1ULL<<33),
+    /** GnssLocation has valid GnssLocation::sessionStatus. <br/> */
+    GNSS_LOCATION_INFO_SESSION_STATUS_BIT               = (1ULL<<34),
+    /** GnssLocation has valid GnssLocation::integrityRiskUsed.
+     *  <br/> */
+    GNSS_LOCATION_INFO_INTEGRITY_RISK_USED_BIT          = (1ULL<<35),
+    /** GnssLocation has valid GnssLocation::protectAlongTrack.
+     *  <br/> */
+    GNSS_LOCATION_INFO_PROTECT_ALONG_TRACK_BIT          = (1ULL<<36),
+    /** GnssLocation has valid GnssLocation::protectCrossTrack.
+     *  <br/> */
+    GNSS_LOCATION_INFO_PROTECT_CROSS_TRACK_BIT          = (1ULL<<37),
+    /** GnssLocation has valid GnssLocation::sprotectVertical.
+     *  <br/> */
+    GNSS_LOCATION_INFO_PROTECT_VERTICAL_BIT             = (1ULL<<38),
+};
+// DEPRECATION - BACKWARD COMPATIBILITY SECTION
 class Geofence;
 
 typedef uint64_t LocationCapabilitiesMask;
@@ -473,130 +605,129 @@ enum GnssSvType {
  *  whether the corrsponding bit in
  *  GnssLocation::gnssInfoFlags is set or
  *  not. <br/> */
-enum GnssLocationInfoFlagMask {
+typedef uint64_t LCAGnssLocationInfoFlagMask;
     /** GnssLocation has valid
      *  GnssLocation::altitudeMeanSeaLevel. <br/>   */
-    GNSS_LOCATION_INFO_ALTITUDE_MEAN_SEA_LEVEL_BIT      = (1ULL<<0),
+#define LCA_GNSS_LOCATION_INFO_ALTITUDE_MEAN_SEA_LEVEL_BIT                  (1ULL<<0)
     /** GnssLocation has valid
      *  GnssLocation::pdop,
      *  GnssLocation::hdop and
      *  GnssLocation::vdop. <br/>   */
-    GNSS_LOCATION_INFO_DOP_BIT                          = (1ULL<<1),
+#define LCA_GNSS_LOCATION_INFO_DOP_BIT                                      (1ULL<<1)
     /** GnssLocation has valid
      *  GnssLocation::magneticDeviation. <br/>   */
-    GNSS_LOCATION_INFO_MAGNETIC_DEVIATION_BIT           = (1ULL<<2),
+#define LCA_GNSS_LOCATION_INFO_MAGNETIC_DEVIATION_BIT                       (1ULL<<2)
     /** GnssLocation has valid
      *  GnssLocation::horReliability. <br/>   */
-    GNSS_LOCATION_INFO_HOR_RELIABILITY_BIT              = (1ULL<<3),
+#define LCA_GNSS_LOCATION_INFO_HOR_RELIABILITY_BIT                          (1ULL<<3)
     /** GnssLocation has valid
      *  GnssLocation::verReliability.  <br/>   */
-    GNSS_LOCATION_INFO_VER_RELIABILITY_BIT              = (1ULL<<4),
+#define LCA_GNSS_LOCATION_INFO_VER_RELIABILITY_BIT                          (1ULL<<4)
     /** GnssLocation has valid
      *  GnssLocation::horUncEllipseSemiMajor. <br/>   */
-    GNSS_LOCATION_INFO_HOR_ACCURACY_ELIP_SEMI_MAJOR_BIT = (1ULL<<5),
+#define LCA_GNSS_LOCATION_INFO_HOR_ACCURACY_ELIP_SEMI_MAJOR_BIT             (1ULL<<5)
     /** GnssLocation has valid
      *  GnssLocation::horUncEllipseSemiMinor. <br/>   */
-    GNSS_LOCATION_INFO_HOR_ACCURACY_ELIP_SEMI_MINOR_BIT = (1ULL<<6),
+#define LCA_GNSS_LOCATION_INFO_HOR_ACCURACY_ELIP_SEMI_MINOR_BIT             (1ULL<<6)
     /** GnssLocation has valid
      *  GnssLocation::horUncEllipseOrientAzimuth. <br/>   */
-    GNSS_LOCATION_INFO_HOR_ACCURACY_ELIP_AZIMUTH_BIT    = (1ULL<<7),
+#define LCA_GNSS_LOCATION_INFO_HOR_ACCURACY_ELIP_AZIMUTH_BIT                (1ULL<<7)
     /** GnssLocation has valid
      *  GnssLocation::svUsedInPosition and
      *  GnssLocation::measUsageInfo. <br/>   */
-    GNSS_LOCATION_INFO_GNSS_SV_USED_DATA_BIT            = (1ULL<<8),
+#define LCA_GNSS_LOCATION_INFO_GNSS_SV_USED_DATA_BIT                        (1ULL<<8)
     /** GnssLocation has valid
      *  GnssLocation::navSolutionMask. <br/>   */
-    GNSS_LOCATION_INFO_NAV_SOLUTION_MASK_BIT            = (1ULL<<9),
+#define LCA_GNSS_LOCATION_INFO_NAV_SOLUTION_MASK_BIT                        (1ULL<<9)
     /** GnssLocation has valid
      *  GnssLocation::posTechMask. <br/>   */
-    GNSS_LOCATION_INFO_POS_TECH_MASK_BIT                = (1ULL<<10),
+#define LCA_GNSS_LOCATION_INFO_POS_TECH_MASK_BIT                            (1ULL<<10)
     /** Deplicated field as there is no corresponding field in
      *  GnssLocation. <br/>   */
-    GNSS_LOCATION_INFO_SV_SOURCE_INFO_BIT               = (1ULL<<11),
+#define LCA_GNSS_LOCATION_INFO_SV_SOURCE_INFO_BIT                           (1ULL<<11)
     /** GnssLocation has valid
      *  GnssLocation::altitudeMeanSeaLevel. <br/> */
-    GNSS_LOCATION_INFO_POS_DYNAMICS_DATA_BIT            = (1ULL<<12),
+#define LCA_GNSS_LOCATION_INFO_POS_DYNAMICS_DATA_BIT                        (1ULL<<12)
     /** GnssLocation has valid
      *  GnssLocation::gdop and
      *  GnssLocation::tdop. <br/>   */
-    GNSS_LOCATION_INFO_EXT_DOP_BIT                      = (1ULL<<13),
+#define LCA_GNSS_LOCATION_INFO_EXT_DOP_BIT                                  (1ULL<<13)
     /** GnssLocation has valid GnssLocation::northStdDeviation.
      *  <br/> */
-    GNSS_LOCATION_INFO_NORTH_STD_DEV_BIT                = (1ULL<<14),
+#define LCA_GNSS_LOCATION_INFO_NORTH_STD_DEV_BIT                            (1ULL<<14)
     /** GnssLocation has valid
      *  GnssLocation::eastStdDeviation. <br/>   */
-    GNSS_LOCATION_INFO_EAST_STD_DEV_BIT                 = (1ULL<<15),
+#define LCA_GNSS_LOCATION_INFO_EAST_STD_DEV_BIT                             (1ULL<<15)
     /** GnssLocation has valid
      *  GnssLocation::northVelocity. <br/>   */
-    GNSS_LOCATION_INFO_NORTH_VEL_BIT                    = (1ULL<<16),
+#define LCA_GNSS_LOCATION_INFO_NORTH_VEL_BIT                                (1ULL<<16)
     /** GnssLocation has valid
      *  GnssLocation::eastVelocity. <br/>   */
-    GNSS_LOCATION_INFO_EAST_VEL_BIT                     = (1ULL<<17),
+#define LCA_GNSS_LOCATION_INFO_EAST_VEL_BIT                                 (1ULL<<17)
     /** GnssLocation has valid
      *  GnssLocation::upVelocity. <br/>   */
-    GNSS_LOCATION_INFO_UP_VEL_BIT                       = (1ULL<<18),
+#define LCA_GNSS_LOCATION_INFO_UP_VEL_BIT                                   (1ULL<<18)
     /** GnssLocation has valid
      *  GnssLocation::northVelocityStdDeviation. <br/>   */
-    GNSS_LOCATION_INFO_NORTH_VEL_UNC_BIT                = (1ULL<<19),
+#define LCA_GNSS_LOCATION_INFO_NORTH_VEL_UNC_BIT                            (1ULL<<19)
     /** GnssLocation has valid
      *  GnssLocation::eastVelocityStdDeviation. <br/>   */
-    GNSS_LOCATION_INFO_EAST_VEL_UNC_BIT                 = (1ULL<<20),
+#define LCA_GNSS_LOCATION_INFO_EAST_VEL_UNC_BIT                             (1ULL<<20)
     /** GnssLocation has valid
      *  GnssLocation::upVelocityStdDeviation. <br/>   */
-    GNSS_LOCATION_INFO_UP_VEL_UNC_BIT                   = (1ULL<<21),
+#define LCA_GNSS_LOCATION_INFO_UP_VEL_UNC_BIT                               (1ULL<<21)
     /** GnssLocation has valid
      *  GnssLocation::leapSeconds. <br/>   */
-    GNSS_LOCATION_INFO_LEAP_SECONDS_BIT                 = (1ULL<<22),
+#define LCA_GNSS_LOCATION_INFO_LEAP_SECONDS_BIT                             (1ULL<<22)
     /** GnssLocation has valid
      *  GnssLocation::timeUncMs. <br/>   */
-    GNSS_LOCATION_INFO_TIME_UNC_BIT                     = (1ULL<<23),
+#define LCA_GNSS_LOCATION_INFO_TIME_UNC_BIT                                 (1ULL<<23)
     /** GnssLocation has valid
      *  GnssLocation::numSvUsedInPosition. <br/>   */
-    GNSS_LOCATION_INFO_NUM_SV_USED_IN_POSITION_BIT      = (1ULL<<24),
+#define LCA_GNSS_LOCATION_INFO_NUM_SV_USED_IN_POSITION_BIT                  (1ULL<<24)
     /** GnssLocation has valid
      *  GnssLocation::calibrationConfidencePercent. <br/>   */
-    GNSS_LOCATION_INFO_CALIBRATION_CONFIDENCE_PERCENT_BIT = (1ULL<<25),
+#define LCA_GNSS_LOCATION_INFO_CALIBRATION_CONFIDENCE_PERCENT_BIT           (1ULL<<25)
     /** GnssLocation has valid
      *  GnssLocation::calibrationStatus.  <br/>   */
-    GNSS_LOCATION_INFO_CALIBRATION_STATUS_BIT           = (1ULL<<26),
+#define LCA_GNSS_LOCATION_INFO_CALIBRATION_STATUS_BIT                       (1ULL<<26)
     /** GnssLocation has valid
      *  GnssLocation::locOutputEngType.  <br/>   */
-    GNSS_LOCATION_INFO_OUTPUT_ENG_TYPE_BIT              = (1ULL<<27),
+#define LCA_GNSS_LOCATION_INFO_OUTPUT_ENG_TYPE_BIT                          (1ULL<<27)
     /** GnssLocation has valid
      *  GnssLocation::locOutputEngMask. <br/>   */
-    GNSS_LOCATION_INFO_OUTPUT_ENG_MASK_BIT              = (1ULL<<28),
+#define LCA_GNSS_LOCATION_INFO_OUTPUT_ENG_MASK_BIT                          (1ULL<<28)
     /** GnssLocation has valid GnssLocation::conformityIndex.
      *  <br/> */
-    GNSS_LOCATION_INFO_CONFORMITY_INDEX_BIT             = (1ULL<<29),
+#define LCA_GNSS_LOCATION_INFO_CONFORMITY_INDEX_BIT                         (1ULL<<29)
     /** GnssLocation has valid
      *  GnssLocation::llaVRPBased. <br/>   */
-    GNSS_LOCATION_INFO_LLA_VRP_BASED_BIT                = (1ULL<<30),
+#define LCA_GNSS_LOCATION_INFO_LLA_VRP_BASED_BIT                            (1ULL<<30)
     /** GnssLocation has valid GnssLocation::enuVelocityVRPBased.
      *  <br/> */
-    GNSS_LOCATION_INFO_ENU_VELOCITY_VRP_BASED_BIT       = (1ULL<<31),
+#define LCA_GNSS_LOCATION_INFO_ENU_VELOCITY_VRP_BASED_BIT                   (1ULL<<31)
     /** GnssLocation has valid GnssLocation::drSolutionStatusMask.
      *  <br/>   */
-    GNSS_LOCATION_INFO_DR_SOLUTION_STATUS_MASK_BIT      = (1ULL<<32),
+#define LCA_GNSS_LOCATION_INFO_DR_SOLUTION_STATUS_MASK_BIT                  (1ULL<<32)
     /** GnssLocation has valid GnssLocation::altitudeAssumed.
      *  <br/> */
-    GNSS_LOCATION_INFO_ALTITUDE_ASSUMED_BIT             = (1ULL<<33),
+#define LCA_GNSS_LOCATION_INFO_ALTITUDE_ASSUMED_BIT                         (1ULL<<33)
     /** GnssLocation has valid GnssLocation::sessionStatus. <br/> */
-    GNSS_LOCATION_INFO_SESSION_STATUS_BIT               = (1ULL<<34),
+#define LCA_GNSS_LOCATION_INFO_SESSION_STATUS_BIT                           (1ULL<<34)
     /** GnssLocation has valid GnssLocation::integrityRiskUsed.
      *  <br/> */
-    GNSS_LOCATION_INFO_INTEGRITY_RISK_USED_BIT          = (1ULL<<35),
+#define LCA_GNSS_LOCATION_INFO_INTEGRITY_RISK_USED_BIT                      (1ULL<<35)
     /** GnssLocation has valid GnssLocation::protectAlongTrack.
      *  <br/> */
-    GNSS_LOCATION_INFO_PROTECT_ALONG_TRACK_BIT          = (1ULL<<36),
+#define LCA_GNSS_LOCATION_INFO_PROTECT_ALONG_TRACK_BIT                      (1ULL<<36)
     /** GnssLocation has valid GnssLocation::protectCrossTrack.
      *  <br/> */
-    GNSS_LOCATION_INFO_PROTECT_CROSS_TRACK_BIT          = (1ULL<<37),
+#define LCA_GNSS_LOCATION_INFO_PROTECT_CROSS_TRACK_BIT                      (1ULL<<37)
     /** GnssLocation has valid GnssLocation::protectVertical.
      *  <br/> */
-    GNSS_LOCATION_INFO_PROTECT_VERTICAL_BIT             = (1ULL<<38),
+#define LCA_GNSS_LOCATION_INFO_PROTECT_VERTICAL_BIT                         (1ULL<<38)
     /** GnssLocation has valid GnssLocation::dgnssStationId. <br/> */
-    GNSS_LOCATION_INFO_DGNSS_STATION_ID_BIT             = (1ULL<<39),
-};
+#define LCA_GNSS_LOCATION_INFO_DGNSS_STATION_ID_BIT                         (1ULL<<39)
 
 /** Specify the reliability level of
  *  GnssLocation::horReliability and
