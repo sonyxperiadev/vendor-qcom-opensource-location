@@ -1321,7 +1321,7 @@ bool LocationIntegrationApiImpl::sendConfigMsgToHalDaemon(
         LocConfigTypeEnum configType, const string& pbStr, bool invokeResponseCb) {
     bool rc = false;
     LOC_LOGd(">>> sendConfigMsgToHalDaemon, mHalRegistered %d, config type=%d, "
-             "msg size %d, config cb %d",
+             "msg size %zu, config cb %d",
              mHalRegistered, configType, pbStr.size(), invokeResponseCb);
 
     if (!mHalRegistered) {
