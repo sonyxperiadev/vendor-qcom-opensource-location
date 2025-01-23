@@ -88,6 +88,8 @@ IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "loc_cfg.h"
 
+#include "libqmi_loader.h"
+
 #ifdef LOC_UTIL_TARGET_OFF_TARGET
 
 // timeout in ms before send_msg_sync should return
@@ -2250,6 +2252,12 @@ locClientStatusEnumType locClientOpen (
   int instanceId;
   locClientStatusEnumType status;
   int tries = 1;
+
+  if (load_qmi_symbols()) {
+    LOC_LOGE("%s:%d]: failed to load QMI symbols. Aborting...",
+             __func__, __LINE__);
+    return eLOC_CLIENT_FAILURE_GENERAL;
+  }
 
   if (getEmulatorCfg()) {
       instanceId = eLOC_CLIENT_INSTANCE_ID_MODEM_EMULATOR;
