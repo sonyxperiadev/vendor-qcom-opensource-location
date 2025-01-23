@@ -21,7 +21,6 @@ LOCAL_CFLAGS := \
     -D_ANDROID_
 
 LOCAL_HEADER_LIBRARIES := \
-    libqmi_common_headers \
     libloc_core_headers \
     libgps.utils_headers \
     libloc_pla_headers \
