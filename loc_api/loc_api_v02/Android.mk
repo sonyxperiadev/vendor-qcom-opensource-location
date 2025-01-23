@@ -10,8 +10,6 @@ LOCAL_MODULE_TAGS := optional
 LOCAL_SHARED_LIBRARIES := \
     libutils \
     libcutils \
-    libqmi_cci \
-    libqmi_common_so \
     libloc_core \
     libgps.utils \
     libdl \
@@ -32,9 +30,7 @@ LOCAL_HEADER_LIBRARIES := \
     libloc_core_headers \
     libgps.utils_headers \
     libloc_pla_headers \
-    liblocation_api_headers \
-    libqmi_common_headers \
-    libqmi_cci_headers
+    liblocation_api_headers
 
 LOCAL_CFLAGS += $(GNSS_CFLAGS)
 include $(BUILD_SHARED_LIBRARY)
