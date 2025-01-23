@@ -20,7 +20,8 @@ LOCAL_SRC_FILES := \
     loc_api_v02_log.cpp \
     loc_api_v02_client.cpp \
     loc_api_sync_req.cpp \
-    location_service_v02.c
+    location_service_v02.c \
+    libqmi_loader.cpp
 
 LOCAL_CFLAGS += \
     -fno-short-enums \
