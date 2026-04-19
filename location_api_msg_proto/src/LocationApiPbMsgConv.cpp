@@ -5870,7 +5870,7 @@ int LocationApiPbMsgConv::pbConvertToGnssLocInfoNotif(
             memcpy(gnssLocInfoNotif.extendedData,
                     extendedDataStr.c_str(), extendedDataStr.length());
         } else {
-            LOC_LOGw("received incorrect payload for oemDreData %d", extendedDataStr.length());
+            LOC_LOGw("received incorrect payload for oemDreData %zu", extendedDataStr.length());
         }
     }
 
