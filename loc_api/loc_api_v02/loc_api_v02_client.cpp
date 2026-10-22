@@ -2054,7 +2054,7 @@ static locClientStatusEnumType locClientQmiCtrlPointInit(
         if (rc == QMI_NO_ERR) {
             break;
         } else {
-            LOC_LOGe(" qmi_client_get_service() rc: %d ", rc);
+            //LOC_LOGe(" qmi_client_get_service() rc: %d ", rc);
         }
 
         QMI_CCI_OS_SIGNAL_WAIT(&os_params, 0);
